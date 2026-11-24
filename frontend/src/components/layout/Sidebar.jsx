@@ -19,11 +19,29 @@ export const Sidebar = ({ isOpen }) => {
           <span>সিস্টেম অবস্থা (Health)</span>
         </NavLink>
 
-        <div className="idms-sidebar-section-title">দুর্যোগ ব্যবস্থাপনা (Disaster)</div>
-        <div className="nav-link text-muted opacity-75 d-flex justify-content-between align-items-center">
-          <span><i className="bi bi-people me-2"></i>উপকারভোগী ব্যবস্থাপনা</span>
-          <span className="badge bg-light text-secondary border">M01</span>
-        </div>
+        <div className="idms-sidebar-section-title">উপকারভোগী ব্যবস্থাপনা (M01)</div>
+        <NavLink to="/beneficiary/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-pie-chart-fill me-2 text-primary"></i>
+          <span>উপকারভোগী ড্যাশবোর্ড</span>
+        </NavLink>
+        <NavLink to="/beneficiary/households" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-people-fill me-2 text-info"></i>
+          <span>মাস্টার রেজিস্ট্রি (Master List)</span>
+        </NavLink>
+        <NavLink to="/beneficiary/register" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-person-plus-fill me-2 text-success"></i>
+          <span>নতুন পরিবার নিবন্ধন</span>
+        </NavLink>
+        <NavLink to="/beneficiary/duplicates" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-person-exclamation me-2 text-danger"></i>
+          <span>ডুপ্লিকেট পর্যালোচনা</span>
+        </NavLink>
+        <NavLink to="/beneficiary/import-export" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-file-earmark-excel-fill me-2 text-success"></i>
+          <span>ইমপোর্ট ও এক্সপোর্ট</span>
+        </NavLink>
+
+        <div className="idms-sidebar-section-title">অন্যান্য মডিউল (Planned)</div>
         <div className="nav-link text-muted opacity-75 d-flex justify-content-between align-items-center">
           <span><i className="bi bi-box-seam me-2"></i>ত্রাণ বিতরণ ব্যবস্থাপনা</span>
           <span className="badge bg-light text-secondary border">M04</span>
@@ -36,8 +54,6 @@ export const Sidebar = ({ isOpen }) => {
           <span><i className="bi bi-clipboard2-data me-2"></i>ক্ষয়ক্ষতি নিরূপণ (D-Form)</span>
           <span className="badge bg-light text-secondary border">M09</span>
         </div>
-
-        <div className="idms-sidebar-section-title">লজিস্টিকস ও নিরাপত্তা</div>
         <div className="nav-link text-muted opacity-75 d-flex justify-content-between align-items-center">
           <span><i className="bi bi-building me-2"></i>গুদাম ও মজুদ (Warehouse)</span>
           <span className="badge bg-light text-secondary border">M08</span>

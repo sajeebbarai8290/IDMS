@@ -79,10 +79,15 @@ In accordance with Section 11 of `AGENTS.md` (*"Never generate the entire applic
 - [ ] **Module 14 (Document Management):** Secure file upload pipeline with MIME sniffing, ClamAV hook, UUID obfuscation, and pre-signed URL streamer.
 - [ ] **Base Seeder:** Bangladesh Administrative Hierarchy dataset (8 Divisions, 64 Districts, 495 Upazilas, 4,500+ Unions).
 
-### Phase 2: Citizen Identity & Beneficiary Registry
-- **Module 02 (NID Verification Engine):** Decoupled `NidVerificationServiceInterface` with resilient `MockNidAdapter` handling 10-digit Smart Card, 13-digit, and 17-digit formats.
-- **Module 01 (Beneficiary Management):** Household enrollment, member roster, vulnerability scoring formula, deduplication queries, and PostGIS dwelling coordinates.
-- **Frontend UI:** Beneficiary enrollment wizard (bilingual Bangla/English), household search, duplicate alert dialogs.
+### Phase 2: Citizen Identity & Beneficiary Registry (MODULE 01 & 02 COMPLETED)
+- [x] **Module 02 (NID Verification Engine):** Decoupled `NidVerificationService` with resilient `MockNidAdapter` handling 10-digit Smart Card, 13-digit, and 17-digit formats with cryptographic verification tokens and audit logging.
+- [x] **Module 01 (Beneficiary Management):** Master household enrollment, member roster, deterministic vulnerability scoring formula (0-100 scale), multi-factor duplicate suspect detection engine, 7-tier scoping, and PostGIS dwelling coordinates.
+- [x] **Four-Eye Verification State Machine:** Draft &rarr; Field Survey &rarr; UDMC Vetted &rarr; PIO/DRRO Statutory Approval / Rejection with separation of duties enforced.
+- [x] **Sensitive Personal Data (PII) Protection:** AES-256-GCM authenticated encryption for NID/Phone, keyed HMAC-SHA256 deduplication hashing, masked UI rendering, and audited gated decryption (`beneficiary.pii.decrypt`).
+- [x] **Disaster Linkages & Assistance History:** Pivot relationships linking households to disaster events (Cyclone Remal, Floods) with assistance disbursement counters preventing unauthorized double dipping.
+- [x] **Batch Processing:** CSV/Excel import with line-by-line validation error reporting, sample template generator, and muster roll CSV export.
+- [x] **React Frontend:** Enterprise dashboard with KPI metrics, high-performance searchable/filterable master registry, 5-step registration wizard with GPS capture, profile details, family member roster, and side-by-side duplicate comparison dialog.
+- [x] **Automated Testing:** 13 new feature tests (31 tests total passing, 158 assertions) covering all statutory rules, scoping, security, and failure scenarios.
 
 ### Phase 3: Disaster Lifecycle & GIS Spatial Operations
 - **Module 03 (Disaster Information Management):** Disaster profiling, severity indexing, and BMD early warning ingestion.
