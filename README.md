@@ -82,13 +82,17 @@ IDMS/
 - Node.js 18+ and npm
 - PostgreSQL 16 with PostGIS & Redis 7 (or Docker)
 
-### Step 1: Start Infrastructure (PostgreSQL, Redis, Keycloak)
+### Step 1: Start Infrastructure (PostgreSQL, Redis, Keycloak, pgAdmin)
 Using Docker Compose:
 ```bash
 cd deployment/docker
 docker compose up -d
 ```
-*Note: If running local native services (WampServer/PostgreSQL/Redis), ensure ports `5432` and `6379` are running.*
+*Port Bindings:*
+- **PostgreSQL 16 + PostGIS:** `localhost:5433` (Docker host port mapped to avoid native 5432 conflict)
+- **pgAdmin 4 Web GUI:** `http://localhost:5050`
+- **Redis 7:** `localhost:6379`
+- **Keycloak 24+ IAM:** `http://localhost:8080`
 
 ### Step 2: Backend Setup (Laravel)
 ```bash

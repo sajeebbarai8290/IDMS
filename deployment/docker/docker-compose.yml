@@ -11,7 +11,8 @@ services:
       POSTGRES_USER: ${DB_USERNAME:-idms_user}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-idms_password}
     ports:
-      - "${DB_PORT:-5432}:5432"
+      # Mapped to 5433 on host to prevent collision with native Windows PostgreSQL (port 5432)
+      - "${DB_PORT:-5433}:5432"
     volumes:
       - idms_pgdata:/var/lib/postgresql/data
       - ../../database/sql/01_init_postgis_and_schemas.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
@@ -60,8 +61,28 @@ services:
     volumes:
       - ../keycloak/idms-realm-template.json:/opt/keycloak/data/import/realm.json:ro
 
+  # 4. pgAdmin 4 (Web-based Database Management GUI)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: idms_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@modmr.gov.bd}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - idms_pgadmin_data:/var/lib/pgadmin
+      - ./pgadmin-servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   idms_pgdata:
     driver: local
   idms_redisdata:
+    driver: local
+  idms_pgadmin_data:
     driver: local

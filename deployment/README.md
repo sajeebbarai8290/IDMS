@@ -14,7 +14,8 @@ docker compose up -d
 ```
 
 ### Stack Port Bindings:
-- **PostgreSQL 16 + PostGIS:** `localhost:5432` (`idms_user` / `idms_password` / `idms_db`)
+- **PostgreSQL 16 + PostGIS:** `localhost:5433` (`idms_user` / `idms_password` / `idms_db`) *(Mapped to 5433 on host to avoid conflict with native Windows PostgreSQL)*
+- **pgAdmin 4 Web GUI:** `http://localhost:5050` (`admin@modmr.gov.bd` / `admin123`)
 - **Redis 7:** `localhost:6379`
 - **Keycloak 24+ IAM:** `http://localhost:8080` (Realm: `idms-gov-realm`)
 

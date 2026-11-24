@@ -22,6 +22,17 @@ class User extends Authenticatable
 
     protected $table = 'core.users';
 
+    /**
+     * Get the table associated with the model.
+     * Uses PostgreSQL 'core.users' schema or fallback 'users' for SQLite testing.
+     *
+     * @return string
+     */
+    public function getTable(): string
+    {
+        return $this->getConnection()->getDriverName() === 'pgsql' ? 'core.users' : 'users';
+    }
+
     protected $keyType = 'string';
     public $incrementing = false;
 

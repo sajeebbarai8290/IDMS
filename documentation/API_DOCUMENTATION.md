@@ -93,11 +93,67 @@ All endpoints follow strict RESTful naming conventions and return a deterministi
 
 ---
 
-## 2. API Versioning Strategy
+## 2. API Versioning Strategy & Core Authentication Endpoints
 
 - **URL Prefix:** All public and internal endpoints are prefixed with `/api/v1/`.
 - **Breaking Changes:** Breaking modifications to payloads or response structures will introduce `/api/v2/` without deprecating `/api/v1/` until all clients (web and mobile) have migrated through scheduled deprecation windows.
 - **Header Version Negotiation:** Minor non-breaking additions are delivered transparently via semantic versioning headers (`X-API-Version: 1.1`).
+
+### 2.1 Centralized Authentication & Scoping Endpoints
+
+All protected endpoints require an `Authorization: Bearer <Keycloak_RS256_JWT>` header.
+
+#### 2.1.1 Get Authenticated User Profile (`GET /api/v1/auth/user`)
+- **Headers:** `Authorization: Bearer <token>`
+- **Response (200 OK):**
+```json
+{
+  "success": true,
+  "user": {
+    "id": "4652e2e7-c611-46ff-ad0c-fa7a2302c6c9",
+    "keycloak_sub": "92d6a561-bef1-46f5-9ca8-a80f54ca244b",
+    "email": "uno.dacope@modmr.gov.bd",
+    "name": "Mohammad Faruk (UNO)",
+    "role": "ROLE_UNO",
+    "designation": "Upazila Nirbahi Officer",
+    "is_active": true,
+    "administrative_scope": {
+      "tier_level": "UPAZILA",
+      "ancestry_path": "/40/47/12/",
+      "scope_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+      "designation": "Upazila Nirbahi Officer"
+    },
+    "last_login_at": "2026-11-24T13:16:00+06:00"
+  },
+  "timestamp": "2026-11-24T13:16:00+06:00"
+}
+```
+
+#### 2.1.2 Verify Administrative Scope Jurisdiction (`GET /api/v1/auth/scope-check`)
+Evaluates the 7-tier hierarchical data access rules between the authenticated officer's jurisdiction and a target node.
+- **Query Parameter:** `target_path` (e.g. `/40/47/12/35/`)
+- **Response (200 OK - Access Allowed):**
+```json
+{
+  "success": true,
+  "target_path": "/40/47/12/35/",
+  "officer_path": "/40/47/12/",
+  "has_access": true,
+  "reason": "Target within officer subtree or national jurisdiction.",
+  "timestamp": "2026-11-24T13:16:00+06:00"
+}
+```
+- **Response (403 Forbidden - Lateral or Upward Boundary Enforced):**
+```json
+{
+  "success": false,
+  "target_path": "/40/47/13/",
+  "officer_path": "/40/47/12/",
+  "has_access": false,
+  "reason": "Target is outside officer jurisdiction (Lateral or Upward Boundary Enforced).",
+  "timestamp": "2026-11-24T13:16:00+06:00"
+}
+```
 
 ---
 

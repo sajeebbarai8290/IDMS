@@ -51,7 +51,7 @@ export const LoginPage = () => {
                   variant="success"
                   size="lg"
                   icon="bi-shield-lock-fill"
-                  onClick={login}
+                  onClick={() => login(from)}
                 >
                   সরকারি SSO লগইন (Keycloak)
                 </Button>

@@ -65,7 +65,7 @@ class HealthCheckTest extends TestCase
      */
     public function test_protected_auth_status_requires_keycloak_token(): void
     {
-        $response = $this->getJson('/api/v1/auth/status');
+        $response = $this->getJson('/api/v1/auth/user');
 
         $response->assertStatus(401)
             ->assertJson([

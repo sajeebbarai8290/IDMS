@@ -55,11 +55,29 @@ In accordance with Section 11 of `AGENTS.md` (*"Never generate the entire applic
 - [x] Establish passwordless sovereign user model (`App\Core\Models\User`) delegating all authentication to Keycloak IAM.
 - [x] Verify automated unit/feature tests (6 passed) and frontend Vite build.
 
-### Phase 1: Core System & Security Infrastructure
-- **Module 12 (User & RBAC Management):** Keycloak JWT validation middleware, administrative scope resolver, user sync listener.
-- **Module 16 (Audit Trail):** Global audit observers capturing JSON mutations, IP, and actor credentials into partitioned audit tables.
-- **Module 14 (Document Management):** Secure file upload pipeline with MIME sniffing, ClamAV hook, UUID obfuscation, and pre-signed URL streamer.
-- **Base Seeder:** Bangladesh Administrative Hierarchy dataset (8 Divisions, 64 Districts, 495 Upazilas, 4,500+ Unions).
+### Phase 1: Core System & Security Infrastructure (AUTHENTICATION & RBAC COMPLETED)
+- [x] **Keycloak OIDC Centralized Authentication:**
+  - Provisioned Keycloak 24.0.5 running on `http://localhost:8080` in Docker.
+  - Configured realm `idms-gov-realm` with clients: `idms-spa-frontend` (Public, PKCE S256) and `idms-backend-api` (Bearer-Only).
+  - Protocol mappers configured for `ancestry_path`, `tier_level`, `scope_id`, `roles`, and `designation`.
+  - Configured MFA policy (TOTP) in Keycloak.
+- [x] **React Frontend Authentication (RFC 7636 PKCE Flow):**
+  - Implemented Authorization Code Flow with PKCE (`code_verifier`, SHA-256 `code_challenge`, cryptographic `state`).
+  - Implemented `/auth/callback` handler (`CallbackPage.jsx`) exchanging code for access, refresh, and ID tokens.
+  - Implemented transparent silent refresh in Axios interceptor with retry queuing.
+  - Implemented OIDC end-session logout (`post_logout_redirect_uri`).
+  - Zero client secrets exposed in frontend.
+- [x] **Laravel Backend Authentication & Verification Guard:**
+  - Implemented `KeycloakJwtService.php`: strictly validates RS256 algorithm (rejects `none` and symmetric algs), checks expiration (`exp`), not-before (`nbf`), issuer (`iss`), and audience (`aud`), verifies cryptographic RS256 signature using Keycloak JWKS public certs with rotation cache.
+  - Implemented `UserSynchronizationService.php`: maps validated token claims into PostgreSQL `core.users` without storing passwords in Laravel.
+  - Implemented `AdministrativeScopeService.php`: strictly enforces 7-tier hierarchical scoping (downward subtree access, lateral boundary isolation, upward access denial, national executive bypass).
+  - Implemented `KeycloakAuthenticate` & `RequireRole` middleware on protected `/api/v1` routes.
+- [x] **Automated & Live Verification:**
+  - 18 automated tests passing in PHPUnit (`KeycloakAuthenticationTest`, `HealthCheckTest`), asserting 401 on missing/malformed/insecure/expired tokens, tampered signatures, 403 on role/scope mismatches, and 200 on authorized access.
+  - Live end-to-end integration verified against live Docker Keycloak, PostgreSQL PostGIS (`core.users`), and Redis.
+- [ ] **Module 16 (Audit Trail):** Global audit observers capturing JSON mutations, IP, and actor credentials into partitioned audit tables.
+- [ ] **Module 14 (Document Management):** Secure file upload pipeline with MIME sniffing, ClamAV hook, UUID obfuscation, and pre-signed URL streamer.
+- [ ] **Base Seeder:** Bangladesh Administrative Hierarchy dataset (8 Divisions, 64 Districts, 495 Upazilas, 4,500+ Unions).
 
 ### Phase 2: Citizen Identity & Beneficiary Registry
 - **Module 02 (NID Verification Engine):** Decoupled `NidVerificationServiceInterface` with resilient `MockNidAdapter` handling 10-digit Smart Card, 13-digit, and 17-digit formats.

@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'keycloak.auth' => KeycloakAuthenticate::class,
+            'role' => \App\Core\Http\Middleware\RequireRole::class,
         ]);
 
         // Trust proxies for HTTPS behind Government WAF/Reverse Proxy

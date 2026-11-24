@@ -26,20 +26,71 @@ axiosClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Standardized Error Handling
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+// Response Interceptor: Standardized Error Handling & Automatic Silent Refresh
 axiosClient.interceptors.response.use(
   (response) => response.data,
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
     const status = error.response ? error.response.status : null;
-    const apiError = error.response?.data?.error || {
-      code: 'NETWORK_ERROR',
-      message: error.message || 'Network connection failed. Please check your internet or server status.',
-    };
 
-    if (status === 401) {
-      // Token expired or unauthenticated
-      keycloakService.logout();
+    // Handle 401 Unauthorized via transparent OIDC Silent Token Refresh
+    if (status === 401 && originalRequest && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return axiosClient(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const newToken = await keycloakService.refreshToken();
+        if (newToken) {
+          processQueue(null, newToken);
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          return axiosClient(originalRequest);
+        } else {
+          processQueue(new Error('Session refresh failed'), null);
+          keycloakService.clearSession();
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
+        }
+      } catch (refreshErr) {
+        processQueue(refreshErr, null);
+        keycloakService.clearSession();
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      } finally {
+        isRefreshing = false;
+      }
     }
+
+    const apiError = error.response?.data?.error || {
+      code: status === 403 ? 'FORBIDDEN' : status === 401 ? 'UNAUTHORIZED' : 'NETWORK_ERROR',
+      message: error.response?.data?.message || error.message || 'Network connection failed.',
+    };
 
     return Promise.reject(apiError);
   }

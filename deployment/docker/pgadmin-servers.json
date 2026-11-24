@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "IDMS PostgreSQL 16 (PostGIS)",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "idms_db",
+      "Username": "idms_user",
+      "SSLMode": "prefer"
+    }
+  }
+}

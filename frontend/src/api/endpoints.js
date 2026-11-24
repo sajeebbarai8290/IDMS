@@ -6,7 +6,11 @@ export const ENDPOINTS = {
   // Core System Inspection
   HEALTH: '/health',
   SYSTEM_INFO: '/system/info',
-  AUTH_STATUS: '/auth/status',
+  AUTH: {
+    USER: '/auth/user',
+    SYNC: '/auth/sync',
+    SCOPE_CHECK: '/auth/scope-check',
+  },
 
   // Modules (Scaffolding ready for subsequent implementations)
   BENEFICIARY: {

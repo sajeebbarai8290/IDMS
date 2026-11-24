@@ -10,6 +10,19 @@
   "resetPasswordAllowed": true,
   "editUsernameAllowed": false,
   "bruteForceProtected": true,
+  "accessTokenLifespan": 1800,
+  "ssoSessionIdleTimeout": 3600,
+  "ssoSessionMaxLifespan": 36000,
+  "otpPolicyType": "totp",
+  "otpPolicyAlgorithm": "HmacSHA1",
+  "otpPolicyDigits": 6,
+  "otpPolicyPeriod": 30,
+  "requiredActions": [
+    { "alias": "CONFIGURE_TOTP", "name": "Configure OTP", "providerId": "CONFIGURE_TOTP", "enabled": true, "defaultAction": false, "priority": 10 },
+    { "alias": "UPDATE_PASSWORD", "name": "Update Password", "providerId": "UPDATE_PASSWORD", "enabled": true, "defaultAction": false, "priority": 30 },
+    { "alias": "UPDATE_PROFILE", "name": "Update Profile", "providerId": "UPDATE_PROFILE", "enabled": false, "defaultAction": false, "priority": 40 },
+    { "alias": "VERIFY_PROFILE", "name": "Verify Profile", "providerId": "VERIFY_PROFILE", "enabled": false, "defaultAction": false, "priority": 90 }
+  ],
   "roles": {
     "realm": [
       { "name": "ROLE_SUPER_ADMIN", "description": "National MoDMR Lead System Administrator" },
@@ -42,16 +55,101 @@
       "enabled": true,
       "publicClient": true,
       "standardFlowEnabled": true,
-      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
       "rootUrl": "http://localhost:5173",
       "baseUrl": "http://localhost:5173",
       "redirectUris": [
         "http://localhost:5173/*",
+        "http://127.0.0.1:5173/*",
         "https://*.modmr.gov.bd/*"
       ],
       "webOrigins": [
+        "+",
         "http://localhost:5173",
+        "http://127.0.0.1:5173",
         "https://*.modmr.gov.bd"
+      ],
+      "protocolMappers": [
+        {
+          "name": "audience-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "idms-backend-api",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "roles-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "claim.name": "roles",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "tier-level-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "tier_level",
+            "claim.name": "tier_level",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "ancestry-path-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "ancestry_path",
+            "claim.name": "ancestry_path",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "designation-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "designation",
+            "claim.name": "designation",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "scope-id-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "scope_id",
+            "claim.name": "scope_id",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
       ]
     },
     {
@@ -60,6 +158,113 @@
       "enabled": true,
       "bearerOnly": true,
       "protocol": "openid-connect"
+    }
+  ],
+  "users": [
+    {
+      "username": "uno_dacope",
+      "enabled": true,
+      "email": "uno.dacope@modmr.gov.bd",
+      "firstName": "Mohammad",
+      "lastName": "Faruk (UNO)",
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Password@123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_UNO"
+      ],
+      "attributes": {
+        "tier_level": ["UPAZILA"],
+        "ancestry_path": ["/40/47/12/"],
+        "division_code": ["40"],
+        "district_code": ["47"],
+        "upazila_code": ["12"],
+        "designation": ["Upazila Nirbahi Officer"],
+        "scope_id": ["9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"]
+      }
+    },
+    {
+      "username": "drro_khulna",
+      "enabled": true,
+      "email": "drro.khulna@modmr.gov.bd",
+      "firstName": "Md. Rafiqul",
+      "lastName": "Islam (DRRO)",
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Password@123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_DRRO"
+      ],
+      "attributes": {
+        "tier_level": ["DISTRICT"],
+        "ancestry_path": ["/40/47/"],
+        "division_code": ["40"],
+        "district_code": ["47"],
+        "designation": ["District Relief and Rehabilitation Officer"],
+        "scope_id": ["8f3e2b10-6c91-4d3a-8742-1a4e8d3b5c90"]
+      }
+    },
+    {
+      "username": "admin_modmr",
+      "enabled": true,
+      "email": "admin@modmr.gov.bd",
+      "firstName": "System",
+      "lastName": "Administrator",
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Password@123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_SUPER_ADMIN"
+      ],
+      "attributes": {
+        "tier_level": ["NATIONAL"],
+        "ancestry_path": ["/"],
+        "designation": ["Lead System Administrator"],
+        "scope_id": ["00000000-0000-0000-0000-000000000001"]
+      }
+    },
+    {
+      "username": "enumerator_chalna",
+      "enabled": true,
+      "email": "enumerator.chalna@modmr.gov.bd",
+      "firstName": "Abdul",
+      "lastName": "Karim",
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Password@123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_FIELD_ENUMERATOR"
+      ],
+      "attributes": {
+        "tier_level": ["FIELD"],
+        "ancestry_path": ["/40/47/12/35/"],
+        "division_code": ["40"],
+        "district_code": ["47"],
+        "upazila_code": ["12"],
+        "union_code": ["35"],
+        "designation": ["Field Surveyor / Ward Enumerator"],
+        "scope_id": ["7c2a1e3b-5d4f-4a6e-9c8b-1e2f3a4b5c6d"]
+      }
     }
   ]
 }

@@ -11,8 +11,10 @@ use Throwable;
 /**
  * Class KeycloakJwtService
  *
+ * Sovereign Token Security Service for IDMS.
  * Validates Keycloak RS256 JSON Web Tokens (JWT) using cached JWKS public keys.
- * Enforces token expiration, issuer verification, audience checking, and claims extraction.
+ * Strictly enforces token expiration, issuer verification, audience checking,
+ * cryptographic signature validation, and claims extraction.
  *
  * @package App\Core\Security
  */
@@ -44,7 +46,7 @@ class KeycloakJwtService
     {
         $parts = explode('.', $token);
         if (count($parts) !== 3) {
-            throw new AuthenticationException('Malformed JWT token structure.');
+            throw new AuthenticationException('Malformed JWT token structure. Expected 3 segments.');
         }
 
         [$headerB64, $payloadB64, $signatureB64] = $parts;
@@ -56,35 +58,47 @@ class KeycloakJwtService
         $payload = json_decode($payloadJson, true);
 
         if (!$header || !$payload) {
-            throw new AuthenticationException('Unable to parse JWT token headers or payload.');
+            throw new AuthenticationException('Unable to parse JWT token headers or payload JSON.');
         }
 
-        // 1. Verify algorithm (RS256 standard for BNDA / IDMS)
+        // 1. Strict algorithm validation (Only RS256 allowed; 'none' or symmetric algs strictly rejected)
         if (($header['alg'] ?? null) !== 'RS256') {
-            throw new AuthenticationException('Unsupported JWT signature algorithm. RS256 required.');
+            throw new AuthenticationException('Unsupported or insecure JWT signature algorithm: ' . ($header['alg'] ?? 'none'));
         }
 
-        // 2. Temporal validation (exp & nbf)
+        // 2. Expiration and Not-Before Validation
         $now = time();
-        if (isset($payload['exp']) && $now >= $payload['exp']) {
-            throw new AuthenticationException('Token has expired.');
+        if (!isset($payload['exp']) || $now >= (int) $payload['exp']) {
+            throw new AuthenticationException('JWT token has expired.');
         }
 
-        if (isset($payload['nbf']) && $now < $payload['nbf']) {
-            throw new AuthenticationException('Token is not yet active.');
+        if (isset($payload['nbf']) && $now < (int) $payload['nbf']) {
+            throw new AuthenticationException('JWT token is not yet active.');
         }
 
-        // 3. Issuer validation
-        if (isset($payload['iss']) && $payload['iss'] !== $this->issuer) {
-            // In local/docker dev, allow host/IP variation if explicitly matching realm
-            if (!str_contains($payload['iss'], $this->realm)) {
-                throw new AuthenticationException('Invalid token issuer.');
+        // 3. Strict Issuer Validation
+        if (!isset($payload['iss']) || !str_contains($payload['iss'], $this->realm)) {
+            throw new AuthenticationException('Invalid token issuer: ' . ($payload['iss'] ?? 'missing'));
+        }
+
+        // 4. Strict Audience Validation
+        if (isset($payload['aud'])) {
+            $audiences = is_array($payload['aud']) ? $payload['aud'] : [$payload['aud']];
+            $allowedAudiences = array_filter([
+                $this->audience,
+                'idms-spa-frontend',
+                'idms-backend-api',
+            ]);
+
+            if (empty(array_intersect($allowedAudiences, $audiences))) {
+                throw new AuthenticationException('Invalid token audience. Expected audience not found.');
             }
         }
 
-        // 4. In production, verify RS256 signature against Keycloak JWKS public key
-        $kid = $header['kid'] ?? null;
-        if (app()->environment('production') || env('KEYCLOAK_VERIFY_SIGNATURE', false)) {
+        // 5. Cryptographic RS256 Signature Verification via Keycloak JWKS
+        $skipSignature = config('services.keycloak.skip_signature_verification', false) && app()->environment('testing');
+        if (!$skipSignature) {
+            $kid = $header['kid'] ?? null;
             $this->verifySignature($headerB64 . '.' . $payloadB64, $signatureB64, $kid);
         }
 
@@ -104,7 +118,7 @@ class KeycloakJwtService
     {
         $publicKey = $this->getPublicKeyByKid($kid);
         if (!$publicKey) {
-            throw new AuthenticationException('Keycloak public signing key not found for kid: ' . $kid);
+            throw new AuthenticationException('Keycloak public signing certificate not found for kid: ' . $kid);
         }
 
         $signature = $this->base64UrlDecodeBytes($signatureB64);
@@ -143,6 +157,23 @@ class KeycloakJwtService
                     return "-----BEGIN CERTIFICATE-----\n" .
                         chunk_split($key['x5c'][0], 64, "\n") .
                         "-----END CERTIFICATE-----\n";
+                }
+            }
+        }
+
+        // If not found in cache and kid was specified, bust cache once to handle Keycloak key rotation
+        if ($kid && !empty($keys)) {
+            Cache::forget($cacheKey);
+            $response = Http::timeout(5)->get($this->jwksUrl);
+            if ($response->successful()) {
+                $freshKeys = $response->json('keys') ?? [];
+                Cache::put($cacheKey, $freshKeys, $this->cacheTtl);
+                foreach ($freshKeys as $key) {
+                    if (($key['kid'] ?? null) === $kid && isset($key['x5c'][0])) {
+                        return "-----BEGIN CERTIFICATE-----\n" .
+                            chunk_split($key['x5c'][0], 64, "\n") .
+                            "-----END CERTIFICATE-----\n";
+                    }
                 }
             }
         }

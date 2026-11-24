@@ -21,7 +21,24 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(false);
   }, []);
 
-  const login = useCallback(() => {
+  const syncSession = useCallback(async () => {
+    if (keycloakService.isAuthenticated()) {
+      const profile = keycloakService.getUserProfile();
+      setUser(profile);
+      setIsAuthenticated(true);
+      return profile;
+    } else {
+      setUser(null);
+      setIsAuthenticated(false);
+      return null;
+    }
+  }, []);
+
+  const login = useCallback((returnTo = '/dashboard') => {
+    const destination = (typeof returnTo === 'string' && returnTo.startsWith('/') && !returnTo.includes('[object'))
+      ? returnTo
+      : '/dashboard';
+    sessionStorage.setItem('idms_return_to', destination);
     keycloakService.login();
   }, []);
 
@@ -50,6 +67,7 @@ export const AuthProvider = ({ children }) => {
     devLogin,
     logout,
     hasRole,
+    syncSession,
     administrativeScope: user?.administrativeScope || null,
   };
 

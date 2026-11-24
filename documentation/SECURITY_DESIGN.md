@@ -88,6 +88,23 @@ Keycloak user attributes are enriched via custom protocol mappers to embed admin
 - Mandatory for all users at or above Upazila level (`UNO_PIO`, `DC_DRRO`, `DDM_DIRECTOR`, `MINISTRY_OFFICER`, `SUPER_ADMIN`).
 - Supports Time-based One-Time Password (TOTP via Google Authenticator, FreeOTP) and automated SMS-OTP via the Government SMS Gateway.
 
+### 1.4 Implemented Centralized Authentication & Verification Stack (Phase 1)
+- **React Frontend Implementation:**
+  - Implements RFC 7636 Authorization Code Flow with PKCE (`keycloakService.js`).
+  - Cryptographically random state and S256 code challenge generated via Web Crypto API on login.
+  - `/auth/callback` handles redirect and securely exchanges code + verifier for tokens.
+  - Token refresh handled transparently via Axios response interceptors (`axiosClient.js`) with request queuing during silent refresh.
+  - Zero client secrets exposed in frontend code.
+- **Laravel Backend Implementation:**
+  - `KeycloakJwtService.php`: strictly enforces RS256 algorithm (rejects `none` and symmetric algs), checks expiration (`exp`), not-before (`nbf`), issuer (`iss`), and audience (`aud`), verifies cryptographic RS256 signature using Keycloak JWKS public certs with rotation cache.
+  - `UserSynchronizationService.php`: maps validated token claims into PostgreSQL `core.users` without storing passwords in Laravel.
+  - `AdministrativeScopeService.php`: strictly enforces 7-tier hierarchical scoping (downward subtree access, lateral boundary isolation, upward access denial, national executive bypass).
+  - `KeycloakAuthenticate` & `RequireRole` middleware on protected `/api/v1` routes.
+- **Security Invariants Enforced & Tested:**
+  - Zero passwords stored in Laravel: `User::getAuthPassword()` returns empty string.
+  - 18 automated PHPUnit feature tests verify all authentication rejection gates (missing, malformed, expired, future nbf, invalid issuer, invalid audience, tampered signature, unauthorized roles, and lateral scope boundary violations).
+  - Live end-to-end integration verified against Keycloak 24.0.5, PostgreSQL PostGIS (`core.users`), and Redis.
+
 ---
 
 ## 2. Comprehensive Security Architecture
