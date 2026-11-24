@@ -1,0 +1,65 @@
+{
+  "id": "idms-gov-realm",
+  "realm": "idms-gov-realm",
+  "displayName": "IDMS National Disaster Management IAM",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "roles": {
+    "realm": [
+      { "name": "ROLE_SUPER_ADMIN", "description": "National MoDMR Lead System Administrator" },
+      { "name": "ROLE_MINISTRY_EXECUTIVE", "description": "Minister, Senior Secretary, Executive Leadership" },
+      { "name": "ROLE_NEOC_DIRECTOR", "description": "Director, National Emergency Operations Centre" },
+      { "name": "ROLE_NATIONAL_AUDITOR", "description": "Auditor General & Statutory Audit Cell" },
+      { "name": "ROLE_DDM_DIRECTOR_GENERAL", "description": "Director General, Department of Disaster Management" },
+      { "name": "ROLE_DDM_RELIEF_DIRECTOR", "description": "Director (Relief, Logistics & Warehousing)" },
+      { "name": "ROLE_DDM_PLANNING_DIRECTOR", "description": "Director (Planning, M&E & Reconstruction)" },
+      { "name": "ROLE_DIVISIONAL_COMMISSIONER", "description": "Divisional Commissioner / Addl. Divisional Commissioner" },
+      { "name": "ROLE_DEPUTY_COMMISSIONER", "description": "Deputy Commissioner (DC) / District Magistrate" },
+      { "name": "ROLE_DRRO", "description": "District Relief and Rehabilitation Officer" },
+      { "name": "ROLE_UNO", "description": "Upazila Nirbahi Officer" },
+      { "name": "ROLE_PIO", "description": "Project Implementation Officer" },
+      { "name": "ROLE_UP_CHAIRMAN", "description": "Union Parishad Chairman / Pourashava Mayor" },
+      { "name": "ROLE_UP_SECRETARY", "description": "Union Parishad Secretary" },
+      { "name": "ROLE_FIELD_ENUMERATOR", "description": "Ward Surveyor / Field Data Collector" },
+      { "name": "ROLE_TAG_OFFICER", "description": "Government Verification & Inspection Officer" },
+      { "name": "ROLE_WAREHOUSE_OFFICER", "description": "Central & Local Godown Keeper" },
+      { "name": "ROLE_SHELTER_MANAGER", "description": "Cyclone / Flood Shelter In-Charge" },
+      { "name": "ROLE_CPP_LEADER", "description": "Cyclone Preparedness Programme Unit Leader" },
+      { "name": "ROLE_VOLUNTEER_RESPONDER", "description": "Red Crescent & Community First Responder" },
+      { "name": "ROLE_EXTERNAL_PARTNER", "description": "UN Agencies & Humanitarian NGO Observers (WFP, UNICEF)" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "idms-spa-frontend",
+      "name": "IDMS React SPA Client",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "rootUrl": "http://localhost:5173",
+      "baseUrl": "http://localhost:5173",
+      "redirectUris": [
+        "http://localhost:5173/*",
+        "https://*.modmr.gov.bd/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173",
+        "https://*.modmr.gov.bd"
+      ]
+    },
+    {
+      "clientId": "idms-backend-api",
+      "name": "IDMS Laravel Backend Resource Server",
+      "enabled": true,
+      "bearerOnly": true,
+      "protocol": "openid-connect"
+    }
+  ]
+}

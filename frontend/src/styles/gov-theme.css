@@ -1,0 +1,163 @@
+/**
+ * IDMS Government Theme
+ * Ministry of Disaster Management and Relief (MoDMR), Bangladesh
+ * Adheres to BNDA (Bangladesh National Digital Architecture) Standards
+ */
+
+:root {
+  --idms-primary: #006a4e;        /* Bangladesh Flag Green */
+  --idms-primary-dark: #004d38;
+  --idms-primary-light: #e8f5e9;
+  --idms-secondary: #003366;      /* Government Sovereign Blue */
+  --idms-accent: #f42a41;         /* Emergency Red */
+  --idms-warning: #d97706;        /* Warning Amber */
+  --idms-info: #0284c7;           /* Sky Blue */
+  --idms-bg-light: #f8fafc;
+  --idms-border: #e2e8f0;
+  --idms-text-dark: #1e293b;
+  --idms-text-muted: #64748b;
+  --sidebar-width: 260px;
+  --header-height: 64px;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'SolaimanLipi', 'Kalpurush';
+  background-color: var(--idms-bg-light);
+  color: var(--idms-text-dark);
+  min-height: 100vh;
+}
+
+/* Header & Navigation */
+.idms-header {
+  height: var(--header-height);
+  background: #ffffff;
+  border-bottom: 2px solid var(--idms-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+}
+
+.idms-brand-logo {
+  height: 40px;
+  width: auto;
+}
+
+.idms-brand-title {
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--idms-secondary);
+  line-height: 1.2;
+}
+
+.idms-brand-subtitle {
+  font-size: 0.75rem;
+  color: var(--idms-primary);
+  font-weight: 600;
+}
+
+/* Sidebar */
+.idms-sidebar {
+  width: var(--sidebar-width);
+  background: #ffffff;
+  border-right: 1px solid var(--idms-border);
+  min-height: calc(100vh - var(--header-height));
+  position: fixed;
+  top: var(--header-height);
+  bottom: 0;
+  left: 0;
+  overflow-y: auto;
+  z-index: 1020;
+  transition: all 0.25s ease-in-out;
+}
+
+.idms-sidebar-nav .nav-link {
+  color: var(--idms-text-dark);
+  font-size: 0.9rem;
+  padding: 0.65rem 1rem;
+  border-radius: 6px;
+  margin: 2px 8px;
+  display: flex;
+  align-items: center;
+  transition: all 0.15s ease-in-out;
+}
+
+.idms-sidebar-nav .nav-link:hover {
+  background-color: var(--idms-primary-light);
+  color: var(--idms-primary);
+}
+
+.idms-sidebar-nav .nav-link.active {
+  background-color: var(--idms-primary);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.idms-sidebar-section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--idms-text-muted);
+  letter-spacing: 0.05em;
+  padding: 1rem 1rem 0.25rem 1rem;
+}
+
+/* Main Content Area */
+.idms-main-wrapper {
+  margin-left: var(--sidebar-width);
+  padding: 1.5rem;
+  min-height: calc(100vh - var(--header-height));
+  display: flex;
+  flex-direction: column;
+}
+
+.idms-content-area {
+  flex: 1;
+}
+
+/* Dashboard Cards */
+.idms-card {
+  border: 1px solid var(--idms-border);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: box-shadow 0.2s ease;
+}
+
+.idms-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06);
+}
+
+.idms-card-header {
+  background: transparent;
+  border-bottom: 1px solid var(--idms-border);
+  padding: 0.85rem 1.15rem;
+  font-weight: 600;
+  color: var(--idms-secondary);
+}
+
+/* Emergency Badges & Tier Indicators */
+.badge-tier {
+  font-size: 0.72rem;
+  padding: 0.35em 0.65em;
+  font-weight: 600;
+  border-radius: 4px;
+}
+
+.tier-national { background-color: #ede9fe; color: #5b21b6; }
+.tier-directorate { background-color: #dbeafe; color: #1e40af; }
+.tier-division { background-color: #e0f2fe; color: #0369a1; }
+.tier-district { background-color: #ecfdf5; color: #047857; }
+.tier-upazila { background-color: #fef3c7; color: #b45309; }
+.tier-union { background-color: #ffedd5; color: #c2410c; }
+.tier-field { background-color: #fae8ff; color: #86198f; }
+
+/* Footer */
+.idms-footer {
+  border-top: 1px solid var(--idms-border);
+  padding: 1rem 0;
+  font-size: 0.8rem;
+  color: var(--idms-text-muted);
+  margin-top: 2rem;
+}

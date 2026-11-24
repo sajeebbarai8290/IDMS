@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL 16 + PostGIS 3.4
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: idms_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-idms_db}
+      POSTGRES_USER: ${DB_USERNAME:-idms_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-idms_password}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - idms_pgdata:/var/lib/postgresql/data
+      - ../../database/sql/01_init_postgis_and_schemas.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-idms_user} -d ${DB_DATABASE:-idms_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Redis 7 (Cache, Queues, Keycloak JWKS Cache)
+  redis:
+    image: redis:7-alpine
+    container_name: idms_redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - idms_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 3. Keycloak 24+ Sovereign Identity Provider
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.5
+    container_name: idms_keycloak
+    restart: unless-stopped
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin_password_dev_only
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/${DB_DATABASE:-idms_db}
+      KC_DB_USERNAME: ${DB_USERNAME:-idms_user}
+      KC_DB_PASSWORD: ${DB_PASSWORD:-idms_password}
+      KC_DB_SCHEMA: keycloak
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ../keycloak/idms-realm-template.json:/opt/keycloak/data/import/realm.json:ro
+
+volumes:
+  idms_pgdata:
+    driver: local
+  idms_redisdata:
+    driver: local
