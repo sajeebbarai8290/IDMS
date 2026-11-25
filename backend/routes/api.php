@@ -14,6 +14,11 @@ use App\Modules\Beneficiary\Controllers\Api\V1\VerificationController;
 use App\Modules\Disaster\Controllers\Api\V1\DisasterCategoryController;
 use App\Modules\Disaster\Controllers\Api\V1\DisasterController;
 use App\Modules\NidVerification\Controllers\Api\V1\NidVerificationController as ModuleNidVerificationController;
+use App\Modules\Relief\Controllers\Api\V1\ReliefAllocationController;
+use App\Modules\Relief\Controllers\Api\V1\ReliefCategoryController;
+use App\Modules\Relief\Controllers\Api\V1\ReliefDashboardController;
+use App\Modules\Relief\Controllers\Api\V1\ReliefDistributionController;
+use App\Modules\Relief\Controllers\Api\V1\ReliefRequisitionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -116,6 +121,44 @@ Route::prefix('v1')->group(function () {
             Route::post('/events/{event}/warnings', [DisasterController::class, 'issueWarning'])->name('api.v1.disaster.events.warnings');
             Route::post('/events/{event}/timelines', [DisasterController::class, 'addTimeline'])->name('api.v1.disaster.events.timelines');
             Route::get('/events/{event}/timelines/{timeline}/attachment', [DisasterController::class, 'downloadAttachment'])->name('api.v1.disaster.events.timelines.download');
+        });
+
+        // 6. Module 04: Relief Distribution Management (relief.*)
+        Route::prefix('relief')->group(function () {
+            Route::get('/dashboard', [ReliefDashboardController::class, 'summary'])->name('api.v1.relief.dashboard');
+            Route::get('/lookups', [ReliefDashboardController::class, 'lookups'])->name('api.v1.relief.lookups');
+            Route::get('/eligible-households', [ReliefDashboardController::class, 'eligibleHouseholds'])->name('api.v1.relief.eligible-households');
+
+            Route::get('/categories', [ReliefCategoryController::class, 'index'])->name('api.v1.relief.categories.index');
+            Route::post('/categories', [ReliefCategoryController::class, 'store'])->name('api.v1.relief.categories.store');
+            Route::put('/categories/{category}', [ReliefCategoryController::class, 'update'])->name('api.v1.relief.categories.update');
+
+            Route::get('/requisitions', [ReliefRequisitionController::class, 'index'])->name('api.v1.relief.requisitions.index');
+            Route::post('/requisitions', [ReliefRequisitionController::class, 'store'])->name('api.v1.relief.requisitions.store');
+            Route::get('/requisitions/{requisition}', [ReliefRequisitionController::class, 'show'])->name('api.v1.relief.requisitions.show');
+            Route::put('/requisitions/{requisition}', [ReliefRequisitionController::class, 'update'])->name('api.v1.relief.requisitions.update');
+            Route::delete('/requisitions/{requisition}', [ReliefRequisitionController::class, 'destroy'])->name('api.v1.relief.requisitions.destroy');
+            Route::post('/requisitions/{requisition}/submit', [ReliefRequisitionController::class, 'submit'])->name('api.v1.relief.requisitions.submit');
+            Route::post('/requisitions/{requisition}/review', [ReliefRequisitionController::class, 'review'])->name('api.v1.relief.requisitions.review');
+            Route::post('/requisitions/{requisition}/approve', [ReliefRequisitionController::class, 'approve'])->name('api.v1.relief.requisitions.approve');
+            Route::post('/requisitions/{requisition}/reject', [ReliefRequisitionController::class, 'reject'])->name('api.v1.relief.requisitions.reject');
+            Route::get('/requisitions/{requisition}/document', [ReliefRequisitionController::class, 'downloadSupportingDoc'])->name('api.v1.relief.requisitions.document');
+
+            Route::get('/allocations', [ReliefAllocationController::class, 'index'])->name('api.v1.relief.allocations.index');
+            Route::post('/allocations', [ReliefAllocationController::class, 'store'])->name('api.v1.relief.allocations.store');
+            Route::get('/allocations/{allocation}', [ReliefAllocationController::class, 'show'])->name('api.v1.relief.allocations.show');
+            Route::post('/allocations/{allocation}/beneficiaries', [ReliefAllocationController::class, 'assignBeneficiaries'])->name('api.v1.relief.allocations.beneficiaries');
+            Route::post('/allocations/{allocation}/approve', [ReliefAllocationController::class, 'approve'])->name('api.v1.relief.allocations.approve');
+            Route::post('/allocations/{allocation}/dispatch', [ReliefAllocationController::class, 'dispatchOrder'])->name('api.v1.relief.allocations.dispatch');
+            Route::post('/allocations/{allocation}/cancel', [ReliefAllocationController::class, 'cancel'])->name('api.v1.relief.allocations.cancel');
+
+            Route::get('/distributions', [ReliefDistributionController::class, 'index'])->name('api.v1.relief.distributions.index');
+            Route::get('/distributions/check-duplicate', [ReliefDistributionController::class, 'checkDuplicate'])->name('api.v1.relief.distributions.check-duplicate');
+            Route::get('/distributions/export-muster', [ReliefDistributionController::class, 'exportMuster'])->name('api.v1.relief.distributions.export-muster');
+            Route::post('/distributions', [ReliefDistributionController::class, 'store'])->name('api.v1.relief.distributions.store');
+            Route::post('/distributions/{voucher}/verify', [ReliefDistributionController::class, 'verify'])->name('api.v1.relief.distributions.verify');
+            Route::post('/distributions/{voucher}/void', [ReliefDistributionController::class, 'void'])->name('api.v1.relief.distributions.void');
+            Route::get('/distributions/{voucher}/photo', [ReliefDistributionController::class, 'downloadPhotoEvidence'])->name('api.v1.relief.distributions.photo');
         });
 
         // Administrative Overview Scenarios

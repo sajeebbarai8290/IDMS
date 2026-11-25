@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             AdministrativeUnitSeeder::class,
             DisasterEventSeeder::class,
             BeneficiarySeeder::class,
+            ReliefCatalogAndWarehouseSeeder::class,
         ]);
     }
 }

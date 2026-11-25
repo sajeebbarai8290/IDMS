@@ -13,6 +13,11 @@ use App\Modules\NidVerification\Adapters\MockNidAdapter;
 use App\Modules\NidVerification\Contracts\NidVerificationServiceInterface;
 use App\Modules\NidVerification\Models\NidVerification;
 use App\Modules\NidVerification\Policies\NidVerificationPolicy;
+use App\Modules\Relief\Models\DistributionVoucher;
+use App\Modules\Relief\Models\ReliefAllocation;
+use App\Modules\Relief\Models\ReliefCategory;
+use App\Modules\Relief\Models\ReliefRequisition;
+use App\Modules\Relief\Policies\ReliefPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -48,5 +53,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Household::class, HouseholdPolicy::class);
         Gate::policy(NidVerification::class, NidVerificationPolicy::class);
         Gate::policy(DisasterEvent::class, DisasterPolicy::class);
+        Gate::policy(ReliefCategory::class, ReliefPolicy::class);
+        Gate::policy(ReliefRequisition::class, ReliefPolicy::class);
+        Gate::policy(ReliefAllocation::class, ReliefPolicy::class);
+        Gate::policy(DistributionVoucher::class, ReliefPolicy::class);
     }
 }
