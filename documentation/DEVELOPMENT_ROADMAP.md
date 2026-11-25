@@ -80,18 +80,18 @@ In accordance with Section 11 of `AGENTS.md` (*"Never generate the entire applic
 - [ ] **Base Seeder:** Bangladesh Administrative Hierarchy dataset (8 Divisions, 64 Districts, 495 Upazilas, 4,500+ Unions).
 
 ### Phase 2: Citizen Identity & Beneficiary Registry (MODULE 01 & 02 COMPLETED)
-- [x] **Module 02 (NID Verification Engine):** Decoupled `NidVerificationService` with resilient `MockNidAdapter` handling 10-digit Smart Card, 13-digit, and 17-digit formats with cryptographic verification tokens and audit logging.
+- [x] **Module 02 (NID Verification Engine):** Dedicated `App\Modules\NidVerification` module with `NidVerificationServiceInterface`, `MockNidAdapter` (dev/test only with explicit `is_mock` isolation), fail-closed `AuthorizedGovernmentNidAdapter` awaiting official government credentials, bounded retries/timeouts, Redis rate limiting, optional async queue job (`ProcessNidVerificationJob`), `beneficiary.nid_verification_attempts` history, 4-eye SoD manual review overrides, React dashboard/workbench/history/detail UI, and 14 dedicated unit/feature tests.
 - [x] **Module 01 (Beneficiary Management):** Master household enrollment, member roster, deterministic vulnerability scoring formula (0-100 scale), multi-factor duplicate suspect detection engine, 7-tier scoping, and PostGIS dwelling coordinates.
 - [x] **Four-Eye Verification State Machine:** Draft &rarr; Field Survey &rarr; UDMC Vetted &rarr; PIO/DRRO Statutory Approval / Rejection with separation of duties enforced.
 - [x] **Sensitive Personal Data (PII) Protection:** AES-256-GCM authenticated encryption for NID/Phone, keyed HMAC-SHA256 deduplication hashing, masked UI rendering, and audited gated decryption (`beneficiary.pii.decrypt`).
 - [x] **Disaster Linkages & Assistance History:** Pivot relationships linking households to disaster events (Cyclone Remal, Floods) with assistance disbursement counters preventing unauthorized double dipping.
 - [x] **Batch Processing:** CSV/Excel import with line-by-line validation error reporting, sample template generator, and muster roll CSV export.
 - [x] **React Frontend:** Enterprise dashboard with KPI metrics, high-performance searchable/filterable master registry, 5-step registration wizard with GPS capture, profile details, family member roster, and side-by-side duplicate comparison dialog.
-- [x] **Automated Testing:** 13 new feature tests (31 tests total passing, 158 assertions) covering all statutory rules, scoping, security, and failure scenarios.
+- [x] **Automated Testing:** 45 backend tests passing in PHPUnit (14 new Module 02 unit/feature tests + 31 existing tests, 240+ assertions) covering statutory rules, 4-eye SoD, scoping, rate limiting, retries, async queue safety, and failure scenarios.
 
-### Phase 3: Disaster Lifecycle & GIS Spatial Operations
-- **Module 03 (Disaster Information Management):** Disaster profiling, severity indexing, and BMD early warning ingestion.
-- **GIS Core Engine:** GeoServer layer publishing for administrative boundaries and disaster hazard zones; OpenLayers React integration with layer switcher.
+### Phase 3: Disaster Lifecycle & GIS Spatial Operations (MODULE 03 COMPLETED)
+- [x] **Module 03 (Disaster Information Management):** Configurable disaster categories/subtypes, multi-location 7-tier scoping, PostGIS epicenter & affected-area MultiPolygon/GeoJSON support, humanitarian & economic impact tracking, 7-stage lifecycle state machine (`REPORTED` &rarr; `CLOSED`), early warning bulletins with queued notification adapter (`DisasterNotificationInterface`), chronological timeline with SHA-256 hashed private attachments, Leaflet interactive map with Shapefile (`.zip`) / GeoJSON upload & polygon/point picker, and 5 feature tests (52 total tests passing, 300+ assertions).
+- **GIS Core Engine:** Leaflet React integration (`leaflet` + `shpjs`) implemented with spatial filters (`bbox`, radius, administrative unit, category, severity, lifecycle, date range), Shapefile upload, optional GeoServer WMS toggle, and PostGIS spatial queries (`ST_Intersects`, `ST_DWithin`). GeoServer container publishing remains ready for deployment configuration.
 - **Module 05 (Disaster Response & Shelter Management):** Cyclone/flood shelter asset catalog, capacity and real-time occupancy logging, emergency SOS incident intake.
 
 ### Phase 4: Logistics, Warehousing & Relief Chain

@@ -74,13 +74,17 @@ class AuditLog extends Model
         ?string $administrativeUnitId = null
     ): self {
         $currentUser = $user ?? auth()->user();
+        $resolvedUnitId = $administrativeUnitId ?? $currentUser?->administrative_unit_id;
+        if ($resolvedUnitId && !AdministrativeUnit::whereKey($resolvedUnitId)->exists()) {
+            $resolvedUnitId = null;
+        }
 
         return self::create([
             'user_id' => $currentUser?->id,
             'action_name' => $actionName,
             'auditable_type' => $auditableType,
             'auditable_id' => $auditableId,
-            'administrative_unit_id' => $administrativeUnitId ?? $currentUser?->administrative_unit_id,
+            'administrative_unit_id' => $resolvedUnitId,
             'old_values' => $oldValues,
             'new_values' => $newValues,
             'ip_address' => request()->ip(),

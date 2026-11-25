@@ -11,6 +11,9 @@ use App\Modules\Beneficiary\Controllers\Api\V1\HouseholdMemberController;
 use App\Modules\Beneficiary\Controllers\Api\V1\ImportExportController;
 use App\Modules\Beneficiary\Controllers\Api\V1\NidVerificationController;
 use App\Modules\Beneficiary\Controllers\Api\V1\VerificationController;
+use App\Modules\Disaster\Controllers\Api\V1\DisasterCategoryController;
+use App\Modules\Disaster\Controllers\Api\V1\DisasterController;
+use App\Modules\NidVerification\Controllers\Api\V1\NidVerificationController as ModuleNidVerificationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -81,6 +84,38 @@ Route::prefix('v1')->group(function () {
             // Disaster Eligibility Linking & Assistance Delivery
             Route::post('/households/{household}/disaster-eligibility', [EligibilityController::class, 'linkDisaster'])->name('api.v1.beneficiary.disaster.link');
             Route::post('/households/{household}/disaster-eligibility/{eligibility}/disburse', [EligibilityController::class, 'recordAssistance'])->name('api.v1.beneficiary.disaster.disburse');
+        });
+
+        // 4. Module 02: National ID Verification (nid.*)
+        Route::prefix('nid')->group(function () {
+            Route::get('/dashboard', [ModuleNidVerificationController::class, 'dashboard'])->name('api.v1.nid.dashboard');
+            Route::get('/provider-health', [ModuleNidVerificationController::class, 'providerHealth'])->name('api.v1.nid.provider_health');
+            Route::get('/verifications', [ModuleNidVerificationController::class, 'index'])->name('api.v1.nid.verifications.index');
+            Route::post('/verifications', [ModuleNidVerificationController::class, 'store'])->name('api.v1.nid.verifications.store');
+            Route::get('/verifications/{verification}', [ModuleNidVerificationController::class, 'show'])->name('api.v1.nid.verifications.show');
+            Route::post('/verifications/{verification}/retry', [ModuleNidVerificationController::class, 'retry'])->name('api.v1.nid.verifications.retry');
+            Route::post('/verifications/{verification}/manual-review', [ModuleNidVerificationController::class, 'manualReview'])->name('api.v1.nid.verifications.manual_review');
+        });
+
+        // 5. Module 03: Disaster Information Management (disaster.*)
+        Route::prefix('disaster')->group(function () {
+            Route::get('/dashboard', [DisasterController::class, 'dashboard'])->name('api.v1.disaster.dashboard');
+            Route::get('/gis/geojson', [DisasterController::class, 'geojson'])->name('api.v1.disaster.geojson');
+            Route::get('/categories', [DisasterCategoryController::class, 'index'])->name('api.v1.disaster.categories.index');
+            Route::post('/categories', [DisasterCategoryController::class, 'store'])->name('api.v1.disaster.categories.store');
+            Route::get('/warnings', [DisasterController::class, 'warnings'])->name('api.v1.disaster.warnings.index');
+
+            Route::get('/events', [DisasterController::class, 'index'])->name('api.v1.disaster.events.index');
+            Route::post('/events', [DisasterController::class, 'store'])->name('api.v1.disaster.events.store');
+            Route::get('/events/{event}', [DisasterController::class, 'show'])->name('api.v1.disaster.events.show');
+            Route::put('/events/{event}', [DisasterController::class, 'update'])->name('api.v1.disaster.events.update');
+            Route::delete('/events/{event}', [DisasterController::class, 'destroy'])->name('api.v1.disaster.events.destroy');
+            Route::put('/events/{event}/impact', [DisasterController::class, 'updateImpact'])->name('api.v1.disaster.events.impact');
+            Route::post('/events/{event}/boundary', [DisasterController::class, 'uploadBoundary'])->name('api.v1.disaster.events.boundary');
+            Route::post('/events/{event}/lifecycle', [DisasterController::class, 'transitionLifecycle'])->name('api.v1.disaster.events.lifecycle');
+            Route::post('/events/{event}/warnings', [DisasterController::class, 'issueWarning'])->name('api.v1.disaster.events.warnings');
+            Route::post('/events/{event}/timelines', [DisasterController::class, 'addTimeline'])->name('api.v1.disaster.events.timelines');
+            Route::get('/events/{event}/timelines/{timeline}/attachment', [DisasterController::class, 'downloadAttachment'])->name('api.v1.disaster.events.timelines.download');
         });
 
         // Administrative Overview Scenarios

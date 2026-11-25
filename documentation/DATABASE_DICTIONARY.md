@@ -102,41 +102,217 @@ Individual household members.
 ---
 
 ### 2.3 `beneficiary.nid_verifications`
-Audit trail of external/mock National ID verification lookups.
+Audit trail and workflow state of National ID verification requests across authorized providers and mock adapters.
 
 | Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
 | :--- | :--- | :---: | :--- | :--- | :--- |
 | `id` | `uuid` | NO | PK | B-Tree (PK) | Verification transaction ID |
-| `nid_hash` | `char(64)` | NO | | B-Tree | HMAC-SHA256 hash of queried NID |
-| `verification_status`| `varchar(30)`| NO | CHECK in ('VERIFIED', 'FAILED', 'NOT_FOUND', 'DECEASED', 'TIMEOUT') | B-Tree | Verification outcome |
-| `verification_token` | `varchar(255)`| YES | | | Cryptographic verification proof from adapter |
-| `provider_code` | `varchar(50)` | NO | DEFAULT 'MOCK_ADAPTER' | | Service adapter used (`MOCK`, `PORICHOY`) |
-| `response_payload_hash`| `char(64)`| YES | | | SHA-256 checksum of upstream response payload |
-| `verified_by_user_id`| `uuid` | YES | FK &rarr; `core.users(id)` | B-Tree | Officer who initiated lookup |
-| `verified_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | B-Tree | Verification timestamp |
+| `household_id` | `uuid` | YES | FK &rarr; `beneficiary.households(id)` ON DELETE SET NULL | B-Tree | Linked beneficiary household (optional) |
+| `household_member_id` | `uuid` | YES | FK &rarr; `beneficiary.household_members(id)` ON DELETE SET NULL | B-Tree | Linked household member (optional) |
+| `administrative_unit_id` | `uuid` | YES | FK &rarr; `core.administrative_units(id)` ON DELETE SET NULL | B-Tree | Jurisdictional unit for 7-tier hierarchical scoping |
+| `nid_hash` | `char(64)` | NO | | B-Tree | Keyed HMAC-SHA256 hash of queried NID |
+| `nid_masked` | `varchar(30)` | YES | | | Masked display NID (e.g. `1990*******123`) |
+| `nid_encrypted_payload` | `text` | YES | | | Temporary AES-256 cipher for queued async processing (wiped upon completion) |
+| `date_of_birth` | `date` | YES | | | Submitted date of birth |
+| `submitted_name_en` | `varchar(150)` | YES | | | Submitted citizen name (English) for matching |
+| `verification_status` | `varchar(30)` | NO | DEFAULT 'PENDING' CHECK in ('PENDING', 'PROCESSING', 'VERIFIED', 'FAILED', 'MANUAL_REVIEW_REQUIRED') | B-Tree | Current verification workflow state |
+| `verification_reference` | `varchar(100)` | YES | UNIQUE | B-Tree (UQ) | Human-readable verification reference (e.g. `NID-REF-20261125-...`) |
+| `verification_token` | `varchar(255)` | YES | | | Cryptographic verification proof from adapter |
+| `provider_code` | `varchar(50)` | NO | DEFAULT 'MOCK_ADAPTER' | B-Tree | Service adapter used (`MOCK_ADAPTER`, `GOV_NID_API`) |
+| `is_mock` | `boolean` | NO | true | B-Tree | Explicitly distinguishes mock development verifications from official government responses |
+| `response_payload_hash` | `char(64)` | YES | | | SHA-256 checksum of sanitized upstream response |
+| `matched_fields` | `jsonb` | YES | | | Minimum necessary verification outcome flags (never raw API payload) |
+| `attempt_count` | `int` | NO | 0 | | Number of verification provider attempts executed |
+| `last_error_code` | `varchar(50)` | YES | | | Latest sanitized provider error code |
+| `last_error_message` | `text` | YES | | | Latest sanitized non-PII error summary |
+| `manual_override` | `boolean` | NO | false | B-Tree | True if resolved via authorized manual review override |
+| `override_reason` | `text` | YES | | | Mandatory officer justification for manual review decision |
+| `previous_status` | `varchar(30)` | YES | | | Status prior to manual override |
+| `requested_by_user_id` | `uuid` | YES | FK &rarr; `core.users(id)` ON DELETE SET NULL | B-Tree | Officer who initiated verification request |
+| `verified_by_user_id` | `uuid` | YES | FK &rarr; `core.users(id)` ON DELETE SET NULL | B-Tree | Officer/processor finalizing verification |
+| `reviewed_by_user_id` | `uuid` | YES | FK &rarr; `core.users(id)` ON DELETE SET NULL | B-Tree | Designated reviewing officer for manual override (4-eye SoD enforced) |
+| `verified_at` | `timestamptz` | YES | | B-Tree | Verification completion timestamp |
+| `reviewed_at` | `timestamptz` | YES | | | Manual review completion timestamp |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | B-Tree | Audit creation timestamp |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit modification timestamp |
+| `deleted_at` | `timestamptz` | YES | NULL | B-Tree | Soft delete timestamp |
+
+---
+
+### 2.4 `beneficiary.nid_verification_attempts`
+Per-attempt execution log for NID provider requests, retries, timeouts, and availability telemetry.
+
+| Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
+| :--- | :--- | :---: | :--- | :--- | :--- |
+| `id` | `uuid` | NO | PK | B-Tree (PK) | Attempt record ID |
+| `nid_verification_id` | `uuid` | NO | FK &rarr; `beneficiary.nid_verifications(id)` ON DELETE CASCADE | B-Tree | Parent verification record |
+| `attempt_number` | `int` | NO | 1 | | Sequential attempt number (1, 2, ...) |
+| `provider_code` | `varchar(50)` | NO | | B-Tree | Adapter identifier executed for this attempt |
+| `is_mock` | `boolean` | NO | true | | Whether attempt used mock adapter |
+| `status` | `varchar(30)` | NO | CHECK in ('VERIFIED', 'FAILED', 'MANUAL_REVIEW_REQUIRED', 'TIMEOUT', 'ERROR') | B-Tree | Outcome of this specific provider call |
+| `http_status` | `int` | YES | | | Upstream HTTP status code (if applicable) |
+| `response_time_ms` | `int` | YES | | | Round-trip provider latency in milliseconds |
+| `error_code` | `varchar(50)` | YES | | B-Tree | Sanitized error code (never contains NID or secrets) |
+| `error_message` | `text` | YES | | | Sanitized error description |
+| `attempted_by_user_id` | `uuid` | YES | FK &rarr; `core.users(id)` ON DELETE SET NULL | | Triggering officer (null for queue worker) |
+| `attempted_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | B-Tree | Attempt execution timestamp |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Record creation timestamp |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Record modification timestamp |
 
 ---
 
 ## 3. Schema: `disaster` (Disasters & Shelters)
 
+### 3.0 `disaster.disaster_categories`
+Configurable catalog of disaster categories and subtypes (Flood, Cyclone, Drought, Earthquake, Landslide, Fire, River Erosion, Lightning, Flash Flood, Cold Wave, etc.).
+
+| Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
+| :--- | :--- | :---: | :--- | :--- | :--- |
+| `id` | `uuid` | NO | PK | B-Tree (PK) | Category identifier |
+| `code` | `varchar(50)` | NO | UNIQUE | B-Tree (UQ) | Uppercase category code (e.g. `FLOOD`, `CYCLONE`) |
+| `name_en` | `varchar(120)` | NO | | | English category name |
+| `name_bn` | `varchar(150)` | NO | | | Bangla category name |
+| `subtypes` | `jsonb` | YES | | | Supported subtypes (`[{code, name_en, name_bn}]`) |
+| `icon` | `varchar(60)` | YES | | | UI Bootstrap icon class |
+| `color_hex` | `varchar(20)` | YES | | | Map/badge color token |
+| `is_system` | `boolean` | NO | true | | Built-in MoDMR category indicator |
+| `is_active` | `boolean` | NO | true | B-Tree | Active flag |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Creation timestamp |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Modification timestamp |
+
+---
+
 ### 3.1 `disaster.disaster_events`
-National and regional disaster declarations.
+National and regional disaster declarations, lifecycle state, spatial epicenter/boundary, and reporting metadata.
 
 | Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
 | :--- | :--- | :---: | :--- | :--- | :--- |
 | `id` | `uuid` | NO | PK | B-Tree (PK) | Disaster identifier (UUIDv7) |
-| `disaster_code`| `varchar(30)` | NO | UNIQUE | B-Tree (UQ) | Official code (e.g. `CYC-REMAL-2024`) |
-| `name_en` | `varchar(150)`| NO | | B-Tree | Event title (English) |
-| `name_bn` | `varchar(200)`| NO | | | Event title (Bangla) |
-| `disaster_type` | `varchar(50)` | NO | CHECK in ('CYCLONE', 'FLOOD', 'FLASH_FLOOD', 'EARTHQUAKE', 'EROSION', 'LANDSLIDE', 'FIRE', 'COLD_WAVE') | B-Tree | Hazard category |
-| `severity_level`| `varchar(30)` | NO | CHECK in ('ADVISORY', 'WARNING', 'DANGER', 'GREAT_DANGER', 'CATASTROPHIC') | B-Tree | Crisis alert level |
-| `lifecycle_phase`| `varchar(30)`| NO | CHECK in ('IMPENDING', 'ACTIVE', 'RESPONSE', 'RECOVERY', 'CLOSED') | B-Tree | Lifecycle state |
-| `declaration_date`| `timestamptz`| NO | | B-Tree | Date/time declared by MoDMR |
-| `affected_zone_geom`| `geometry(MultiPolygon, 4326)`| YES | | GIST | Composite spatial footprint of affected zone |
-| `created_by` | `uuid` | NO | FK &rarr; `core.users(id)` | | Officer who logged declaration |
-| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
+| `category_id` | `uuid` | YES | FK &rarr; `disaster.disaster_categories(id)` ON DELETE SET NULL | B-Tree | Category catalog reference |
+| `disaster_code` | `varchar(30)` | NO | UNIQUE | B-Tree (UQ) | Official identification code (e.g. `CYC-REMAL-2024`) |
+| `name_en` | `varchar(150)` | NO | | B-Tree | Event title (English) |
+| `name_bn` | `varchar(200)` | NO | | | Event title (Bangla) |
+| `disaster_type` | `varchar(50)` | NO | | B-Tree | Category code (`CYCLONE`, `FLOOD`, `DROUGHT`, `EARTHQUAKE`, `LANDSLIDE`, `FIRE`, `RIVER_EROSION`, `LIGHTNING`, etc.) |
+| `subtype` | `varchar(80)` | YES | | B-Tree | Subtype classification (e.g. `MONSOON_FLOOD`, `SUPER_CYCLONE`) |
+| `description_en` | `text` | YES | | | Detailed event description (English) |
+| `description_bn` | `text` | YES | | | Detailed event description (Bangla) |
+| `severity_level` | `varchar(30)` | NO | CHECK in ('ADVISORY', 'WARNING', 'DANGER', 'GREAT_DANGER', 'CATASTROPHIC') | B-Tree | Crisis alert level |
+| `lifecycle_phase` | `varchar(30)` | NO | CHECK in ('REPORTED', 'UNDER_ASSESSMENT', 'VERIFIED', 'ACTIVE', 'RESPONSE_ONGOING', 'RECOVERY', 'CLOSED') | B-Tree | 7-stage disaster lifecycle state |
+| `declaration_date` | `timestamptz` | NO | | B-Tree | Reporting / declaration timestamp |
+| `start_date` | `date` | YES | | B-Tree | Disaster onset date |
+| `end_date` | `date` | YES | | | Disaster conclusion date |
+| `epicenter_lat` | `decimal(10,7)` | YES | | | Primary latitude (WGS84) |
+| `epicenter_lng` | `decimal(10,7)` | YES | | | Primary longitude (WGS84) |
+| `affected_areas_summary` | `text` | YES | | | Human-readable summary of affected areas |
+| `affected_zone_geojson` | `jsonb` | YES | | | Portable GeoJSON boundary polygon(s) |
+| `location_geom` | `geometry(Point, 4326)` | YES | | GIST | PostGIS epicenter point geometry |
+| `affected_zone_geom` | `geometry(MultiPolygon, 4326)` | YES | | GIST | PostGIS composite spatial footprint |
+| `is_national` | `boolean` | NO | false | B-Tree | True for nationwide events visible to all tiers |
+| `is_emergency_declared` | `boolean` | NO | false | B-Tree | Emergency state declaration flag |
+| `created_by` | `uuid` | YES | FK &rarr; `core.users(id)` ON DELETE SET NULL | B-Tree | Reporting officer |
+| `updated_by` | `uuid` | YES | FK &rarr; `core.users(id)` ON DELETE SET NULL | B-Tree | Last updating officer |
+| `verified_by` | `uuid` | YES | FK &rarr; `core.users(id)` ON DELETE SET NULL | B-Tree | Verifying officer |
+| `verified_at` | `timestamptz` | YES | | | Verification timestamp |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | B-Tree | Audit timestamp |
 | `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
-| `deleted_at` | `timestamptz` | YES | NULL | | Soft delete timestamp |
+| `deleted_at` | `timestamptz` | YES | NULL | B-Tree | Soft delete timestamp |
+
+---
+
+### 3.1a `disaster.disaster_locations`
+Affected administrative units (Division, District, Upazila, Union, Ward) and localized coordinates/boundaries linked to each disaster.
+
+| Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
+| :--- | :--- | :---: | :--- | :--- | :--- |
+| `id` | `uuid` | NO | PK | B-Tree (PK) | Location mapping ID |
+| `disaster_event_id` | `uuid` | NO | FK &rarr; `disaster.disaster_events(id)` ON DELETE CASCADE | B-Tree | Parent disaster event |
+| `administrative_unit_id` | `uuid` | NO | FK &rarr; `core.administrative_units(id)` ON DELETE RESTRICT | B-Tree | Linked Division/District/Upazila/Union/Ward |
+| `latitude` | `decimal(10,7)` | YES | | | Local marker latitude |
+| `longitude` | `decimal(10,7)` | YES | | | Local marker longitude |
+| `boundary_geojson` | `jsonb` | YES | | | Local affected boundary GeoJSON |
+| `location_geom` | `geometry(Point, 4326)` | YES | | GIST | PostGIS local point |
+| `severity_override` | `varchar(30)` | YES | | | Localized severity if different from overall event |
+| `notes` | `text` | YES | | | Location-specific remarks |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Creation timestamp |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Modification timestamp |
+
+---
+
+### 3.1b `disaster.disaster_impacts`
+Aggregated humanitarian, housing, infrastructure, agriculture, livestock, and economic impact estimates per disaster event.
+
+| Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
+| :--- | :--- | :---: | :--- | :--- | :--- |
+| `id` | `uuid` | NO | PK | B-Tree (PK) | Impact record ID |
+| `disaster_event_id` | `uuid` | NO | UNIQUE FK &rarr; `disaster.disaster_events(id)` ON DELETE CASCADE | B-Tree (UQ) | Parent disaster event |
+| `affected_population` | `int` | NO | 0 | | Estimated affected individuals |
+| `affected_households` | `int` | NO | 0 | | Estimated affected families |
+| `deaths_count` | `int` | NO | 0 | | Confirmed fatalities |
+| `injured_count` | `int` | NO | 0 | | Confirmed injured persons |
+| `missing_count` | `int` | NO | 0 | | Reported missing persons |
+| `damaged_houses_fully` | `int` | NO | 0 | | Fully damaged houses |
+| `damaged_houses_partially` | `int` | NO | 0 | | Partially damaged houses |
+| `damaged_infrastructure_count` | `int` | NO | 0 | | Damaged roads, bridges, embankments, institutions |
+| `agricultural_loss_acres` | `decimal(12,2)` | NO | 0.00 | | Damaged crop land in acres |
+| `agricultural_loss_bdt` | `decimal(15,2)` | NO | 0.00 | | Estimated crop loss (BDT) |
+| `livestock_loss_count` | `int` | NO | 0 | | Livestock/poultry lost |
+| `livestock_loss_bdt` | `decimal(15,2)` | NO | 0.00 | | Estimated livestock loss (BDT) |
+| `total_economic_loss_bdt` | `decimal(16,2)` | NO | 0.00 | | Total estimated economic impact (BDT) |
+| `remarks` | `text` | YES | | | Assessment notes |
+| `updated_by` | `uuid` | YES | FK &rarr; `core.users(id)` ON DELETE SET NULL | | Updating officer |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Creation timestamp |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Modification timestamp |
+
+---
+
+### 3.1c `disaster.disaster_warnings`
+Early warning bulletins, alert levels, expiry windows, affected areas, and notification dispatch tracking.
+
+| Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
+| :--- | :--- | :---: | :--- | :--- | :--- |
+| `id` | `uuid` | NO | PK | B-Tree (PK) | Warning ID |
+| `disaster_event_id` | `uuid` | NO | FK &rarr; `disaster.disaster_events(id)` ON DELETE CASCADE | B-Tree | Associated disaster event |
+| `warning_code` | `varchar(40)` | NO | UNIQUE | B-Tree (UQ) | Official bulletin reference |
+| `warning_level` | `varchar(30)` | NO | CHECK in ('ADVISORY', 'WATCH', 'WARNING', 'DANGER', 'GREAT_DANGER', 'EVACUATION_ORDER') | B-Tree | Alert severity |
+| `title_en` | `varchar(180)` | NO | | | Warning headline (English) |
+| `title_bn` | `varchar(220)` | NO | | | Warning headline (Bangla) |
+| `message_en` | `text` | NO | | | Warning bulletin content (English) |
+| `message_bn` | `text` | NO | | | Warning bulletin content (Bangla) |
+| `issuing_authority` | `varchar(150)` | NO | | | e.g. `BMD`, `FFWC`, `NEOC / MoDMR`, `DDMC` |
+| `issued_at` | `timestamptz` | NO | | B-Tree | Warning issue timestamp |
+| `expires_at` | `timestamptz` | YES | | B-Tree | Warning expiration timestamp |
+| `affected_unit_ids` | `jsonb` | YES | | | Targeted administrative unit UUIDs |
+| `status` | `varchar(30)` | NO | DEFAULT 'ACTIVE' | B-Tree | `ACTIVE`, `EXPIRED`, `CANCELLED` |
+| `notification_dispatch_status` | `varchar(30)` | NO | DEFAULT 'QUEUED' | | `QUEUED`, `DISPATCHED`, `FAILED` |
+| `notification_reference` | `varchar(100)` | YES | | | Adapter dispatch reference |
+| `issued_by` | `uuid` | YES | FK &rarr; `core.users(id)` ON DELETE SET NULL | B-Tree | Officer issuing warning |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Creation timestamp |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Modification timestamp |
+
+---
+
+### 3.1d `disaster.disaster_timelines`
+Chronological audit timeline of lifecycle changes, field situation updates, and attached reports/images/documents.
+
+| Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
+| :--- | :--- | :---: | :--- | :--- | :--- |
+| `id` | `uuid` | NO | PK | B-Tree (PK) | Timeline entry ID |
+| `disaster_event_id` | `uuid` | NO | FK &rarr; `disaster.disaster_events(id)` ON DELETE CASCADE | B-Tree | Parent disaster event |
+| `event_type` | `varchar(40)` | NO | | B-Tree | `CREATED`, `STATUS_CHANGE`, `SITUATION_UPDATE`, `IMPACT_UPDATE`, `WARNING_ISSUED`, `ATTACHMENT_ADDED` |
+| `from_phase` | `varchar(30)` | YES | | | Previous lifecycle state |
+| `to_phase` | `varchar(30)` | YES | | | New lifecycle state |
+| `title_en` | `varchar(180)` | NO | | | Entry summary (English) |
+| `title_bn` | `varchar(220)` | YES | | | Entry summary (Bangla) |
+| `notes` | `text` | YES | | | Detailed update or transition rationale |
+| `attachment_original_name` | `varchar(255)` | YES | | | Original uploaded filename |
+| `attachment_path` | `varchar(500)` | YES | | | Private storage path (UUID-obfuscated) |
+| `attachment_mime` | `varchar(120)` | YES | | | Validated MIME type |
+| `attachment_size_bytes` | `bigint` | YES | | | File size in bytes |
+| `attachment_sha256` | `char(64)` | YES | | | SHA-256 integrity hash |
+| `recorded_by` | `uuid` | YES | FK &rarr; `core.users(id)` ON DELETE SET NULL | B-Tree | Recording officer |
+| `occurred_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | B-Tree | Chronological timestamp |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Creation timestamp |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Modification timestamp |
 
 ---
 

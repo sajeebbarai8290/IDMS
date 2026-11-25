@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useLanguage } from '../../contexts/LanguageContext';
 import Badge from '../common/Badge';
 
 export const Header = ({ toggleSidebar }) => {
   const { user, isAuthenticated, logout } = useAuth();
-  const [lang, setLang] = useState('bn');
+  const { lang, setLang } = useLanguage();
 
   const scope = user?.administrativeScope;
 

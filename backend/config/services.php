@@ -42,4 +42,18 @@ return [
         'cache_ttl' => env('KEYCLOAK_JWKS_CACHE_TTL', 86400),
     ],
 
+    'nid' => [
+        'driver' => env('NID_VERIFICATION_DRIVER', 'mock'), // 'mock' (dev/test only) | 'government'
+        'base_url' => env('NID_API_BASE_URL'),
+        'verify_path' => env('NID_API_VERIFY_PATH'),
+        'api_key' => env('NID_API_KEY'),
+        'ssl_cert_path' => env('NID_API_SSL_CERT_PATH'),
+        'ssl_key_path' => env('NID_API_SSL_KEY_PATH'),
+        'timeout_seconds' => (int) env('NID_API_TIMEOUT_SECONDS', 5),
+        'max_retries' => (int) env('NID_API_MAX_RETRIES', 2),
+        'retry_delay_ms' => (int) env('NID_API_RETRY_DELAY_MS', 250),
+        'rate_limit_per_minute' => (int) env('NID_RATE_LIMIT_PER_MINUTE', 30),
+        'async_by_default' => (bool) env('NID_VERIFICATION_ASYNC', false),
+    ],
+
 ];

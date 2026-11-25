@@ -93,18 +93,25 @@ export const BeneficiaryRegistrationPage = () => {
         nid_number: formData.hoh_nid,
         date_of_birth: formData.hoh_dob || undefined,
       });
-      const isSuccess = res?.success || res?.data?.success;
-      const token = res?.verification?.verification_token || res?.data?.verification?.verification_token || 'VERIFIED';
-      if (isSuccess) {
+      const v = res?.verification || res?.data?.verification;
+      const status = v?.verification_status;
+      const ref = v?.verification_reference || v?.verification_token || '';
+      const mockTag = v?.is_mock ? ' [Mock]' : '';
+      if (status === 'VERIFIED') {
         setNidVerifyStatus({
           verified: true,
-          message: 'পরিচয়পত্র সফলভাবে যাচাই হয়েছে (Token: ' + token + ')',
+          message: `পরিচয়পত্র যাচাইকৃত হয়েছে${mockTag} (Ref: ${ref})`,
+        });
+      } else {
+        setNidVerifyStatus({
+          verified: false,
+          message: `যাচাই অবস্থা: ${status || 'FAILED'}${v?.last_error_message ? ` — ${v.last_error_message}` : ''}`,
         });
       }
     } catch (err) {
       setNidVerifyStatus({
         verified: false,
-        message: err.response?.data?.message || 'পরিচয়পত্র যাচাই ব্যর্থ হয়েছে।',
+        message: err?.message || err.response?.data?.message || 'পরিচয়পত্র যাচাই ব্যর্থ হয়েছে।',
       });
     } finally {
       setNidVerifying(false);

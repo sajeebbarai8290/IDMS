@@ -37,11 +37,30 @@ export const ENDPOINTS = {
     TEMPLATE: '/beneficiary/template',
   },
 
-  // Future Modules
+  // Module 02: National ID Verification
+  NID: {
+    DASHBOARD: '/nid/dashboard',
+    PROVIDER_HEALTH: '/nid/provider-health',
+    VERIFICATIONS: '/nid/verifications',
+    VERIFICATION_DETAIL: (id) => `/nid/verifications/${id}`,
+    RETRY: (id) => `/nid/verifications/${id}/retry`,
+    MANUAL_REVIEW: (id) => `/nid/verifications/${id}/manual-review`,
+  },
+
+  // Module 03: Disaster Information Management
   DISASTER: {
+    DASHBOARD: '/disaster/dashboard',
+    GEOJSON: '/disaster/gis/geojson',
+    CATEGORIES: '/disaster/categories',
+    WARNINGS: '/disaster/warnings',
     EVENTS: '/disaster/events',
-    EARLY_WARNINGS: '/disaster/warnings',
-    HAZARD_ZONES: '/disaster/hazard-zones',
+    EVENT_DETAIL: (id) => `/disaster/events/${id}`,
+    IMPACT: (id) => `/disaster/events/${id}/impact`,
+    BOUNDARY: (id) => `/disaster/events/${id}/boundary`,
+    LIFECYCLE: (id) => `/disaster/events/${id}/lifecycle`,
+    EVENT_WARNINGS: (id) => `/disaster/events/${id}/warnings`,
+    TIMELINES: (id) => `/disaster/events/${id}/timelines`,
+    TIMELINE_ATTACHMENT: (eventId, timelineId) => `/disaster/events/${eventId}/timelines/${timelineId}/attachment`,
   },
   RELIEF: {
     REQUISITIONS: '/relief/requisitions',

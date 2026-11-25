@@ -167,92 +167,31 @@ namespace App\Modules\NidVerification\Contracts;
 
 use App\Modules\NidVerification\DTOs\NidVerificationRequestDto;
 use App\Modules\NidVerification\DTOs\NidVerificationResultDto;
+use App\Modules\NidVerification\DTOs\ProviderHealthDto;
 
 interface NidVerificationServiceInterface
 {
-    /**
-     * Verify a citizen's National Identity credentials against the verification provider.
-     *
-     * @param NidVerificationRequestDto $requestDto
-     * @return NidVerificationResultDto
-     * @throws \App\Modules\NidVerification\Exceptions\NidVerificationException
-     */
     public function verifyNid(NidVerificationRequestDto $requestDto): NidVerificationResultDto;
-
-    /**
-     * Check health status of the verification upstream provider.
-     *
-     * @return bool
-     */
+    public function getHealthStatus(): ProviderHealthDto;
     public function isProviderAvailable(): bool;
+    public function getProviderCode(): string;
+    public function isMockProvider(): bool;
 }
 ```
 
-### 3.2 Mock Adapter Specification (`MockNidAdapter`)
-When running in local, testing, or uncertified staging environments, Laravel binds `MockNidAdapter` to `NidVerificationServiceInterface` via the Service Container:
+### 3.2 Implemented Adapters & Separation of Mock vs. Production
+- **`MockNidAdapter` (`MOCK_ADAPTER`):** Active only in non-production environments (`local`, `testing`) when `NID_VERIFICATION_DRIVER=mock`. Always marks records `is_mock = true` and simulates 10/13/17-digit formats, `NID_NOT_FOUND` (`0000000000`), `CITIZEN_DECEASED` (`9999999999`), `MANUAL_REVIEW_REQUIRED` (`8888888888`), and retryable `PROVIDER_TIMEOUT` (`7777777777`).
+- **`AuthorizedGovernmentNidAdapter` (`GOV_NID_API`):** Enforced automatically in `production` or when `NID_VERIFICATION_DRIVER=government`. Reads endpoint/API key/mTLS certs from `config('services.nid')` and **fails closed** (`PROVIDER_NOT_CONFIGURED`) until official MoDMR / Election Commission API documentation and credentials are supplied.
 
-```php
-namespace App\Modules\NidVerification\Adapters;
-
-use App\Modules\NidVerification\Contracts\NidVerificationServiceInterface;
-use App\Modules\NidVerification\DTOs\NidVerificationRequestDto;
-use App\Modules\NidVerification\DTOs\NidVerificationResultDto;
-
-class MockNidAdapter implements NidVerificationServiceInterface
-{
-    public function verifyNid(NidVerificationRequestDto $dto): NidVerificationResultDto
-    {
-        // 1. Simulate network latency (200ms - 500ms)
-        usleep(rand(200000, 500000));
-
-        $nid = preg_replace('/[^0-9]/', '', $dto->nidNumber);
-
-        // 2. Format validation: Must be 10 digits (Smart Card), 13 digits, or 17 digits
-        if (!in_array(strlen($nid), [10, 13, 17])) {
-            return new NidVerificationResultDto(
-                isValid: false,
-                errorCode: 'INVALID_NID_LENGTH',
-                errorMessage: 'NID must be 10, 13, or 17 digits.'
-            );
-        }
-
-        // 3. Test Fixture: Special test numbers for simulated negative outcomes
-        if ($nid === '0000000000') {
-            return new NidVerificationResultDto(
-                isValid: false,
-                errorCode: 'NID_NOT_FOUND',
-                errorMessage: 'NID record does not exist in national registry.'
-            );
-        }
-
-        if ($nid === '9999999999') {
-            return new NidVerificationResultDto(
-                isValid: false,
-                errorCode: 'CITIZEN_DECEASED',
-                errorMessage: 'Citizen recorded as deceased in civil registry.'
-            );
-        }
-
-        // 4. Default Success Simulation
-        return new NidVerificationResultDto(
-            isValid: true,
-            nid: $nid,
-            fullNameEn: $dto->nameEn ?? 'MOHAMMAD RAHMAN',
-            fullNameBn: 'মোহাম্মদ রহমান',
-            dob: $dto->dob ?? '1985-05-15',
-            fatherName: 'আজিজুর রহমান',
-            motherName: 'ফাতেমা বেগম',
-            photoUrl: 'https://mock.nid.gov.bd/photos/placeholder.jpg',
-            verificationToken: 'MOCK-VERIFIED-' . hash('sha256', $nid . time())
-        );
-    }
-
-    public function isProviderAvailable(): bool
-    {
-        return true;
-    }
-}
-```
+### 3.3 Module 02 Implemented Endpoints (`/api/v1/nid/*`)
+- `GET /api/v1/nid/dashboard` — Scoped verification KPI summary (`total_requests`, `verified_count`, `failed_count`, `pending_count`, `manual_review_count`, `manual_override_count`), provider health, and attempt latency/error telemetry (`nid.verification.view_status`).
+- `GET /api/v1/nid/provider-health` — Live adapter availability and mock vs. official mode indicator.
+- `GET /api/v1/nid/verifications` — Scoped, paginated, searchable, filterable verification history (`search`, `verification_status`, `provider_code`, `is_mock`, `manual_override`, `administrative_unit_id`, `date_from`, `date_to`).
+- `POST /api/v1/nid/verifications` — Validate format (10/13/17 digits), enforce Redis-backed rate limit, and process verification (`PENDING` &rarr; `PROCESSING` &rarr; `VERIFIED` | `FAILED` | `MANUAL_REVIEW_REQUIRED`) synchronously with bounded retries or asynchronously (`async: true`) via `ProcessNidVerificationJob` (`nid.verification.initiate`).
+- `GET /api/v1/nid/verifications/{verification}` — Detailed verification record with minimized matched flags, manual review audit fields, and provider attempt timeline.
+- `POST /api/v1/nid/verifications/{verification}/retry` — Re-submit a `FAILED` or `MANUAL_REVIEW_REQUIRED` verification (requires matching NID re-entry).
+- `POST /api/v1/nid/verifications/{verification}/manual-review` — Audited officer manual override (`VERIFIED` | `FAILED`) with mandatory reason (min 10 chars) and 4-eye Separation of Duties (`nid.verification.manual_review`; initiator cannot override own request).
+- `POST /api/v1/beneficiary/verify-nid` — Backward-compatible Beneficiary facade delegating to Module 02.
 
 ---
 
@@ -304,4 +243,28 @@ class MockNidAdapter implements NidVerificationServiceInterface
 - `POST /api/v1/beneficiary/import` — Batch CSV import. Validates row-by-row, computes vulnerability scores, detects duplicates, and returns line-by-line validation error report.
 - `GET /api/v1/beneficiary/export` — Download filtered beneficiary muster roll as CSV.
 - `GET /api/v1/beneficiary/template` — Download standard government CSV import template.
+
+---
+
+## 6. Module 03: Disaster Information Management Implemented Endpoints (`/api/v1/disaster/*`)
+
+### 6.1 Dashboard, Categories & GIS
+- `GET /api/v1/disaster/dashboard` — Scoped analytics: active disasters, total events, category/severity/lifecycle breakdowns, humanitarian & economic impact totals, geographic distribution, and monthly trends.
+- `GET /api/v1/disaster/gis/geojson` — RFC 7946 `FeatureCollection` of scoped disaster epicenters and affected polygon boundaries; supports `disaster_type`, `severity_level`, `lifecycle_phase`, `bbox=minLng,minLat,maxLng,maxLat`, and `lat,lng,radius_km` spatial filters (PostGIS `ST_Intersects`/`ST_DWithin`).
+- `GET /api/v1/disaster/categories` — Cached configurable disaster categories and subtypes (`FLOOD`, `CYCLONE`, `DROUGHT`, `EARTHQUAKE`, `LANDSLIDE`, `FIRE`, `RIVER_EROSION`, `LIGHTNING`, `FLASH_FLOOD`, `COLD_WAVE`).
+- `POST /api/v1/disaster/categories` — Create new disaster category/subtypes (`disaster.category.manage`).
+
+### 6.2 Disaster Lifecycle, Impact, Warnings & Timeline
+- `GET /api/v1/disaster/events` — Scoped, paginated, searchable, filterable, sortable disaster registry.
+- `POST /api/v1/disaster/events` — Register disaster with Bangla/English titles, auto-generated or custom unique code, multi-location administrative unit mappings, GPS coordinates, GeoJSON boundary polygon, and initial impact estimate.
+- `GET /api/v1/disaster/events/{event}` — Full disaster detail with locations, impact, warnings, and chronological timeline.
+- `PUT /api/v1/disaster/events/{event}` — Update event metadata, locations, GIS geometries, and impact.
+- `DELETE /api/v1/disaster/events/{event}` — Soft-delete/archive disaster event (`disaster.event.verify` / National/District roles).
+- `PUT /api/v1/disaster/events/{event}/impact` — Update humanitarian, housing, infrastructure, agriculture, livestock, and economic impact estimates.
+- `POST /api/v1/disaster/events/{event}/boundary` — Upload and normalize Shapefile (`.zip`) / GeoJSON Polygon/MultiPolygon boundaries onto the disaster event and PostGIS `affected_zone_geom`.
+- `POST /api/v1/disaster/events/{event}/lifecycle` — Transition across 7 lifecycle phases (`REPORTED` &rarr; `UNDER_ASSESSMENT` &rarr; `VERIFIED` &rarr; `ACTIVE` &rarr; `RESPONSE_ONGOING` &rarr; `RECOVERY` &rarr; `CLOSED`); `VERIFIED`, `ACTIVE`, and `CLOSED` enforce higher-tier verification authorization.
+- `GET /api/v1/disaster/warnings` — Scoped early warning bulletins across accessible events.
+- `POST /api/v1/disaster/events/{event}/warnings` — Issue early warning bulletin and dispatch via queued `DisasterNotificationInterface` (`MockDisasterNotificationAdapter` until Module 13).
+- `POST /api/v1/disaster/events/{event}/timelines` — Record chronological update with optional private file attachment (MIME-validated, SHA-256 hashed, UUID-obfuscated path).
+- `GET /api/v1/disaster/events/{event}/timelines/{timeline}/attachment` — Authenticated, scope-enforced private attachment download.
 

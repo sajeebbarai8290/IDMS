@@ -1,10 +1,17 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { canInitiateNid, canViewNid } from '../../modules/nid/utils/nidPermissions';
+import { canCreateDisaster } from '../../modules/disaster/utils/disasterPermissions';
 
 export const Sidebar = ({ isOpen }) => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const role = user?.roles?.[0] || 'GUEST';
+  const showNidView = canViewNid(user);
+  const showNidInitiate = canInitiateNid(user);
+  const showDisasterCreate = canCreateDisaster(user);
 
   return (
     <aside className={`idms-sidebar ${isOpen ? 'show' : ''}`}>
@@ -39,6 +46,50 @@ export const Sidebar = ({ isOpen }) => {
         <NavLink to="/beneficiary/import-export" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
           <i className="bi bi-file-earmark-excel-fill me-2 text-success"></i>
           <span>ইমপোর্ট ও এক্সপোর্ট</span>
+        </NavLink>
+
+        {showNidView && (
+          <>
+            <div className="idms-sidebar-section-title">
+              {t('জাতীয় পরিচয়পত্র যাচাই (M02)', 'NID Verification (M02)')}
+            </div>
+            <NavLink to="/nid/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              <i className="bi bi-person-vcard-fill me-2 text-primary"></i>
+              <span>{t('এনআইডি ড্যাশবোর্ড', 'NID Dashboard')}</span>
+            </NavLink>
+            {showNidInitiate && (
+              <NavLink to="/nid/verify" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                <i className="bi bi-patch-check-fill me-2 text-success"></i>
+                <span>{t('এনআইডি যাচাই করুন', 'Verify NID')}</span>
+              </NavLink>
+            )}
+            <NavLink to="/nid/verifications" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              <i className="bi bi-clock-history me-2 text-info"></i>
+              <span>{t('যাচাই ইতিহাস', 'Verification History')}</span>
+            </NavLink>
+          </>
+        )}
+
+        <div className="idms-sidebar-section-title">
+          {t('দুর্যোগ তথ্য ব্যবস্থাপনা (M03)', 'Disaster Info (M03)')}
+        </div>
+        <NavLink to="/disaster/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-tsunami me-2 text-danger"></i>
+          <span>{t('দুর্যোগ ড্যাশবোর্ড', 'Disaster Dashboard')}</span>
+        </NavLink>
+        <NavLink to="/disaster/events" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-exclamation-diamond me-2 text-warning"></i>
+          <span>{t('দুর্যোগ তালিকা', 'Disaster Registry')}</span>
+        </NavLink>
+        {showDisasterCreate && (
+          <NavLink to="/disaster/events/new" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <i className="bi bi-plus-circle-fill me-2 text-danger"></i>
+            <span>{t('নতুন দুর্যোগ নিবন্ধন', 'Register Disaster')}</span>
+          </NavLink>
+        )}
+        <NavLink to="/disaster/map" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-map-fill me-2 text-primary"></i>
+          <span>{t('জিআইএস মানচিত্র', 'GIS Disaster Map')}</span>
         </NavLink>
 
         <div className="idms-sidebar-section-title">অন্যান্য মডিউল (Planned)</div>

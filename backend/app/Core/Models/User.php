@@ -132,7 +132,10 @@ class User extends Authenticatable
             return true;
         }
 
-        $roles = $this->jwtClaims['roles'] ?? [];
+        $roles = $this->jwtClaims['roles']
+            ?? $this->jwtClaims['realm_access']['roles']
+            ?? [];
+
         return in_array($role, $roles, true);
     }
 
@@ -160,13 +163,19 @@ class User extends Authenticatable
      */
     public function isNationalScope(): bool
     {
-        return in_array($this->role_code, [
+        foreach ([
             'ROLE_SUPER_ADMIN',
             'ROLE_MINISTRY_EXECUTIVE',
             'ROLE_NEOC_DIRECTOR',
             'ROLE_NATIONAL_AUDITOR',
             'ROLE_DDM_DIRECTOR_GENERAL',
-        ], true);
+        ] as $nationalRole) {
+            if ($this->hasRole($nationalRole)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

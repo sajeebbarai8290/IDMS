@@ -28,9 +28,17 @@ erDiagram
     HOUSEHOLDS ||--|{ HOUSEHOLD_MEMBERS : "has_members"
     HOUSEHOLDS ||--o{ NID_VERIFICATIONS : "verified_via"
     HOUSEHOLD_MEMBERS ||--o{ NID_VERIFICATIONS : "member_verified_via"
+    ADMINISTRATIVE_UNITS ||--o{ NID_VERIFICATIONS : "scoped_to"
+    NID_VERIFICATIONS ||--|{ NID_VERIFICATION_ATTEMPTS : "logs_attempts"
     HOUSEHOLDS ||--o{ DISTRIBUTION_VOUCHERS : "receives_relief"
 
     %% DISASTER & SHELTER MANAGEMENT
+    DISASTER_CATEGORIES ||--o{ DISASTER_EVENTS : "classifies"
+    DISASTER_EVENTS ||--|{ DISASTER_LOCATIONS : "affects_areas"
+    ADMINISTRATIVE_UNITS ||--o{ DISASTER_LOCATIONS : "mapped_to_disaster"
+    DISASTER_EVENTS ||--o| DISASTER_IMPACTS : "summarizes_impact"
+    DISASTER_EVENTS ||--o{ DISASTER_WARNINGS : "issues_warnings"
+    DISASTER_EVENTS ||--o{ DISASTER_TIMELINES : "tracks_history"
     DISASTER_EVENTS ||--o{ SHELTER_OCCUPANCIES : "causes_evacuation_to"
     SHELTERS ||--o{ SHELTER_OCCUPANCIES : "logs_occupancy"
     DISASTER_EVENTS ||--o{ SAR_INCIDENTS : "triggers_sar"
@@ -127,21 +135,114 @@ erDiagram
 
     NID_VERIFICATIONS {
         uuid id PK
+        uuid household_id FK
+        uuid household_member_id FK
+        uuid administrative_unit_id FK
         string nid_hash
+        string nid_masked
+        date date_of_birth
         string verification_status
+        string verification_reference
         string verification_token
-        string response_payload_hash
+        string provider_code
+        boolean is_mock
+        int attempt_count
+        boolean manual_override
+        uuid requested_by_user_id FK
+        uuid reviewed_by_user_id FK
         timestamptz verified_at
+        timestamptz reviewed_at
+    }
+
+    NID_VERIFICATION_ATTEMPTS {
+        uuid id PK
+        uuid nid_verification_id FK
+        int attempt_number
+        string provider_code
+        string status
+        int http_status
+        int response_time_ms
+        string error_code
+        timestamptz attempted_at
+    }
+
+    DISASTER_CATEGORIES {
+        uuid id PK
+        string code UK
+        string name_en
+        string name_bn
+        json subtypes
+        boolean is_active
     }
 
     DISASTER_EVENTS {
         uuid id PK
+        uuid category_id FK
         string disaster_code UK
+        string name_en
+        string name_bn
         string disaster_type
+        string subtype
         string severity_level
         string lifecycle_phase
         timestamptz declaration_date
+        date start_date
+        date end_date
+        decimal epicenter_lat
+        decimal epicenter_lng
+        geometry_point location_geom
         geometry_multipolygon affected_zone_geom
+        boolean is_national
+        boolean is_emergency_declared
+    }
+
+    DISASTER_LOCATIONS {
+        uuid id PK
+        uuid disaster_event_id FK
+        uuid administrative_unit_id FK
+        decimal latitude
+        decimal longitude
+        string severity_override
+    }
+
+    DISASTER_IMPACTS {
+        uuid id PK
+        uuid disaster_event_id FK
+        int affected_population
+        int affected_households
+        int deaths_count
+        int injured_count
+        int missing_count
+        int damaged_houses_fully
+        int damaged_houses_partially
+        int damaged_infrastructure_count
+        decimal agricultural_loss_bdt
+        int livestock_loss_count
+        decimal total_economic_loss_bdt
+    }
+
+    DISASTER_WARNINGS {
+        uuid id PK
+        uuid disaster_event_id FK
+        string warning_level
+        string title_en
+        string title_bn
+        string issuing_authority
+        timestamptz issued_at
+        timestamptz expires_at
+        string status
+    }
+
+    DISASTER_TIMELINES {
+        uuid id PK
+        uuid disaster_event_id FK
+        string event_type
+        string from_phase
+        string to_phase
+        string title_en
+        string attachment_path
+        uuid recorded_by FK
+        timestamptz occurred_at
     }
 
     SHELTERS {
@@ -403,6 +504,8 @@ The table below defines relational integrity constraints, foreign key cascades, 
 | `core.administrative_units` | `core.users` | `administrative_unit_id` | `RESTRICT` | Prohibit deleting jurisdictions with active officers |
 | `core.administrative_units` | `beneficiary.households` | `administrative_unit_id` | `RESTRICT` | Citizen registry records must preserve historical jurisdiction |
 | `beneficiary.households` | `beneficiary.household_members` | `household_id` | `CASCADE` | Deleting a household deletes its dependent members |
+| `core.administrative_units` | `beneficiary.nid_verifications` | `administrative_unit_id` | `SET NULL` | Retains verification audit record while enforcing jurisdictional scoping |
+| `beneficiary.nid_verifications` | `beneficiary.nid_verification_attempts` | `nid_verification_id` | `CASCADE` | Provider attempt logs belong to parent verification transaction |
 | `disaster.disaster_events` | `disaster.shelter_occupancies` | `disaster_event_id` | `RESTRICT` | Historical disaster shelter usage cannot be dropped |
 | `disaster.shelters` | `disaster.shelter_occupancies` | `shelter_id` | `RESTRICT` | Preserves shelter occupancy audit history |
 | `disaster.disaster_events` | `damage.damage_assessments` | `disaster_event_id` | `RESTRICT` | D-Form damage assessments are legally binding government records |
@@ -431,6 +534,7 @@ erDiagram
     HOUSEHOLDS ||--|{ HOUSEHOLD_MEMBERS : "contains"
     HOUSEHOLDS ||--o{ NID_VERIFICATIONS : "authenticates"
     HOUSEHOLD_MEMBERS ||--o{ NID_VERIFICATIONS : "authenticates"
+    NID_VERIFICATIONS ||--|{ NID_VERIFICATION_ATTEMPTS : "records_attempts"
     HOUSEHOLDS ||--o{ DISTRIBUTION_VOUCHERS : "receives"
 
     HOUSEHOLDS {
@@ -455,10 +559,29 @@ erDiagram
 
     NID_VERIFICATIONS {
         uuid id PK
+        uuid administrative_unit_id FK
         string nid_hash
+        string nid_masked
         string verification_status
+        string verification_reference
         string verification_token
+        string provider_code
+        boolean is_mock
+        int attempt_count
+        boolean manual_override
         timestamptz verified_at
+    }
+
+    NID_VERIFICATION_ATTEMPTS {
+        uuid id PK
+        uuid nid_verification_id FK
+        int attempt_number
+        string provider_code
+        string status
+        int http_status
+        int response_time_ms
+        string error_code
+        timestamptz attempted_at
     }
 
     DISTRIBUTION_VOUCHERS {

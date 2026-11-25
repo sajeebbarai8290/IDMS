@@ -210,16 +210,19 @@ Module 01: Beneficiary Management (beneficiary.*)
   └── beneficiary.dedup.override           # Override AI biometric/demographic duplicate flag
 
 Module 02: National ID Verification (nid.*)
-  ├── nid.verification.initiate            # Submit NID & DoB for verification against Porichoy
-  ├── nid.verification.view_status         # View verification pass/fail status
+  ├── nid.verification.initiate            # Submit NID & DoB for verification against authorized gateway
+  ├── nid.verification.view_status         # View verification status, dashboard & attempt history
+  ├── nid.verification.manual_review       # Perform manual review & override (with 4-eye SoD)
   └── nid.adapter.configure                # Technical configuration of NID gateway adapter
 
 Module 03: Disaster Information Management (disaster.*)
-  ├── disaster.event.view
-  ├── disaster.event.create                # Declare new disaster incident
-  ├── disaster.event.update                # Update phase (Warning, Active, Recovery)
-  ├── disaster.warning.broadcast           # Broadcast meteorological bulletins & SMS warnings
-  ├── disaster.hazard_map.manage           # Upload/update GIS hazard boundary layers
+  ├── disaster.event.view                  # View scoped disaster events, impacts, timelines & GIS map
+  ├── disaster.event.create                # Report/register new disaster incident within jurisdiction
+  ├── disaster.event.update                # Update details, impact metrics, locations & timeline updates
+  ├── disaster.event.verify                # Transition lifecycle to VERIFIED / ACTIVE / CLOSED
+  ├── disaster.category.manage             # Manage configurable disaster categories & subtypes
+  ├── disaster.warning.broadcast           # Issue & dispatch early warning bulletins
+  ├── disaster.hazard_map.manage           # Update GIS epicenter & affected area boundaries
   └── disaster.emergency.declare           # Declare National/District State of Emergency
 
 Module 04: Relief Distribution Management (relief.*)
@@ -361,13 +364,16 @@ The following matrix maps every system role across all 17 functional modules.
 | **M02: NID VERIFICATION** | | | | | | | | | | | | | | | | | | | | | |
 | `nid.verification.initiate` | -- | -- | -- | -- | -- | -- | -- | -- | -- | [S] | -- | [S] | -- | [S] | [S] | -- | -- | -- | -- | -- | -- |
 | `nid.verification.view_status` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- |
+| `nid.verification.manual_review` | ✔ | -- | -- | -- | -- | -- | -- | -- | [S][D] | [S][D] | [S][D] | [S][D] | -- | -- | -- | -- | -- | -- | -- | -- | -- |
 | `nid.adapter.configure` | ✔ | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
 | **M03: DISASTER INFO** | | | | | | | | | | | | | | | | | | | | | |
-| `disaster.event.view` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ |
-| `disaster.event.create` | ✔ | ✔ | ✔ | -- | ✔ | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
-| `disaster.event.update` | ✔ | ✔ | ✔ | -- | ✔ | ✔ | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
-| `disaster.warning.broadcast` | -- | ✔ | ✔ | -- | ✔ | -- | -- | [S] | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
-| `disaster.hazard_map.manage` | ✔ | -- | ✔ | -- | ✔ | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `disaster.event.view` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [A] |
+| `disaster.event.create` | ✔ | ✔ | ✔ | -- | ✔ | -- | -- | -- | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `disaster.event.update` | ✔ | ✔ | ✔ | -- | ✔ | ✔ | -- | -- | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `disaster.event.verify` | ✔ | ✔ | ✔ | -- | ✔ | -- | -- | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `disaster.category.manage` | ✔ | ✔ | ✔ | -- | ✔ | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `disaster.warning.broadcast` | ✔ | ✔ | ✔ | -- | ✔ | -- | -- | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `disaster.hazard_map.manage` | ✔ | ✔ | ✔ | -- | ✔ | -- | -- | -- | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- |
 | `disaster.emergency.declare` | -- | ✔ | -- | -- | -- | -- | -- | -- | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
 | **M04: RELIEF DISTRIBUTION** | | | | | | | | | | | | | | | | | | | | | |
 | `relief.requisition.view` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | -- | [A] |

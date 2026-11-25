@@ -2,6 +2,7 @@
 
 namespace App\Core\Services;
 
+use App\Core\Models\AdministrativeUnit;
 use App\Core\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -28,9 +29,16 @@ class UserSynchronizationService
         $email = $claims['email'] ?? ($claims['preferred_username'] . '@modmr.gov.bd');
         $fullName = $claims['name'] ?? $claims['preferred_username'] ?? 'Government Officer';
 
-        // Extract roles
+        // Extract roles (preferring explicit IDMS ROLE_* over Keycloak default realm roles)
         $roles = $claims['roles'] ?? $claims['realm_access']['roles'] ?? [];
-        $primaryRole = $roles[0] ?? 'ROLE_FIELD_ENUMERATOR';
+        $idmsRole = null;
+        foreach ($roles as $r) {
+            if (is_string($r) && str_starts_with($r, 'ROLE_')) {
+                $idmsRole = $r;
+                break;
+            }
+        }
+        $primaryRole = $idmsRole ?? ($roles[0] ?? 'ROLE_FIELD_ENUMERATOR');
 
         // Extract administrative attributes
         $tierLevel = $claims['tier_level'] ?? $claims['administrative_profile']['tier_level'] ?? 'NATIONAL';
@@ -59,9 +67,13 @@ class UserSynchronizationService
         $user->is_active = true;
         $user->last_login_at = now();
 
-        if ($scopeId) {
-            $user->administrative_unit_id = $scopeId;
+        $resolvedScopeId = null;
+        if ($scopeId && AdministrativeUnit::whereKey($scopeId)->exists()) {
+            $resolvedScopeId = $scopeId;
+        } elseif ($ancestryPath) {
+            $resolvedScopeId = AdministrativeUnit::where('ancestry_path', $ancestryPath)->value('id');
         }
+        $user->administrative_unit_id = $resolvedScopeId;
 
         $user->save();
 
