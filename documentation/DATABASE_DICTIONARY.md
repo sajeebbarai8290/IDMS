@@ -396,20 +396,42 @@ Granular sectoral breakdown of losses (Housing, Agriculture, Livestock, Fisherie
 
 ---
 
-## 5. Schema: `logistics` (Warehouses, Stock & Requisitions)
+## 5. Schema: `logistics` (Warehouses, Stock, Requisitions & Allocations)
+
+### 5.0 `logistics.relief_categories`
+Configurable relief assistance categories (`FOOD`, `DRINKING_WATER`, `CASH_ASSISTANCE`, `CLOTHING`, `SHELTER_MATERIALS`, `MEDICINE_SUPPLIES`, plus custom categories).
+
+| Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
+| :--- | :--- | :---: | :--- | :--- | :--- |
+| `id` | `uuid` | NO | PK | B-Tree (PK) | Category ID |
+| `code` | `varchar(50)` | NO | UNIQUE | B-Tree (UQ) | Uppercase category code |
+| `name_en` | `varchar(120)` | NO | | | English name |
+| `name_bn` | `varchar(150)` | NO | | | Bangla name |
+| `default_unit` | `varchar(30)` | NO | DEFAULT 'UNIT' | | Default unit of measure |
+| `duplicate_window_days` | `int` | NO | 14 | | Default cooldown window (days) for duplicate assistance checks |
+| `is_system` | `boolean` | NO | true | | Built-in category flag |
+| `is_active` | `boolean` | NO | true | B-Tree | Active flag |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Creation timestamp |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Update timestamp |
+
+---
 
 ### 5.1 `logistics.commodities`
-Standardized catalog of disaster relief goods.
+Standardized catalog of disaster relief goods linked to relief categories.
 
 | Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
 | :--- | :--- | :---: | :--- | :--- | :--- |
 | `id` | `uuid` | NO | PK | B-Tree (PK) | Commodity ID |
-| `commodity_code`| `varchar(30)` | NO | UNIQUE | B-Tree (UQ) | e.g. `COM-RICE-GR`, `COM-CASH-BDT` |
-| `name_en` | `varchar(150)`| NO | | B-Tree | English item name |
-| `name_bn` | `varchar(200)`| NO | | | Bangla item name |
-| `category` | `varchar(50)` | NO | CHECK in ('FOOD_GRAIN', 'CASH', 'DRY_FOOD', 'NON_FOOD_ITEM', 'MEDICAL', 'SHELTER_KIT') | B-Tree | Category |
-| `unit_of_measure`| `varchar(20)`| NO | e.g. `METRIC_TON`, `PACKET`, `BDT`, `PIECE` | | Measurement unit |
+| `relief_category_id` | `uuid` | YES | FK &rarr; `logistics.relief_categories(id)` ON DELETE SET NULL | B-Tree | Parent relief category |
+| `commodity_code` | `varchar(30)` | NO | UNIQUE | B-Tree (UQ) | e.g. `COM-RICE-GR`, `COM-CASH-BDT` |
+| `name_en` | `varchar(150)` | NO | | B-Tree | English item name |
+| `name_bn` | `varchar(200)` | NO | | | Bangla item name |
+| `category` | `varchar(50)` | NO | | B-Tree | Category code |
+| `unit_of_measure` | `varchar(20)` | NO | e.g. `METRIC_TON`, `KG`, `LITER`, `PACKET`, `BDT`, `PIECE` | | Measurement unit |
 | `is_perishable` | `boolean` | NO | false | | Perishability indicator |
+| `is_active` | `boolean` | NO | true | B-Tree | Active flag |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Creation timestamp |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Update timestamp |
 
 ---
 
@@ -421,10 +443,14 @@ Storage depots across the national hierarchy.
 | `id` | `uuid` | NO | PK | B-Tree (PK) | Warehouse ID |
 | `administrative_unit_id`| `uuid`| NO | FK &rarr; `core.administrative_units(id)` ON DELETE RESTRICT | B-Tree | Jurisdiction location |
 | `warehouse_code`| `varchar(30)` | NO | UNIQUE | B-Tree (UQ) | Godown asset code |
-| `warehouse_name`| `varchar(150)`| NO | | B-Tree | Facility name |
+| `warehouse_name`| `varchar(150)`| NO | | B-Tree | Facility name (EN) |
+| `warehouse_name_bn`| `varchar(200)`| YES | | | Facility name (BN) |
 | `tier` | `varchar(30)` | NO | CHECK in ('CENTRAL_CSD', 'REGIONAL_LSD', 'DISTRICT_GODOWN', 'UPAZILA_STORE') | B-Tree | Godown echelon |
 | `capacity_mt` | `decimal(10,2)`| NO | | | Storage capacity in Metric Tons |
-| `location_geom` | `geometry(Point, 4326)`| NO | | GIST | Warehouse GPS coordinates |
+| `latitude` | `decimal(10,7)` | YES | | | GPS latitude |
+| `longitude` | `decimal(10,7)` | YES | | | GPS longitude |
+| `location_geom` | `geometry(Point, 4326)`| YES | Populated on PostgreSQL/PostGIS | GIST | Warehouse GPS coordinates |
+| `is_active` | `boolean` | NO | true | B-Tree | Operational flag |
 | `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
 | `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
 | `deleted_at` | `timestamptz` | YES | NULL | | Soft delete timestamp |
@@ -432,7 +458,7 @@ Storage depots across the national hierarchy.
 ---
 
 ### 5.3 `logistics.warehouse_inventories`
-Stock on hand per warehouse, commodity, and batch.
+Stock on hand per warehouse, commodity, and batch (FIFO/FEFO tracked).
 
 | Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
 | :--- | :--- | :---: | :--- | :--- | :--- |
@@ -441,9 +467,14 @@ Stock on hand per warehouse, commodity, and batch.
 | `commodity_id` | `uuid` | NO | FK &rarr; `logistics.commodities(id)` ON DELETE RESTRICT | B-Tree | Commodity stocked |
 | `batch_number` | `varchar(50)` | NO | | B-Tree | Lot / Batch serial |
 | `current_quantity`| `decimal(12,2)`| NO | CHECK (current_quantity >= 0) | B-Tree | Available stock balance |
-| `expiry_date` | `date` | YES | | B-Tree | Expiration date for food/medicines |
+| `reserved_quantity`| `decimal(12,2)`| NO | 0, CHECK (reserved_quantity >= 0) | | Quantity reserved for approved allocations |
+| `unit_cost_bdt` | `decimal(12,2)` | YES | | | Unit valuation in BDT |
+| `received_date` | `date` | YES | | B-Tree | Batch receipt date |
+| `expiry_date` | `date` | YES | | B-Tree | Expiration date for food/medicines (FEFO ordering) |
 | `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Lot creation timestamp |
 | `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Lot modification timestamp |
+
+*Unique Constraint:* `UNIQUE (warehouse_id, commodity_id, batch_number)`
 
 ---
 
@@ -454,99 +485,187 @@ Double-entry inventory audit ledger.
 | :--- | :--- | :---: | :--- | :--- | :--- |
 | `id` | `uuid` | NO | PK | B-Tree (PK) | Transaction ID |
 | `warehouse_inventory_id`| `uuid`| NO | FK &rarr; `logistics.warehouse_inventories(id)` ON DELETE RESTRICT | B-Tree | Affected inventory lot |
-| `transaction_type`| `varchar(30)`| NO | CHECK in ('STOCK_IN_GRN', 'INTER_WAREHOUSE_TRANSFER', 'DISTRIBUTION_ISSUE', 'WRITE_OFF_DAMAGED') | B-Tree | Ledger movement type |
+| `transaction_type`| `varchar(35)`| NO | CHECK in ('STOCK_IN_GRN', 'INTER_WAREHOUSE_TRANSFER', 'DISTRIBUTION_ISSUE', 'ALLOCATION_RETURN', 'WRITE_OFF_DAMAGED') | B-Tree | Ledger movement type |
 | `quantity` | `decimal(12,2)`| NO | CHECK (quantity != 0) | | Quantity moved (+ for in, - for out) |
 | `balance_after` | `decimal(12,2)`| NO | CHECK (balance_after >= 0) | | Running balance post-transaction |
-| `reference_voucher_no`| `varchar(50)`| NO | | B-Tree | Source invoice, transfer order, or issue voucher |
-| `authorized_by` | `uuid` | NO | FK &rarr; `core.users(id)` | | Authorizing officer |
+| `reference_voucher_no`| `varchar(60)`| NO | | B-Tree | Source invoice, transfer order, or distribution voucher |
+| `relief_allocation_item_id`| `uuid` | YES | FK &rarr; `logistics.relief_allocation_items(id)` ON DELETE SET NULL | B-Tree | Related allocation item (if applicable) |
+| `distribution_voucher_id`| `uuid` | YES | FK &rarr; `distribution.distribution_vouchers(id)` ON DELETE SET NULL | B-Tree | Related distribution voucher (if applicable) |
+| `notes` | `text` | YES | | | Movement remarks |
+| `authorized_by` | `uuid` | NO | FK &rarr; `core.users(id)` | B-Tree | Authorizing officer |
 | `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | B-Tree | Ledger record timestamp (Immutable) |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Record timestamp |
 
 ---
 
 ### 5.5 `logistics.relief_requisitions`
-Bottom-up relief requests from field/unions.
+Bottom-up relief requests from field/unions/upazilas/districts.
 
 | Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
 | :--- | :--- | :---: | :--- | :--- | :--- |
 | `id` | `uuid` | NO | PK | B-Tree (PK) | Requisition ID |
 | `disaster_event_id`| `uuid` | NO | FK &rarr; `disaster.disaster_events(id)` ON DELETE RESTRICT | B-Tree | Associated disaster |
-| `administrative_unit_id`| `uuid`| NO | FK &rarr; `core.administrative_units(id)` ON DELETE RESTRICT | B-Tree | Requisitioning union/upazila |
-| `requisition_no`| `varchar(50)` | NO | UNIQUE | B-Tree (UQ) | e.g. `REQ-2024-DAC-001` |
-| `status` | `varchar(30)` | NO | CHECK in ('DRAFT', 'SUBMITTED', 'VERIFIED_PIO', 'APPROVED_DRRO', 'REJECTED') | B-Tree | Approval status |
-| `submitted_by` | `uuid` | NO | FK &rarr; `core.users(id)` | | Requisitioning officer |
-| `submitted_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | B-Tree | Submission timestamp |
+| `administrative_unit_id`| `uuid`| NO | FK &rarr; `core.administrative_units(id)` ON DELETE RESTRICT | B-Tree | Requisitioning jurisdiction |
+| `requisition_no`| `varchar(50)` | NO | UNIQUE | B-Tree (UQ) | e.g. `REQ-2026-DAC-001` |
+| `requesting_organization` | `varchar(150)` | YES | | | Requesting office / committee |
+| `estimated_beneficiaries` | `integer` | NO | 0 | | Estimated affected households/people |
+| `priority` | `varchar(20)` | NO | 'MEDIUM', CHECK in ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL') | B-Tree | Operational urgency |
+| `request_date` | `date` | NO | | B-Tree | Official request date |
+| `needed_by_date` | `date` | YES | | | Target delivery date |
+| `status` | `varchar(30)` | NO | 'DRAFT', CHECK in ('DRAFT', 'SUBMITTED', 'UNDER_REVIEW', 'APPROVED', 'PARTIALLY_APPROVED', 'REJECTED', 'COMPLETED') | B-Tree | 7-state approval lifecycle |
+| `justification` | `text` | YES | | | Needs justification summary |
+| `review_notes` | `text` | YES | | | Reviewer / approver remarks or rejection reason |
+| `supporting_doc_path` | `varchar(255)` | YES | | | Private disk path for supporting letter/assessment |
+| `supporting_doc_name` | `varchar(255)` | YES | | | Original filename |
+| `supporting_doc_mime` | `varchar(100)` | YES | | | Validated MIME type |
+| `supporting_doc_checksum` | `varchar(64)` | YES | | | SHA-256 checksum |
+| `submitted_by` | `uuid` | YES | FK &rarr; `core.users(id)` | B-Tree | Submitting officer |
+| `submitted_at` | `timestamptz` | YES | | B-Tree | Submission timestamp |
+| `reviewed_by` | `uuid` | YES | FK &rarr; `core.users(id)` | | Reviewing officer |
+| `reviewed_at` | `timestamptz` | YES | | | Review timestamp |
+| `approved_by` | `uuid` | YES | FK &rarr; `core.users(id)` | | Approving officer (must differ from creator/submitter) |
+| `approved_at` | `timestamptz` | YES | | | Approval timestamp |
+| `created_by` | `uuid` | NO | FK &rarr; `core.users(id)` | B-Tree | Record creator (4-eye SoD checked) |
+| `updated_by` | `uuid` | YES | FK &rarr; `core.users(id)` | | Last modifier |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
+| `deleted_at` | `timestamptz` | YES | NULL | | Soft delete timestamp |
 
 ---
 
 ### 5.6 `logistics.relief_requisition_items`
-Line items requested within a requisition.
+Line items requested and approved within a requisition.
 
 | Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
 | :--- | :--- | :---: | :--- | :--- | :--- |
 | `id` | `uuid` | NO | PK | B-Tree (PK) | Item ID |
 | `relief_requisition_id`| `uuid`| NO | FK &rarr; `logistics.relief_requisitions(id)` ON DELETE CASCADE | B-Tree | Parent requisition |
 | `commodity_id` | `uuid` | NO | FK &rarr; `logistics.commodities(id)` ON DELETE RESTRICT | B-Tree | Commodity requested |
-| `quantity_requested`| `decimal(10,2)`| NO | CHECK (quantity_requested > 0) | | Quantity requested |
+| `quantity_requested`| `decimal(12,2)`| NO | CHECK (quantity_requested > 0) | | Quantity requested |
+| `quantity_approved`| `decimal(12,2)`| NO | 0, CHECK (quantity_approved >= 0) | | Quantity sanctioned on approval/partial approval |
+| `notes` | `text` | YES | | | Line item notes |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
 
 ---
 
 ### 5.7 `logistics.relief_allocations`
-Official government sanction/allocation orders.
+Official government sanction/allocation orders tied to disaster, warehouse, and distribution center.
 
 | Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
 | :--- | :--- | :---: | :--- | :--- | :--- |
 | `id` | `uuid` | NO | PK | B-Tree (PK) | Allocation order ID |
-| `relief_requisition_id`| `uuid`| YES | FK &rarr; `logistics.relief_requisitions(id)` ON DELETE RESTRICT | B-Tree | Source requisition (if applicable) |
+| `relief_requisition_id`| `uuid`| YES | FK &rarr; `logistics.relief_requisitions(id)` ON DELETE RESTRICT | B-Tree | Source requisition (optional for top-down emergency dispatch) |
+| `disaster_event_id`| `uuid` | NO | FK &rarr; `disaster.disaster_events(id)` ON DELETE RESTRICT | B-Tree | Disaster event |
+| `administrative_unit_id`| `uuid`| NO | FK &rarr; `core.administrative_units(id)` ON DELETE RESTRICT | B-Tree | Target distribution jurisdiction |
+| `distribution_point_id`| `uuid`| YES | FK &rarr; `distribution.distribution_points(id)` ON DELETE SET NULL | B-Tree | Assigned relief distribution center |
+| `warehouse_id` | `uuid` | NO | FK &rarr; `logistics.warehouses(id)` ON DELETE RESTRICT | B-Tree | Source warehouse issuing stock |
 | `allocation_order_no`| `varchar(50)`| NO | UNIQUE | B-Tree (UQ) | Government order memo number |
-| `status` | `varchar(30)` | NO | CHECK in ('DRAFT', 'SANCTIONED', 'DISPATCHED', 'COMPLETED') | B-Tree | Allocation lifecycle state |
-| `approved_by` | `uuid` | NO | FK &rarr; `core.users(id)` | | Sanctioning authority |
-| `approved_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | B-Tree | Sanction timestamp |
+| `status` | `varchar(30)` | NO | 'DRAFT', CHECK in ('DRAFT', 'SANCTIONED', 'DISPATCHED', 'PARTIALLY_DISTRIBUTED', 'COMPLETED', 'CANCELLED') | B-Tree | Allocation lifecycle state |
+| `scheduled_start_at` | `timestamptz` | YES | | B-Tree | Scheduled distribution window start |
+| `scheduled_end_at` | `timestamptz` | YES | | | Scheduled distribution window end |
+| `duplicate_window_days` | `integer` | NO | 30 | | Cooldown window in days for duplicate-assistance checks |
+| `remarks` | `text` | YES | | | Allocation remarks |
+| `created_by` | `uuid` | NO | FK &rarr; `core.users(id)` | B-Tree | Creator (cannot sanction own allocation) |
+| `updated_by` | `uuid` | YES | FK &rarr; `core.users(id)` | | Last modifier |
+| `approved_by` | `uuid` | YES | FK &rarr; `core.users(id)` | B-Tree | Sanctioning authority (must differ from creator) |
+| `approved_at` | `timestamptz` | YES | | B-Tree | Sanction timestamp |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
+| `deleted_at` | `timestamptz` | YES | NULL | | Soft delete timestamp |
 
 ---
 
 ### 5.8 `logistics.relief_allocation_items`
-Approved commodities per allocation order.
+Allocated, distributed, and cancelled commodity quantities per allocation order.
 
 | Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
 | :--- | :--- | :---: | :--- | :--- | :--- |
 | `id` | `uuid` | NO | PK | B-Tree (PK) | Allocation item ID |
 | `relief_allocation_id`| `uuid`| NO | FK &rarr; `logistics.relief_allocations(id)` ON DELETE CASCADE | B-Tree | Parent allocation order |
 | `commodity_id` | `uuid` | NO | FK &rarr; `logistics.commodities(id)` ON DELETE RESTRICT | B-Tree | Allocated commodity |
-| `quantity_allocated`| `decimal(10,2)`| NO | CHECK (quantity_allocated > 0) | | Quantity sanctioned |
+| `quantity_allocated`| `decimal(12,2)`| NO | CHECK (quantity_allocated > 0) | | Quantity sanctioned |
+| `quantity_distributed`| `decimal(12,2)`| NO | 0, CHECK (quantity_distributed >= 0) | | Cumulative quantity distributed |
+| `quantity_cancelled`| `decimal(12,2)`| NO | 0, CHECK (quantity_cancelled >= 0) | | Cancelled / returned quantity |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
+
+---
+
+### 5.9 `logistics.relief_allocation_beneficiaries`
+Pre-selected eligible beneficiary households assigned to an allocation round.
+
+| Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
+| :--- | :--- | :---: | :--- | :--- | :--- |
+| `id` | `uuid` | NO | PK | B-Tree (PK) | Assignment ID |
+| `relief_allocation_id`| `uuid`| NO | FK &rarr; `logistics.relief_allocations(id)` ON DELETE CASCADE | B-Tree | Parent allocation order |
+| `household_id` | `uuid` | NO | FK &rarr; `beneficiary.households(id)` ON DELETE RESTRICT | B-Tree | Assigned eligible household |
+| `selection_status` | `varchar(20)` | NO | 'SELECTED', CHECK in ('SELECTED', 'DISTRIBUTED', 'ABSENT', 'REMOVED') | B-Tree | Roster status |
+| `assigned_by` | `uuid` | YES | FK &rarr; `core.users(id)` | | Assigning officer |
+| `notes` | `text` | YES | | | Roster remarks |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
+
+*Unique Constraint:* `UNIQUE (relief_allocation_id, household_id)`
 
 ---
 
 ## 6. Schema: `distribution` (Beneficiary Relief Hand-off)
 
 ### 6.1 `distribution.distribution_points`
-Physical sites where aid distributions are staged.
+Physical sites/centers where relief distributions are staged.
 
 | Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
 | :--- | :--- | :---: | :--- | :--- | :--- |
 | `id` | `uuid` | NO | PK | B-Tree (PK) | Point ID |
-| `administrative_unit_id`| `uuid`| NO | FK &rarr; `core.administrative_units(id)` ON DELETE RESTRICT | B-Tree | Union location |
-| `point_name` | `varchar(150)`| NO | | | Site name (e.g. Dacope High School Grounds) |
-| `location_geom` | `geometry(Point, 4326)`| NO | | GIST | Site GPS coordinates |
+| `administrative_unit_id`| `uuid`| NO | FK &rarr; `core.administrative_units(id)` ON DELETE RESTRICT | B-Tree | Union/Upazila location |
+| `point_code` | `varchar(30)` | NO | UNIQUE | B-Tree (UQ) | Center code |
+| `point_name` | `varchar(150)`| NO | | B-Tree | Site name (EN) |
+| `point_name_bn` | `varchar(200)`| YES | | | Site name (BN) |
+| `address` | `text` | YES | | | Landmark / site address |
+| `latitude` | `decimal(10,7)` | YES | | | Site GPS latitude |
+| `longitude` | `decimal(10,7)` | YES | | | Site GPS longitude |
+| `location_geom` | `geometry(Point, 4326)`| YES | Populated on PostgreSQL/PostGIS | GIST | Site GPS coordinates |
+| `is_active` | `boolean` | NO | true | B-Tree | Active flag |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
+| `deleted_at` | `timestamptz` | YES | NULL | | Soft delete timestamp |
 
 ---
 
 ### 6.2 `distribution.distribution_vouchers`
-Official hand-off record to beneficiary household.
+Official hand-off record to beneficiary household with atomic stock deduction, GPS/evidence capture, and idempotency protection.
 
 | Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
 | :--- | :--- | :---: | :--- | :--- | :--- |
-| `id` | `uuid` | NO | PK | B-Tree (PK) | Voucher ID (UUIDv7) |
+| `id` | `uuid` | NO | PK | B-Tree (PK) | Voucher ID (UUID) |
 | `relief_allocation_item_id`| `uuid`| NO | FK &rarr; `logistics.relief_allocation_items(id)` ON DELETE RESTRICT | B-Tree | Source allocation item |
 | `household_id` | `uuid` | NO | FK &rarr; `beneficiary.households(id)` ON DELETE RESTRICT | B-Tree | Recipient household |
 | `distribution_point_id`| `uuid`| NO | FK &rarr; `distribution.distribution_points(id)` ON DELETE RESTRICT | B-Tree | Handover center |
-| `quantity_disbursed`| `decimal(10,2)`| NO | CHECK (quantity_disbursed > 0) | | Exact quantity received |
+| `voucher_no` | `varchar(60)` | NO | UNIQUE | B-Tree (UQ) | Official voucher serial number |
+| `idempotency_key` | `varchar(100)` | NO | UNIQUE | B-Tree (UQ) | Client/request idempotency token blocking duplicate submissions |
+| `quantity_disbursed`| `decimal(12,2)`| NO | CHECK (quantity_disbursed > 0) | | Exact quantity received |
 | `verification_method`| `varchar(30)`| NO | CHECK in ('QR_SCAN', 'SMS_OTP', 'SIGNATURE_MANUAL', 'NID_BIOMETRIC') | B-Tree | Proof of distribution method |
-| `verification_proof` | `varchar(255)`| YES | | | OTP code hash or token reference |
+| `verification_proof` | `varchar(255)`| YES | | | OTP code hash, QR token, or acknowledgment reference |
+| `acknowledgment_signature` | `text` | YES | | | Digital signature SVG/data or receiver thumbprint/ack text |
+| `photo_evidence_path` | `varchar(255)` | YES | | | Private disk path for handoff photo evidence |
+| `photo_evidence_mime` | `varchar(100)` | YES | | | Validated image MIME type |
+| `photo_evidence_checksum` | `varchar(64)` | YES | | | SHA-256 checksum |
+| `distribution_lat` | `decimal(10,7)` | YES | | | Captured distribution GPS latitude |
+| `distribution_lng` | `decimal(10,7)` | YES | | | Captured distribution GPS longitude |
+| `duplicate_override` | `boolean` | NO | false | B-Tree | True if authorized duplicate-assistance exception used |
+| `duplicate_override_reason` | `text` | YES | | | Mandatory documented reason for duplicate override |
 | `distributed_by`| `uuid` | NO | FK &rarr; `core.users(id)` | B-Tree | Distributing officer / volunteer |
 | `distributed_at`| `timestamptz` | NO | CURRENT_TIMESTAMP | B-Tree | Hand-off timestamp |
-| `is_voided` | `boolean` | NO | false | B-Tree (UQ) | Void flag for erroneous vouchers |
-
-*Unique Idempotency Constraint:* `UNIQUE (relief_allocation_item_id, household_id) WHERE is_voided = false` (prevents double distributions).
+| `verified_by_tag_officer`| `uuid` | YES | FK &rarr; `core.users(id)` | B-Tree | Verifying witness/tag officer (cannot equal `distributed_by`) |
+| `verified_at` | `timestamptz` | YES | | | Witness verification timestamp |
+| `remarks` | `text` | YES | | | Field remarks |
+| `is_voided` | `boolean` | NO | false | B-Tree | Void flag for erroneous vouchers |
+| `void_reason` | `text` | YES | | | Void justification |
+| `voided_by` | `uuid` | YES | FK &rarr; `core.users(id)` | | Voiding authority |
+| `voided_at` | `timestamptz` | YES | | | Void timestamp |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
 
 ---
 

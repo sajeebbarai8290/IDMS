@@ -268,3 +268,43 @@ interface NidVerificationServiceInterface
 - `POST /api/v1/disaster/events/{event}/timelines` — Record chronological update with optional private file attachment (MIME-validated, SHA-256 hashed, UUID-obfuscated path).
 - `GET /api/v1/disaster/events/{event}/timelines/{timeline}/attachment` — Authenticated, scope-enforced private attachment download.
 
+---
+
+## 7. Module 04: Relief Distribution Management Implemented Endpoints (`/api/v1/relief/*`)
+
+### 7.1 Dashboard, Reference Lookups & Relief Categories
+- `GET /api/v1/relief/dashboard` — Scoped analytics: total requests, pending approvals, approved allocations, allocated vs distributed totals & progress percentage, beneficiaries served, vouchers issued, requisition status breakdown, area-wise statistics, and warehouse stock summary.
+- `GET /api/v1/relief/lookups` — Scoped active commodities, supplying warehouses (with physical, reserved, and unreserved stock balances), active distribution centers, and disaster events.
+- `GET /api/v1/relief/eligible-households` — Scoped lookup of verified/approved beneficiary households filtered by target jurisdiction and search query (`household_code`, `hoh_name_en`, `hoh_name_bn`).
+- `GET /api/v1/relief/categories` — List configured relief categories (`FOOD`, `DRINKING_WATER`, `CASH_ASSISTANCE`, `CLOTHING`, `SHELTER_MATERIALS`, `MEDICINE_SUPPLIES`, plus custom categories).
+- `POST /api/v1/relief/categories` & `PUT /api/v1/relief/categories/{category}` — Create/update relief categories (`relief.category.manage`).
+
+### 7.2 Relief Requisitions (7-State Approval Workflow & 4-Eye SoD)
+- `GET /api/v1/relief/requisitions` — Scoped, paginated, searchable, filterable list (`status`, `priority`, `disaster_event_id`).
+- `POST /api/v1/relief/requisitions` — Create requisition (`DRAFT` or immediate `SUBMITTED`) with multi-line commodity items and optional private supporting document (`pdf`, `jpg`, `png`). Blocked for `ROLE_SUPER_ADMIN` under operational blackout.
+- `GET /api/v1/relief/requisitions/{requisition}` — Full requisition detail with line items and audit metadata.
+- `PUT /api/v1/relief/requisitions/{requisition}` & `DELETE /api/v1/relief/requisitions/{requisition}` — Modify `DRAFT`/`SUBMITTED` or soft-delete `DRAFT` requisitions.
+- `POST /api/v1/relief/requisitions/{requisition}/submit` — Transition `DRAFT` &rarr; `SUBMITTED`.
+- `POST /api/v1/relief/requisitions/{requisition}/review` — Transition `SUBMITTED` &rarr; `UNDER_REVIEW` (enforces 4-eye SoD).
+- `POST /api/v1/relief/requisitions/{requisition}/approve` — Transition to `APPROVED` or `PARTIALLY_APPROVED` with per-item `quantity_approved` (enforces 4-eye SoD & Super Admin blackout).
+- `POST /api/v1/relief/requisitions/{requisition}/reject` — Transition to `REJECTED` with mandatory `review_notes` (enforces 4-eye SoD).
+- `GET /api/v1/relief/requisitions/{requisition}/document` — Authenticated private supporting document download.
+
+### 7.3 Relief Allocations & Warehouse Stock Reservation
+- `GET /api/v1/relief/allocations` — Scoped, paginated allocation orders (`status`, `disaster_event_id`, search).
+- `POST /api/v1/relief/allocations` — Create draft allocation order linked to warehouse, distribution center, disaster, schedules, duplicate cooldown window (`duplicate_window_days`), line items, and optional eligible household roster.
+- `GET /api/v1/relief/allocations/{allocation}` — Full allocation order detail with distributed/remaining item balances and beneficiary roster.
+- `POST /api/v1/relief/allocations/{allocation}/beneficiaries` — Assign/update verified eligible beneficiary households on the allocation roster.
+- `POST /api/v1/relief/allocations/{allocation}/approve` — Sanction allocation (`DRAFT` &rarr; `SANCTIONED`), reserve unreserved warehouse stock atomically, and enforce 4-eye SoD (`created_by !== actor`).
+- `POST /api/v1/relief/allocations/{allocation}/dispatch` — Mark allocation `DISPATCHED` to its distribution center.
+- `POST /api/v1/relief/allocations/{allocation}/cancel` — Cancel remaining undelivered quantities and release reserved warehouse stock.
+
+### 7.4 Physical Distribution, Atomic Inventory Deduction & Muster Roll
+- `GET /api/v1/relief/distributions` — Scoped distribution voucher ledger (`relief_allocation_id`, `disaster_event_id`, `is_voided`, `duplicate_override_only`, search).
+- `GET /api/v1/relief/distributions/check-duplicate` — Pre-flight check for existing distribution under the same allocation item or disaster + category cooldown window.
+- `POST /api/v1/relief/distributions` — Record physical beneficiary handover with unique `idempotency_key` replay guard, FEFO atomic stock deduction (`InventoryLedgerService::deductStock()`), optional duplicate-assistance exception override (`relief.distribution.override_duplicate` + mandatory `exception_reason`), acknowledgment signature/proof, GPS coordinates, private handoff photo upload, and `disaster_eligibilities` synchronization.
+- `POST /api/v1/relief/distributions/{voucher}/verify` — Tag Officer witness sign-off enforcing 4-eye SoD (`verified_by_tag_officer !== distributed_by`).
+- `POST /api/v1/relief/distributions/{voucher}/void` — Void erroneous voucher and atomically restore physical + reserved stock via `ALLOCATION_RETURN` ledger entries.
+- `GET /api/v1/relief/distributions/{voucher}/photo` — Authenticated private handoff photo download.
+- `GET /api/v1/relief/distributions/export-muster` — Download UTF-8 CSV official relief muster roll with formula-injection sanitization.
+

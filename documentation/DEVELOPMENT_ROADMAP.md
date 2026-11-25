@@ -94,10 +94,10 @@ In accordance with Section 11 of `AGENTS.md` (*"Never generate the entire applic
 - **GIS Core Engine:** Leaflet React integration (`leaflet` + `shpjs`) implemented with spatial filters (`bbox`, radius, administrative unit, category, severity, lifecycle, date range), Shapefile upload, optional GeoServer WMS toggle, and PostGIS spatial queries (`ST_Intersects`, `ST_DWithin`). GeoServer container publishing remains ready for deployment configuration.
 - **Module 05 (Disaster Response & Shelter Management):** Cyclone/flood shelter asset catalog, capacity and real-time occupancy logging, emergency SOS incident intake.
 
-### Phase 4: Logistics, Warehousing & Relief Chain
-- **Module 08 (Warehouse & Inventory Management):** Multi-echelon godown registry (CSD, LSD, District, Upazila), batch/expiry tracking, FIFO stock ledger transactions.
+### Phase 4: Logistics, Warehousing & Relief Chain (MODULE 04 COMPLETED)
+- [x] **Module 04 (Relief Distribution Management):** Configurable relief categories (`FOOD`, `DRINKING_WATER`, `CASH_ASSISTANCE`, `CLOTHING`, `SHELTER_MATERIALS`, `MEDICINE_SUPPLIES`), core `logistics.*` warehouse & FEFO/FIFO batch ledger tables (`InventoryLedgerService`), 7-state relief requisition workflow (`DRAFT` &rarr; `COMPLETED`) with private document attachments, relief allocation orders with stock reservation & eligible beneficiary roster, physical distribution vouchers with `idempotency_key` replay protection, duplicate-assistance cooldown guard with authorized documented override, GPS/signature/photo evidence, 4-eye SoD witness verification & void stock reversal, Super Admin operational blackout, bilingual React dashboard/requisition/allocation/handover pages, and unit/feature automated tests.
+- **Module 08 (Warehouse & Inventory Management):** Multi-echelon godown registry UI, inter-warehouse transfers, and procurement GRN workflows building on the shared `logistics.*` ledger tables.
 - **Module 07 (Resource & Fleet Management):** Rescue boats, 4WD vehicles, water purification units, and equipment dispatch.
-- **Module 04 (Relief Distribution Management):** Relief requisition generation, allocation matrices, and distribution verification (QR code / SMS OTP hand-off proof).
 
 ### Phase 5: Field Damage Assessment & Mobilization
 - **Module 09 (Damage Assessment - D-Form):** Digital official Bangladesh D-Form workflow (Housing, Crops, Livestock, Fisheries, Infrastructure, Human Casualties) with photo geo-tagging.

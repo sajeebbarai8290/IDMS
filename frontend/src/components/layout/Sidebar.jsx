@@ -4,6 +4,11 @@ import { useAuth } from '../../hooks/useAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { canInitiateNid, canViewNid } from '../../modules/nid/utils/nidPermissions';
 import { canCreateDisaster } from '../../modules/disaster/utils/disasterPermissions';
+import {
+  canCreateAllocation,
+  canCreateRequisition,
+  canRecordDistribution,
+} from '../../modules/relief/utils/reliefPermissions';
 
 export const Sidebar = ({ isOpen }) => {
   const { user } = useAuth();
@@ -12,6 +17,9 @@ export const Sidebar = ({ isOpen }) => {
   const showNidView = canViewNid(user);
   const showNidInitiate = canInitiateNid(user);
   const showDisasterCreate = canCreateDisaster(user);
+  const showReliefReqCreate = canCreateRequisition(user);
+  const showReliefAllocCreate = canCreateAllocation(user);
+  const showReliefDistribute = canRecordDistribution(user);
 
   return (
     <aside className={`idms-sidebar ${isOpen ? 'show' : ''}`}>
@@ -92,11 +100,39 @@ export const Sidebar = ({ isOpen }) => {
           <span>{t('জিআইএস মানচিত্র', 'GIS Disaster Map')}</span>
         </NavLink>
 
-        <div className="idms-sidebar-section-title">অন্যান্য মডিউল (Planned)</div>
-        <div className="nav-link text-muted opacity-75 d-flex justify-content-between align-items-center">
-          <span><i className="bi bi-box-seam me-2"></i>ত্রাণ বিতরণ ব্যবস্থাপনা</span>
-          <span className="badge bg-light text-secondary border">M04</span>
+        <div className="idms-sidebar-section-title">
+          {t('ত্রাণ বিতরণ ব্যবস্থাপনা (M04)', 'Relief Distribution (M04)')}
         </div>
+        <NavLink to="/relief/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-box-seam-fill me-2 text-success"></i>
+          <span>{t('ত্রাণ ড্যাশবোর্ড', 'Relief Dashboard')}</span>
+        </NavLink>
+        <NavLink to="/relief/requisitions" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-file-earmark-text me-2 text-primary"></i>
+          <span>{t('ত্রাণ চাহিদাপত্র', 'Requisitions')}</span>
+        </NavLink>
+        {showReliefReqCreate && (
+          <NavLink to="/relief/requisitions/new" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <i className="bi bi-plus-circle me-2 text-success"></i>
+            <span>{t('নতুন চাহিদাপত্র', 'New Requisition')}</span>
+          </NavLink>
+        )}
+        <NavLink to="/relief/allocations" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-truck me-2 text-info"></i>
+          <span>{t('ত্রাণ বরাদ্দ আদেশ', 'Allocations')}</span>
+        </NavLink>
+        {showReliefAllocCreate && (
+          <NavLink to="/relief/allocations/new" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <i className="bi bi-clipboard-plus me-2 text-primary"></i>
+            <span>{t('নতুন বরাদ্দ আদেশ', 'New Allocation')}</span>
+          </NavLink>
+        )}
+        <NavLink to="/relief/distributions" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-hand-index-thumb-fill me-2 text-warning"></i>
+          <span>{showReliefDistribute ? t('ত্রাণ বিতরণ ও ভাউচার', 'Handover & Vouchers') : t('বিতরণ ভাউচার লেজার', 'Distribution Ledger')}</span>
+        </NavLink>
+
+        <div className="idms-sidebar-section-title">অন্যান্য মডিউল (Planned)</div>
         <div className="nav-link text-muted opacity-75 d-flex justify-content-between align-items-center">
           <span><i className="bi bi-house-door me-2"></i>আশ্রয়কেন্দ্র অপারেশন</span>
           <span className="badge bg-light text-secondary border">M05</span>

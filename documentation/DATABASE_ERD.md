@@ -51,19 +51,29 @@ erDiagram
     ADMINISTRATIVE_UNITS ||--o{ DAMAGE_ASSESSMENTS : "assessed_at"
 
     %% LOGISTICS, WAREHOUSING & RELIEF CHAIN
+    RELIEF_CATEGORIES ||--o{ COMMODITIES : "categorizes"
     COMMODITIES ||--o{ WAREHOUSE_INVENTORIES : "stocked_as"
     WAREHOUSES ||--|{ WAREHOUSE_INVENTORIES : "stores_lots"
     WAREHOUSE_INVENTORIES ||--o{ STOCK_TRANSACTIONS : "ledger_records"
-    
+
+    DISASTER_EVENTS ||--o{ RELIEF_ALLOCATIONS : "funds_allocations"
+    ADMINISTRATIVE_UNITS ||--o{ RELIEF_ALLOCATIONS : "allocated_to_unit"
+    DISTRIBUTION_POINTS ||--o{ RELIEF_ALLOCATIONS : "staged_at_center"
+    WAREHOUSES ||--o{ RELIEF_ALLOCATIONS : "sourced_from_warehouse"
+
     RELIEF_REQUISITIONS ||--|{ RELIEF_REQUISITION_ITEMS : "contains_requests"
     RELIEF_REQUISITIONS ||--o{ RELIEF_ALLOCATIONS : "approved_into"
     RELIEF_ALLOCATIONS ||--|{ RELIEF_ALLOCATION_ITEMS : "contains_allocations"
+    RELIEF_ALLOCATIONS ||--o{ RELIEF_ALLOCATION_BENEFICIARIES : "targets_beneficiaries"
+    HOUSEHOLDS ||--o{ RELIEF_ALLOCATION_BENEFICIARIES : "eligible_for_allocation"
+
     COMMODITIES ||--o{ RELIEF_REQUISITION_ITEMS : "requested_commodity"
     COMMODITIES ||--o{ RELIEF_ALLOCATION_ITEMS : "allocated_commodity"
     
     RELIEF_ALLOCATION_ITEMS ||--o{ DISTRIBUTION_VOUCHERS : "disbursed_through"
     DISTRIBUTION_POINTS ||--o{ DISTRIBUTION_VOUCHERS : "handed_over_at"
     ADMINISTRATIVE_UNITS ||--o{ DISTRIBUTION_POINTS : "located_in"
+    STOCK_TRANSACTIONS ||--o| DISTRIBUTION_VOUCHERS : "deducted_for_voucher"
 
     %% RECONSTRUCTION PROJECTS
     PROJECTS ||--|{ PROJECT_MILESTONES : "scheduled_in"
@@ -284,8 +294,18 @@ erDiagram
         decimal estimated_loss_bdt
     }
 
+    RELIEF_CATEGORIES {
+        uuid id PK
+        string code UK
+        string name_en
+        string name_bn
+        boolean is_system
+        boolean is_active
+    }
+
     COMMODITIES {
         uuid id PK
+        uuid relief_category_id FK
         string commodity_code UK
         string name_en
         string name_bn
@@ -300,6 +320,8 @@ erDiagram
         string warehouse_name
         string tier
         decimal capacity_mt
+        decimal latitude
+        decimal longitude
         geometry_point location_geom
     }
 
@@ -309,6 +331,7 @@ erDiagram
         uuid commodity_id FK
         string batch_number
         decimal current_quantity
+        decimal reserved_quantity
         date expiry_date
     }
 
@@ -319,6 +342,8 @@ erDiagram
         decimal quantity
         decimal balance_after
         string reference_voucher_no
+        uuid relief_allocation_item_id FK
+        uuid distribution_voucher_id FK
     }
 
     RELIEF_REQUISITIONS {
@@ -326,7 +351,12 @@ erDiagram
         uuid disaster_event_id FK
         uuid administrative_unit_id FK
         string requisition_no UK
+        string requesting_organization
+        int estimated_beneficiaries
+        string priority
+        date request_date
         string status
+        string supporting_doc_path
         timestamptz submitted_at
     }
 
@@ -335,13 +365,20 @@ erDiagram
         uuid relief_requisition_id FK
         uuid commodity_id FK
         decimal quantity_requested
+        decimal quantity_approved
     }
 
     RELIEF_ALLOCATIONS {
         uuid id PK
         uuid relief_requisition_id FK
+        uuid disaster_event_id FK
+        uuid administrative_unit_id FK
+        uuid distribution_point_id FK
+        uuid warehouse_id FK
         string allocation_order_no UK
         string status
+        timestamptz scheduled_start_at
+        timestamptz scheduled_end_at
         timestamptz approved_at
     }
 
@@ -350,12 +387,25 @@ erDiagram
         uuid relief_allocation_id FK
         uuid commodity_id FK
         decimal quantity_allocated
+        decimal quantity_distributed
+        decimal quantity_cancelled
+    }
+
+    RELIEF_ALLOCATION_BENEFICIARIES {
+        uuid id PK
+        uuid relief_allocation_id FK
+        uuid household_id FK
+        string selection_status
     }
 
     DISTRIBUTION_POINTS {
         uuid id PK
         uuid administrative_unit_id FK
+        string point_code UK
         string point_name
+        string point_name_bn
+        decimal latitude
+        decimal longitude
         geometry_point location_geom
     }
 
@@ -364,10 +414,18 @@ erDiagram
         uuid relief_allocation_item_id FK
         uuid household_id FK
         uuid distribution_point_id FK
+        string voucher_no UK
+        string idempotency_key UK
         decimal quantity_disbursed
         string verification_method
-        string verification_proof
+        string acknowledgment_signature
+        string photo_evidence_path
+        decimal distribution_lat
+        decimal distribution_lng
+        boolean duplicate_override
+        text duplicate_override_reason
         timestamptz distributed_at
+        boolean is_voided
     }
 
     PROJECTS {

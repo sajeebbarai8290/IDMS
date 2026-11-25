@@ -226,17 +226,19 @@ Module 03: Disaster Information Management (disaster.*)
   └── disaster.emergency.declare           # Declare National/District State of Emergency
 
 Module 04: Relief Distribution Management (relief.*)
+  ├── relief.category.manage               # Manage configurable relief categories
   ├── relief.requisition.view
-  ├── relief.requisition.create            # Submit grassroots relief request
+  ├── relief.requisition.create            # Submit relief request (with org, disaster, docs)
   ├── relief.requisition.update
   ├── relief.requisition.delete
-  ├── relief.requisition.approve           # Endorse/sanction requisition in workflow
+  ├── relief.requisition.approve           # Review / approve / partially approve / reject (4-eye SoD)
   ├── relief.allocation.view
-  ├── relief.allocation.create             # Issue official allocation order
-  ├── relief.allocation.approve            # Authorize allocation release from buffer
+  ├── relief.allocation.create             # Issue allocation order & target beneficiaries
+  ├── relief.allocation.approve            # Authorize allocation & reserve/release stock (4-eye SoD)
   ├── relief.allocation.export
-  ├── relief.distribution.record           # Record physical handover to beneficiary
-  ├── relief.distribution.verify           # Tag Officer sign-off on distribution voucher
+  ├── relief.distribution.record           # Record physical handover with acknowledgment, photo & GPS
+  ├── relief.distribution.override_duplicate # Authorize documented exception to duplicate rule
+  ├── relief.distribution.verify           # Tag Officer witness sign-off (4-eye SoD)
   └── relief.distribution.export_muster    # Download official muster roll with signatures
 
 Module 05: Disaster Response Management (response.*)
@@ -376,17 +378,19 @@ The following matrix maps every system role across all 17 functional modules.
 | `disaster.hazard_map.manage` | ✔ | ✔ | ✔ | -- | ✔ | -- | -- | -- | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- |
 | `disaster.emergency.declare` | -- | ✔ | -- | -- | -- | -- | -- | -- | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
 | **M04: RELIEF DISTRIBUTION** | | | | | | | | | | | | | | | | | | | | | |
-| `relief.requisition.view` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | -- | [A] |
+| `relief.category.manage` | ✔ | ✔ | -- | -- | ✔ | ✔ | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `relief.requisition.view` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [A] |
 | `relief.requisition.create` | -- | -- | -- | -- | -- | -- | -- | -- | -- | [S] | -- | [S] | [S] | [S] | -- | -- | -- | [S] | -- | -- | -- |
 | `relief.requisition.update` | -- | -- | -- | -- | -- | -- | -- | -- | -- | [S] | -- | [S] | [S] | [S] | -- | -- | -- | [S] | -- | -- | -- |
 | `relief.requisition.delete` | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | [S] | [S] | -- | -- | -- | -- | -- | -- | -- | -- |
-| `relief.requisition.approve` | -- | ✔ | ✔ | -- | ✔ | ✔ | -- | [S] | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- |
-| `relief.allocation.view` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | [S] | [S] | [S] | -- | -- | [A] |
+| `relief.requisition.approve` | -- | ✔[D] | ✔[D] | -- | ✔[D] | ✔[D] | -- | [S][D] | [S][D] | [S][D] | [S][D] | [S][D] | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `relief.allocation.view` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [A] |
 | `relief.allocation.create` | -- | ✔ | -- | -- | ✔ | ✔ | -- | -- | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- |
-| `relief.allocation.approve` | -- | ✔ | -- | -- | ✔[D]| ✔[D]| -- | -- | [S][D]| [S][D]| [S][D]| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `relief.allocation.approve` | -- | ✔[D] | -- | -- | ✔[D]| ✔[D]| -- | -- | [S][D]| [S][D]| [S][D]| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
 | `relief.allocation.export` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | [S] | [S] | -- | -- | -- | [A] |
-| `relief.distribution.record` | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | [S] | [S] | [S] | -- | -- | [S] | -- | [S] | -- |
-| `relief.distribution.verify` | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | [S] | -- | -- | -- | [S] | -- | -- | -- | -- | -- |
+| `relief.distribution.record` | -- | -- | -- | -- | -- | -- | -- | -- | -- | [S] | -- | [S] | [S] | [S] | [S] | -- | -- | [S] | -- | [S] | -- |
+| `relief.distribution.override_duplicate` | -- | -- | -- | -- | -- | -- | -- | -- | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `relief.distribution.verify` | -- | -- | -- | -- | -- | -- | -- | -- | -- | [S][D] | [S][D] | [S][D] | -- | -- | -- | [S][D] | -- | -- | -- | -- | -- |
 | `relief.distribution.export_muster` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | [S] | [S] | [S] | -- | -- | -- |
 | **M05: DISASTER RESPONSE** | | | | | | | | | | | | | | | | | | | | | |
 | `response.incident.view` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ |

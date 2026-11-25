@@ -31,6 +31,16 @@ import DisasterFormPage from '../modules/disaster/pages/DisasterFormPage';
 import DisasterDetailPage from '../modules/disaster/pages/DisasterDetailPage';
 import DisasterMapPage from '../modules/disaster/pages/DisasterMapPage';
 
+// Module 04: Relief Distribution Management Pages
+import ReliefDashboardPage from '../modules/relief/pages/ReliefDashboardPage';
+import ReliefRequisitionListPage from '../modules/relief/pages/ReliefRequisitionListPage';
+import ReliefRequisitionFormPage from '../modules/relief/pages/ReliefRequisitionFormPage';
+import ReliefRequisitionDetailPage from '../modules/relief/pages/ReliefRequisitionDetailPage';
+import ReliefAllocationListPage from '../modules/relief/pages/ReliefAllocationListPage';
+import ReliefAllocationFormPage from '../modules/relief/pages/ReliefAllocationFormPage';
+import ReliefAllocationDetailPage from '../modules/relief/pages/ReliefAllocationDetailPage';
+import ReliefDistributionPage from '../modules/relief/pages/ReliefDistributionPage';
+
 export const AppRoutes = () => {
   return (
     <Routes>
@@ -238,6 +248,88 @@ export const AppRoutes = () => {
           <ProtectedRoute>
             <MainLayout>
               <DisasterMapPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Module 04: Relief Distribution Management Routes */}
+      <Route
+        path="/relief/dashboard"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ReliefDashboardPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/relief/requisitions"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ReliefRequisitionListPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/relief/requisitions/new"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ReliefRequisitionFormPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/relief/requisitions/:id"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ReliefRequisitionDetailPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/relief/allocations"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ReliefAllocationListPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/relief/allocations/new"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ReliefAllocationFormPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/relief/allocations/:id"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ReliefAllocationDetailPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/relief/distributions"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ReliefDistributionPage />
             </MainLayout>
           </ProtectedRoute>
         }
