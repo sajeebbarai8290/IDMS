@@ -242,15 +242,15 @@ Module 04: Relief Distribution Management (relief.*)
   └── relief.distribution.export_muster    # Download official muster roll with signatures
 
 Module 05: Disaster Response Management (response.*)
-  ├── response.incident.view
-  ├── response.incident.create             # Submit SOS emergency incident report
-  ├── response.incident.update
-  ├── response.shelter.view
-  ├── response.shelter.manage              # Add or update shelter capacity & amenities
-  ├── response.shelter.log_occupancy       # Record live headcount of evacuees & livestock
-  ├── response.sar.view
-  ├── response.sar.dispatch                # Dispatch Fire Service, Armed Forces, Coast Guard
-  └── response.sar.update_status
+  ├── response.activity.manage             # Manage configurable response activity types
+  ├── response.operation.view              # View response operations, tasks & dashboard
+  ├── response.operation.create            # Plan & create emergency response operation
+  ├── response.operation.update            # Edit operation details & objectives
+  ├── response.operation.manage_lifecycle  # Activate, suspend, complete or close operations (District/UNO/NEOC+)
+  ├── response.task.manage                 # Create/assign tasks, update progress & upload evidence
+  ├── response.coordination.manage         # Coordinate agencies, teams, requirements & vehicles
+  ├── response.report.create               # Submit incident reports, field updates & casualty/rescue sitreps
+  └── response.gis.view_exact              # View exact incident & team GPS coordinates (vs generalized area coords)
 
 Module 06: Project Management (project.*)
   ├── project.scheme.view
@@ -393,15 +393,15 @@ The following matrix maps every system role across all 17 functional modules.
 | `relief.distribution.verify` | -- | -- | -- | -- | -- | -- | -- | -- | -- | [S][D] | [S][D] | [S][D] | -- | -- | -- | [S][D] | -- | -- | -- | -- | -- |
 | `relief.distribution.export_muster` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | [S] | [S] | [S] | -- | -- | -- |
 | **M05: DISASTER RESPONSE** | | | | | | | | | | | | | | | | | | | | | |
-| `response.incident.view` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ |
-| `response.incident.create` | ✔ | ✔ | ✔ | -- | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- |
-| `response.incident.update` | ✔ | -- | ✔ | -- | ✔ | ✔ | -- | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | -- | [S] | [S] | -- | -- |
-| `response.shelter.view` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ |
-| `response.shelter.manage` | ✔ | -- | ✔ | -- | ✔ | -- | -- | -- | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- | [S] | -- | -- | -- |
-| `response.shelter.log_occupancy` | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | [S] | [S] | [S] | [S] | [S] | -- | [S] | [S] | [S] | -- |
-| `response.sar.view` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | [S] | [S] | [S] | [A] |
-| `response.sar.dispatch` | -- | ✔ | ✔ | -- | ✔ | -- | -- | [S] | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- |
-| `response.sar.update_status` | -- | -- | ✔ | -- | ✔ | -- | -- | [S] | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | [S] | [S] | -- |
+| `response.activity.manage` | ✔ | ✔ | ✔ | -- | ✔ | ✔ | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `response.operation.view` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [A] |
+| `response.operation.create` | -- | ✔ | ✔ | -- | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `response.operation.update` | -- | ✔ | ✔ | -- | ✔ | ✔ | -- | [S] | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `response.operation.manage_lifecycle` | -- | ✔ | ✔ | -- | ✔ | ✔ | -- | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `response.task.manage` | -- | ✔ | ✔ | -- | ✔ | ✔ | -- | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | -- | [S] | [S] | [S] | -- |
+| `response.coordination.manage` | -- | ✔ | ✔ | -- | ✔ | ✔ | -- | [S] | [S] | [S] | [S] | [S] | [S] | -- | -- | -- | [S] | -- | [S] | -- | -- |
+| `response.report.create` | -- | ✔ | ✔ | -- | ✔ | ✔ | -- | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | [S] | [S] | [S] | -- |
+| `response.gis.view_exact` | ✔ | ✔ | ✔ | -- | ✔ | ✔ | -- | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | [S] | [S] | [S] | -- |
 | **M06: PROJECT MANAGEMENT** | | | | | | | | | | | | | | | | | | | | | |
 | `project.scheme.view` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | -- | -- | -- | [A] |
 | `project.scheme.create` | -- | -- | -- | -- | -- | -- | ✔ | -- | -- | [S] | -- | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | -- |

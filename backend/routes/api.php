@@ -19,6 +19,11 @@ use App\Modules\Relief\Controllers\Api\V1\ReliefCategoryController;
 use App\Modules\Relief\Controllers\Api\V1\ReliefDashboardController;
 use App\Modules\Relief\Controllers\Api\V1\ReliefDistributionController;
 use App\Modules\Relief\Controllers\Api\V1\ReliefRequisitionController;
+use App\Modules\Response\Controllers\Api\V1\ResponseCoordinationController;
+use App\Modules\Response\Controllers\Api\V1\ResponseDashboardController;
+use App\Modules\Response\Controllers\Api\V1\ResponseOperationController;
+use App\Modules\Response\Controllers\Api\V1\ResponseSituationReportController;
+use App\Modules\Response\Controllers\Api\V1\ResponseTaskController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -159,6 +164,36 @@ Route::prefix('v1')->group(function () {
             Route::post('/distributions/{voucher}/verify', [ReliefDistributionController::class, 'verify'])->name('api.v1.relief.distributions.verify');
             Route::post('/distributions/{voucher}/void', [ReliefDistributionController::class, 'void'])->name('api.v1.relief.distributions.void');
             Route::get('/distributions/{voucher}/photo', [ReliefDistributionController::class, 'downloadPhotoEvidence'])->name('api.v1.relief.distributions.photo');
+        });
+
+        // 7. Module 05: Disaster Response Management (response.*)
+        Route::prefix('response')->group(function () {
+            Route::get('/dashboard', [ResponseDashboardController::class, 'summary'])->name('api.v1.response.dashboard');
+            Route::get('/lookups', [ResponseDashboardController::class, 'lookups'])->name('api.v1.response.lookups');
+            Route::get('/gis/geojson', [ResponseDashboardController::class, 'geojson'])->name('api.v1.response.gis.geojson');
+            Route::post('/activities', [ResponseDashboardController::class, 'storeActivity'])->name('api.v1.response.activities.store');
+
+            Route::get('/operations', [ResponseOperationController::class, 'index'])->name('api.v1.response.operations.index');
+            Route::post('/operations', [ResponseOperationController::class, 'store'])->name('api.v1.response.operations.store');
+            Route::get('/operations/{operation}', [ResponseOperationController::class, 'show'])->name('api.v1.response.operations.show');
+            Route::put('/operations/{operation}', [ResponseOperationController::class, 'update'])->name('api.v1.response.operations.update');
+            Route::delete('/operations/{operation}', [ResponseOperationController::class, 'destroy'])->name('api.v1.response.operations.destroy');
+            Route::post('/operations/{operation}/lifecycle', [ResponseOperationController::class, 'transitionLifecycle'])->name('api.v1.response.operations.lifecycle');
+
+            Route::post('/operations/{operation}/agencies', [ResponseCoordinationController::class, 'addAgency'])->name('api.v1.response.operations.agencies.store');
+            Route::post('/operations/{operation}/teams', [ResponseCoordinationController::class, 'addTeam'])->name('api.v1.response.operations.teams.store');
+            Route::put('/teams/{team}', [ResponseCoordinationController::class, 'updateTeamStatus'])->name('api.v1.response.teams.update');
+
+            Route::post('/operations/{operation}/resources', [ResponseCoordinationController::class, 'addResource'])->name('api.v1.response.operations.resources.store');
+            Route::put('/resources/{allocation}', [ResponseCoordinationController::class, 'updateResourceStatus'])->name('api.v1.response.resources.update');
+
+            Route::post('/operations/{operation}/tasks', [ResponseTaskController::class, 'store'])->name('api.v1.response.operations.tasks.store');
+            Route::put('/tasks/{task}', [ResponseTaskController::class, 'updateProgress'])->name('api.v1.response.tasks.update');
+            Route::post('/tasks/{task}/attachments', [ResponseTaskController::class, 'uploadAttachment'])->name('api.v1.response.tasks.attachments.store');
+            Route::get('/tasks/{task}/attachments/{attachment}', [ResponseTaskController::class, 'downloadAttachment'])->name('api.v1.response.tasks.attachments.download');
+
+            Route::get('/reports', [ResponseSituationReportController::class, 'index'])->name('api.v1.response.reports.index');
+            Route::post('/operations/{operation}/reports', [ResponseSituationReportController::class, 'store'])->name('api.v1.response.operations.reports.store');
         });
 
         // Administrative Overview Scenarios

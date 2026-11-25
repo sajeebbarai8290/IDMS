@@ -89,6 +89,28 @@ export const ENDPOINTS = {
     VOUCHER_VOID: (id) => `/relief/distributions/${id}/void`,
     VOUCHER_PHOTO: (id) => `/relief/distributions/${id}/photo`,
   },
+
+  // Module 05: Disaster Response Management
+  RESPONSE: {
+    DASHBOARD: '/response/dashboard',
+    LOOKUPS: '/response/lookups',
+    GEOJSON: '/response/gis/geojson',
+    ACTIVITIES: '/response/activities',
+    OPERATIONS: '/response/operations',
+    OPERATION_DETAIL: (id) => `/response/operations/${id}`,
+    OPERATION_LIFECYCLE: (id) => `/response/operations/${id}/lifecycle`,
+    OPERATION_AGENCIES: (id) => `/response/operations/${id}/agencies`,
+    OPERATION_TEAMS: (id) => `/response/operations/${id}/teams`,
+    TEAM_UPDATE: (id) => `/response/teams/${id}`,
+    OPERATION_RESOURCES: (id) => `/response/operations/${id}/resources`,
+    RESOURCE_UPDATE: (id) => `/response/resources/${id}`,
+    OPERATION_TASKS: (id) => `/response/operations/${id}/tasks`,
+    TASK_UPDATE: (id) => `/response/tasks/${id}`,
+    TASK_ATTACHMENTS: (id) => `/response/tasks/${id}/attachments`,
+    TASK_ATTACHMENT_DOWNLOAD: (taskId, attId) => `/response/tasks/${taskId}/attachments/${attId}`,
+    REPORTS: '/response/reports',
+    OPERATION_REPORTS: (id) => `/response/operations/${id}/reports`,
+  },
   SHELTER: {
     LIST: '/shelter/shelters',
     OCCUPANCY: '/shelter/occupancy',

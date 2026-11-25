@@ -18,6 +18,10 @@ use App\Modules\Relief\Models\ReliefAllocation;
 use App\Modules\Relief\Models\ReliefCategory;
 use App\Modules\Relief\Models\ReliefRequisition;
 use App\Modules\Relief\Policies\ReliefPolicy;
+use App\Modules\Response\Models\ResponseActivityType;
+use App\Modules\Response\Models\ResponseOperation;
+use App\Modules\Response\Models\ResponseSituationReport;
+use App\Modules\Response\Policies\ResponsePolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -57,5 +61,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ReliefRequisition::class, ReliefPolicy::class);
         Gate::policy(ReliefAllocation::class, ReliefPolicy::class);
         Gate::policy(DistributionVoucher::class, ReliefPolicy::class);
+        Gate::policy(ResponseActivityType::class, ResponsePolicy::class);
+        Gate::policy(ResponseOperation::class, ResponsePolicy::class);
+        Gate::policy(ResponseSituationReport::class, ResponsePolicy::class);
     }
 }

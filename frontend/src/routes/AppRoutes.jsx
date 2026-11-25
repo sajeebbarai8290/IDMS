@@ -41,6 +41,13 @@ import ReliefAllocationFormPage from '../modules/relief/pages/ReliefAllocationFo
 import ReliefAllocationDetailPage from '../modules/relief/pages/ReliefAllocationDetailPage';
 import ReliefDistributionPage from '../modules/relief/pages/ReliefDistributionPage';
 
+// Module 05: Disaster Response Management Pages
+import ResponseDashboardPage from '../modules/response/pages/ResponseDashboardPage';
+import ResponseOperationListPage from '../modules/response/pages/ResponseOperationListPage';
+import ResponseOperationFormPage from '../modules/response/pages/ResponseOperationFormPage';
+import ResponseOperationDetailPage from '../modules/response/pages/ResponseOperationDetailPage';
+import ResponseMapPage from '../modules/response/pages/ResponseMapPage';
+
 export const AppRoutes = () => {
   return (
     <Routes>
@@ -330,6 +337,68 @@ export const AppRoutes = () => {
           <ProtectedRoute>
             <MainLayout>
               <ReliefDistributionPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Module 05: Disaster Response Management Routes */}
+      <Route
+        path="/response/dashboard"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ResponseDashboardPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/response/operations"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ResponseOperationListPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/response/operations/new"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ResponseOperationFormPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/response/operations/:id/edit"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ResponseOperationFormPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/response/operations/:id"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ResponseOperationDetailPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/response/map"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ResponseMapPage />
             </MainLayout>
           </ProtectedRoute>
         }

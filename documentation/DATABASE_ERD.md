@@ -45,6 +45,22 @@ erDiagram
     DISASTER_EVENTS ||--o{ DAMAGE_ASSESSMENTS : "caused_damage"
     DISASTER_EVENTS ||--o{ RELIEF_REQUISITIONS : "triggers_requisitions"
     DISASTER_EVENTS ||--o{ PROJECTS : "rehabilitates_from"
+    DISASTER_EVENTS ||--o{ RESPONSE_OPERATIONS : "triggers_operations"
+
+    %% DISASTER RESPONSE MANAGEMENT (M05)
+    ADMINISTRATIVE_UNITS ||--o{ RESPONSE_CENTERS : "hosts_eoc"
+    ADMINISTRATIVE_UNITS ||--o{ RESOURCE_ASSETS : "stationed_at"
+    ADMINISTRATIVE_UNITS ||--o{ RESPONSE_OPERATIONS : "scoped_operation"
+    RESPONSE_CENTERS ||--o{ RESPONSE_OPERATIONS : "coordinated_from"
+    RESPONSE_OPERATIONS ||--o{ RESPONSE_OPERATION_AGENCIES : "coordinates_with"
+    RESPONSE_OPERATIONS ||--o{ RESPONSE_TEAMS : "deploys_teams"
+    RESPONSE_OPERATIONS ||--o{ RESPONSE_TASKS : "tracks_tasks"
+    RESPONSE_ACTIVITY_TYPES ||--o{ RESPONSE_TASKS : "classifies"
+    RESPONSE_TEAMS ||--o{ RESPONSE_TASKS : "executes"
+    RESPONSE_TASKS ||--o{ RESPONSE_TASK_ATTACHMENTS : "evidenced_by"
+    RESPONSE_OPERATIONS ||--o{ RESPONSE_RESOURCE_ALLOCATIONS : "requests_or_links"
+    RESOURCE_ASSETS ||--o{ RESPONSE_RESOURCE_ALLOCATIONS : "deployed_to_operation"
+    RESPONSE_OPERATIONS ||--o{ RESPONSE_SITUATION_REPORTS : "receives_sitreps"
 
     %% DAMAGE ASSESSMENT (D-FORM)
     DAMAGE_ASSESSMENTS ||--|{ DAMAGE_SECTOR_ITEMS : "details_sector_loss"
@@ -273,6 +289,127 @@ erDiagram
         int current_women
         int current_children
         timestamptz recorded_at
+    }
+
+    RESPONSE_ACTIVITY_TYPES {
+        uuid id PK
+        string code UK
+        string name_en
+        string name_bn
+        boolean is_system
+        boolean is_active
+    }
+
+    RESPONSE_CENTERS {
+        uuid id PK
+        uuid administrative_unit_id FK
+        string center_code UK
+        string center_type
+        string name_en
+        string name_bn
+        decimal latitude
+        decimal longitude
+        geometry_point location_geom
+    }
+
+    RESOURCE_ASSETS {
+        uuid id PK
+        uuid administrative_unit_id FK
+        string asset_code UK
+        string asset_type
+        string name_en
+        string name_bn
+        string status
+    }
+
+    RESPONSE_OPERATIONS {
+        uuid id PK
+        uuid disaster_event_id FK
+        uuid administrative_unit_id FK
+        uuid response_center_id FK
+        string operation_no UK
+        string title_en
+        string title_bn
+        string priority
+        string severity_level
+        string status
+        date start_date
+        date expected_completion_date
+    }
+
+    RESPONSE_OPERATION_AGENCIES {
+        uuid id PK
+        uuid response_operation_id FK
+        string agency_name
+        string agency_type
+        string role_summary
+        string coordination_status
+    }
+
+    RESPONSE_TEAMS {
+        uuid id PK
+        uuid response_operation_id FK
+        uuid administrative_unit_id FK
+        string team_code UK
+        string team_name
+        string agency_name
+        string team_type
+        int member_count
+        string status
+        decimal latitude
+        decimal longitude
+        geometry_point location_geom
+    }
+
+    RESPONSE_TASKS {
+        uuid id PK
+        uuid response_operation_id FK
+        uuid activity_type_id FK
+        uuid response_team_id FK
+        uuid assigned_user_id FK
+        string task_code UK
+        string title_en
+        string title_bn
+        string priority
+        string status
+        int progress_percentage
+        timestamptz deadline_at
+    }
+
+    RESPONSE_TASK_ATTACHMENTS {
+        uuid id PK
+        uuid response_task_id FK
+        string original_name
+        string storage_path
+        string sha256_hash
+    }
+
+    RESPONSE_RESOURCE_ALLOCATIONS {
+        uuid id PK
+        uuid response_operation_id FK
+        uuid resource_asset_id FK
+        string requirement_title
+        decimal quantity_needed
+        decimal quantity_assigned
+        string status
+    }
+
+    RESPONSE_SITUATION_REPORTS {
+        uuid id PK
+        uuid response_operation_id FK
+        uuid disaster_event_id FK
+        uuid administrative_unit_id FK
+        string report_no UK
+        string report_type
+        int casualties_injured
+        int casualties_missing
+        int casualties_fatalities
+        int rescued_count
+        string privacy_level
+        decimal latitude
+        decimal longitude
+        geometry_point location_geom
+        timestamptz reported_at
     }
 
     DAMAGE_ASSESSMENTS {

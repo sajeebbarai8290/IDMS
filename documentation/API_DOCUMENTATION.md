@@ -308,3 +308,27 @@ interface NidVerificationServiceInterface
 - `GET /api/v1/relief/distributions/{voucher}/photo` — Authenticated private handoff photo download.
 - `GET /api/v1/relief/distributions/export-muster` — Download UTF-8 CSV official relief muster roll with formula-injection sanitization.
 
+---
+
+## 8. Module 05: Disaster Response Management Implemented Endpoints (`/api/v1/response/*`)
+
+### 8.1 Dashboard, Configurable Activities, Lookups & GIS Map
+- `GET /api/v1/response/dashboard` — Scoped command analytics: active operations, total operations, pending/completed tasks, response teams (active/total), rescued/evacuated/casualty totals, geographical coverage, and emergency requirements.
+- `GET /api/v1/response/lookups` — Active response activity types, scoped EOC/response centers, scoped deployable assets (`resource.resource_assets`), and disaster events.
+- `GET /api/v1/response/gis/geojson` — Scoped RFC 7946 `FeatureCollection` containing affected areas, response centers, response teams, and situation/incident reports with **location privacy coordinate masking** (~2 decimal precision) for external partners and non-responder viewers or `RESTRICTED_EXACT` reports.
+- `POST /api/v1/response/activities` — Add custom response activity type (`response.activity.manage`).
+
+### 8.2 Response Operations & 6-State Lifecycle
+- `GET /api/v1/response/operations` — Scoped, paginated, searchable, filterable (`status`, `priority`, `disaster_event_id`) response operations.
+- `POST /api/v1/response/operations` — Create planned operation linked to disaster, jurisdiction, and optional response center (`ROLE_SUPER_ADMIN` blocked by operational blackout).
+- `GET /api/v1/response/operations/{operation}` — Full operation command detail including agencies, teams, tasks with attachments, resource allocations/assets, and situation reports.
+- `PUT /api/v1/response/operations/{operation}` & `DELETE /api/v1/response/operations/{operation}` — Update active/planned operation metadata or soft-delete a `PLANNED` operation.
+- `POST /api/v1/response/operations/{operation}/lifecycle` — Transition across `PLANNED`, `ACTIVATED`, `ONGOING`, `SUSPENDED`, `COMPLETED`, `CLOSED` (District/UNO/NEOC+ authority required for `ACTIVATED`, `SUSPENDED`, `COMPLETED`, `CLOSED`; closing automatically returns linked `ResourceAsset` units).
+
+### 8.3 Coordination, Tasks & Situation Reporting
+- `POST /api/v1/response/operations/{operation}/agencies` — Register coordinating government/NGO agencies.
+- `POST /api/v1/response/operations/{operation}/teams` & `PUT /api/v1/response/teams/{team}` — Deploy response teams with member count and GPS coordinates.
+- `POST /api/v1/response/operations/{operation}/resources` & `PUT /api/v1/response/resources/{allocation}` — Record resource requirements or link/deploy/return available `resource_assets` atomically.
+- `POST /api/v1/response/operations/{operation}/tasks`, `PUT /api/v1/response/tasks/{task}`, `POST /api/v1/response/tasks/{task}/attachments`, & `GET /api/v1/response/tasks/{task}/attachments/{attachment}` — Task assignment, progress updates, and private evidence upload/download.
+- `GET /api/v1/response/reports` & `POST /api/v1/response/operations/{operation}/reports` — Incident reports, field updates, casualty/rescue figures, emergency requirements, and privacy-scoped GPS.
+

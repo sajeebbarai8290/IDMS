@@ -9,6 +9,7 @@ import {
   canCreateRequisition,
   canRecordDistribution,
 } from '../../modules/relief/utils/reliefPermissions';
+import { canCreateOperation } from '../../modules/response/utils/responsePermissions';
 
 export const Sidebar = ({ isOpen }) => {
   const { user } = useAuth();
@@ -20,6 +21,7 @@ export const Sidebar = ({ isOpen }) => {
   const showReliefReqCreate = canCreateRequisition(user);
   const showReliefAllocCreate = canCreateAllocation(user);
   const showReliefDistribute = canRecordDistribution(user);
+  const showResponseOpCreate = canCreateOperation(user);
 
   return (
     <aside className={`idms-sidebar ${isOpen ? 'show' : ''}`}>
@@ -132,11 +134,29 @@ export const Sidebar = ({ isOpen }) => {
           <span>{showReliefDistribute ? t('ত্রাণ বিতরণ ও ভাউচার', 'Handover & Vouchers') : t('বিতরণ ভাউচার লেজার', 'Distribution Ledger')}</span>
         </NavLink>
 
-        <div className="idms-sidebar-section-title">অন্যান্য মডিউল (Planned)</div>
-        <div className="nav-link text-muted opacity-75 d-flex justify-content-between align-items-center">
-          <span><i className="bi bi-house-door me-2"></i>আশ্রয়কেন্দ্র অপারেশন</span>
-          <span className="badge bg-light text-secondary border">M05</span>
+        <div className="idms-sidebar-section-title">
+          {t('দুর্যোগ সাড়াদান ব্যবস্থাপনা (M05)', 'Disaster Response (M05)')}
         </div>
+        <NavLink to="/response/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-broadcast-pin me-2 text-danger"></i>
+          <span>{t('সাড়াদান ড্যাশবোর্ড', 'Response Dashboard')}</span>
+        </NavLink>
+        <NavLink to="/response/operations" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-shield-exclamation me-2 text-primary"></i>
+          <span>{t('সাড়াদান অভিযানসমূহ', 'Response Operations')}</span>
+        </NavLink>
+        {showResponseOpCreate && (
+          <NavLink to="/response/operations/new" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <i className="bi bi-plus-circle me-2 text-danger"></i>
+            <span>{t('নতুন অভিযান তৈরি', 'New Operation')}</span>
+          </NavLink>
+        )}
+        <NavLink to="/response/map" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-map me-2 text-success"></i>
+          <span>{t('সাড়াদান জিআইএস মানচিত্র', 'Response GIS Map')}</span>
+        </NavLink>
+
+        <div className="idms-sidebar-section-title">অন্যান্য মডিউল (Planned)</div>
         <div className="nav-link text-muted opacity-75 d-flex justify-content-between align-items-center">
           <span><i className="bi bi-clipboard2-data me-2"></i>ক্ষয়ক্ষতি নিরূপণ (D-Form)</span>
           <span className="badge bg-light text-secondary border">M09</span>

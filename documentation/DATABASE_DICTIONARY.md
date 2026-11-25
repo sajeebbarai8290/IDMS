@@ -839,3 +839,31 @@ Central system event ledger capturing all state mutations.
 | `ip_address` | `varchar(45)` | YES | | | IPv4 / IPv6 client address |
 | `user_agent` | `text` | YES | | | Browser / Device user agent string |
 | `created_at` | `timestamptz` | NO | Partition Key | B-Tree | Event timestamp (Partition criteria) |
+
+---
+
+## 12. Schema: `response` & `resource` (Module 05: Disaster Response Management)
+
+### 12.1 `response.response_activity_types`
+Configurable response activity taxonomy (`SEARCH_RESCUE`, `EMERGENCY_EVACUATION`, `MEDICAL_ASSISTANCE`, `EMERGENCY_SHELTER`, `FOOD_WATER_SUPPLY`, `ROAD_COMM_RESTORATION`, `EMERGENCY_TRANSPORT`, and custom types).
+
+### 12.2 `response.response_centers`
+Emergency Operations Centers (EOCs) and field command posts with `administrative_unit_id`, `center_code`, `center_type`, bilingual names, contact phone, `latitude`/`longitude`, and PostGIS `location_geom` (Point, 4326).
+
+### 12.3 `resource.resource_assets`
+Deployable emergency assets (rescue boats, 4WD vehicles, ambulances, water purification units, generators) with `administrative_unit_id`, `asset_code`, `asset_type`, `status` (`AVAILABLE`, `DEPLOYED`, `MAINTENANCE`, `RETIRED`).
+
+### 12.4 `response.response_operations`
+Core response operations linked to `disaster.disaster_events`, `core.administrative_units`, and optional `response.response_centers` with `operation_no`, bilingual title, objectives, priority, severity, 6-state lifecycle (`PLANNED`, `ACTIVATED`, `ONGOING`, `SUSPENDED`, `COMPLETED`, `CLOSED`), schedules, responsible agency/commander, and soft deletes.
+
+### 12.5 `response.response_operation_agencies` & `response.response_teams`
+Participating government agencies/NGOs and field response teams (`FIRE_SERVICE`, `ARMED_FORCES`, `COAST_GUARD`, `CPP_VOLUNTEERS`, `MEDICAL_TEAM`, `BD_POLICE`, `SAR_UNIT`) with member counts, leader contact, `status` (`STANDBY`, `DEPLOYED`, `ACTIVE`, `DEMOBILIZED`), GPS coordinates, and PostGIS `location_geom`.
+
+### 12.6 `response.response_tasks` & `response.response_task_attachments`
+Operational tasks linked to operations, activity types, teams, and assignee officers with deadlines, priorities, `progress_percentage` (0–100), `status` (`PENDING`, `IN_PROGRESS`, `BLOCKED`, `COMPLETED`, `CANCELLED`), and SHA-256 checksummed private evidence attachments.
+
+### 12.7 `response.response_resource_allocations`
+Resource requirements and deployed vehicle/equipment links tied to operations and `resource.resource_assets` (`REQUESTED`, `ALLOCATED`, `DEPLOYED`, `RETURNED`).
+
+### 12.8 `response.response_situation_reports`
+Emergency incident reports, field updates, casualty/missing/rescued/evacuated figures, emergency requirements, GPS coordinates + PostGIS `location_geom`, and `privacy_level` (`PUBLIC_AREA`, `RESTRICTED_EXACT`).
