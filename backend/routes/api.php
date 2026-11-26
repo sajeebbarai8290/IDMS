@@ -14,6 +14,11 @@ use App\Modules\Beneficiary\Controllers\Api\V1\VerificationController;
 use App\Modules\Disaster\Controllers\Api\V1\DisasterCategoryController;
 use App\Modules\Disaster\Controllers\Api\V1\DisasterController;
 use App\Modules\NidVerification\Controllers\Api\V1\NidVerificationController as ModuleNidVerificationController;
+use App\Modules\Project\Controllers\Api\V1\ProjectController;
+use App\Modules\Project\Controllers\Api\V1\ProjectDashboardController;
+use App\Modules\Project\Controllers\Api\V1\ProjectFinancialController;
+use App\Modules\Project\Controllers\Api\V1\ProjectMilestoneController;
+use App\Modules\Project\Controllers\Api\V1\ProjectMonitoringController;
 use App\Modules\Relief\Controllers\Api\V1\ReliefAllocationController;
 use App\Modules\Relief\Controllers\Api\V1\ReliefCategoryController;
 use App\Modules\Relief\Controllers\Api\V1\ReliefDashboardController;
@@ -194,6 +199,37 @@ Route::prefix('v1')->group(function () {
 
             Route::get('/reports', [ResponseSituationReportController::class, 'index'])->name('api.v1.response.reports.index');
             Route::post('/operations/{operation}/reports', [ResponseSituationReportController::class, 'store'])->name('api.v1.response.operations.reports.store');
+        });
+
+        // 8. Module 06: Project Management (project.*)
+        Route::prefix('project')->group(function () {
+            Route::get('/dashboard', [ProjectDashboardController::class, 'summary'])->name('api.v1.project.dashboard');
+            Route::get('/lookups', [ProjectDashboardController::class, 'lookups'])->name('api.v1.project.lookups');
+            Route::get('/gis/geojson', [ProjectDashboardController::class, 'geojson'])->name('api.v1.project.gis.geojson');
+            Route::get('/reports', [ProjectDashboardController::class, 'reports'])->name('api.v1.project.reports');
+            Route::get('/export', [ProjectDashboardController::class, 'export'])->name('api.v1.project.export');
+            Route::post('/categories', [ProjectDashboardController::class, 'storeCategory'])->name('api.v1.project.categories.store');
+
+            Route::get('/schemes', [ProjectController::class, 'index'])->name('api.v1.project.schemes.index');
+            Route::post('/schemes', [ProjectController::class, 'store'])->name('api.v1.project.schemes.store');
+            Route::get('/schemes/{project}', [ProjectController::class, 'show'])->name('api.v1.project.schemes.show');
+            Route::put('/schemes/{project}', [ProjectController::class, 'update'])->name('api.v1.project.schemes.update');
+            Route::delete('/schemes/{project}', [ProjectController::class, 'destroy'])->name('api.v1.project.schemes.destroy');
+            Route::post('/schemes/{project}/lifecycle', [ProjectController::class, 'transitionLifecycle'])->name('api.v1.project.schemes.lifecycle');
+            Route::post('/schemes/{project}/boundary', [ProjectController::class, 'uploadBoundary'])->name('api.v1.project.schemes.boundary');
+
+            Route::post('/schemes/{project}/milestones', [ProjectMilestoneController::class, 'store'])->name('api.v1.project.schemes.milestones.store');
+            Route::put('/milestones/{milestone}/progress', [ProjectMilestoneController::class, 'updateProgress'])->name('api.v1.project.milestones.progress');
+            Route::post('/milestones/{milestone}/certify', [ProjectMilestoneController::class, 'certify'])->name('api.v1.project.milestones.certify');
+
+            Route::post('/schemes/{project}/financials', [ProjectFinancialController::class, 'store'])->name('api.v1.project.schemes.financials.store');
+            Route::post('/financials/{disbursement}/approve', [ProjectFinancialController::class, 'approve'])->name('api.v1.project.financials.approve');
+            Route::get('/financials/{disbursement}/document', [ProjectFinancialController::class, 'downloadDocument'])->name('api.v1.project.financials.document');
+
+            Route::post('/schemes/{project}/monitoring-reports', [ProjectMonitoringController::class, 'storeReport'])->name('api.v1.project.schemes.monitoring.store');
+            Route::get('/monitoring-reports/{report}/attachment', [ProjectMonitoringController::class, 'downloadAttachment'])->name('api.v1.project.monitoring.attachment');
+            Route::post('/schemes/{project}/risks', [ProjectMonitoringController::class, 'storeRisk'])->name('api.v1.project.schemes.risks.store');
+            Route::put('/risks/{risk}', [ProjectMonitoringController::class, 'updateRisk'])->name('api.v1.project.risks.update');
         });
 
         // Administrative Overview Scenarios

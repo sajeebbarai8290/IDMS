@@ -332,3 +332,34 @@ interface NidVerificationServiceInterface
 - `POST /api/v1/response/operations/{operation}/tasks`, `PUT /api/v1/response/tasks/{task}`, `POST /api/v1/response/tasks/{task}/attachments`, & `GET /api/v1/response/tasks/{task}/attachments/{attachment}` — Task assignment, progress updates, and private evidence upload/download.
 - `GET /api/v1/response/reports` & `POST /api/v1/response/operations/{operation}/reports` — Incident reports, field updates, casualty/rescue figures, emergency requirements, and privacy-scoped GPS.
 
+---
+
+## 9. Module 06: Project Management Implemented Endpoints (`/api/v1/project/*`)
+
+### 9.1 Dashboard, Lookups, Categories, Reports & GIS Map
+- `GET /api/v1/project/dashboard` — Scoped portfolio analytics (Redis cached with version invalidation): total projects, active projects, completed projects, delayed projects, total approved/effective budget, released funds, expenditure, remaining balance, financial & physical progress percentages, category breakdown, and progress by location.
+- `GET /api/v1/project/lookups` — Active project categories, disaster events, scoped administrative units, and lifecycle status constants.
+- `GET /api/v1/project/gis/geojson` — Scoped RFC 7946 `FeatureCollection` of project sites, multi-location points, and boundary polygons; supports `status`, `category_id`, and `bbox=minLng,minLat,maxLng,maxLat` spatial filters.
+- `GET /api/v1/project/reports?type={summary|financial|physical|milestones|monitoring}` — Scoped analytical report views across project summary, financial progress, physical progress & delays, milestone certifications, and monitoring visit reports.
+- `GET /api/v1/project/export` — Download UTF-8 BOM CSV project portfolio export (`project.scheme.export`).
+- `POST /api/v1/project/categories` — Create configurable project category (`DEVELOPMENT`, `DRR`, `REHABILITATION`, `RECOVERY`, etc.).
+
+### 9.2 Project Registration, Multi-Location Coverage & 7-Stage Lifecycle
+- `GET /api/v1/project/schemes` — Scoped, paginated, searchable, sortable, filterable (`status`, `category_id`, `disaster_event_id`, `is_delayed`, `search`) project registry.
+- `POST /api/v1/project/schemes` — Register a disaster management / DRR / rehabilitation / recovery project with Bangla & English titles, code, reference number, optional linked disaster event, primary jurisdiction, multi-location coordinates/wards, funding source, approved/revised budget, timeline, and GIS boundary (`ROLE_SUPER_ADMIN` blocked by operational blackout).
+- `GET /api/v1/project/schemes/{project}` — Full project detail including locations, WBS milestones, financial disbursements, monitoring reports, and risks (`ROLE_EXTERNAL_PARTNER` receives anonymized manager contact and cannot access private internal attachments).
+- `PUT /api/v1/project/schemes/{project}` & `DELETE /api/v1/project/schemes/{project}` — Update non-closed project metadata/locations/GIS or soft-delete `PROPOSED`/`UNDER_REVIEW` drafts.
+- `POST /api/v1/project/schemes/{project}/lifecycle` — Transition across 7 lifecycle states (`PROPOSED` &rarr; `UNDER_REVIEW` &rarr; `APPROVED` &rarr; `ONGOING` &rarr; `SUSPENDED` &rarr; `COMPLETED` &rarr; `CLOSED`); enforces 4-eye Separation of Duties on `APPROVED` (`approved_by !== created_by`) and terminal immutability on `CLOSED`.
+- `POST /api/v1/project/schemes/{project}/boundary` — Upload/update GeoJSON Polygon/MultiPolygon boundary and PostGIS `boundary_geom`.
+
+### 9.3 WBS Activities, Financial Tracking, Monitoring Visits & Risks
+- `POST /api/v1/project/schemes/{project}/milestones` — Create WBS phase/activity/milestone with deliverables, timeline, weight, and assigned officer.
+- `PUT /api/v1/project/milestones/{milestone}/progress` — Update physical completion percentage (0–100) and automatically recalculate weighted project `physical_progress_pct`.
+- `POST /api/v1/project/milestones/{milestone}/certify` — Engineer/PIO physical inspection certification (`VERIFIED_ENGINEER`, `APPROVED_PIO`, `REJECTED`) enforcing 4-eye SoD (`certified_by !== updated_by`).
+- `POST /api/v1/project/schemes/{project}/financials` — Record `FUND_RELEASE`, `EXPENDITURE`, or `BUDGET_REVISION` voucher with optional SHA-256 hashed private supporting document; enforces budget ceiling guards (no unrestricted payment execution).
+- `POST /api/v1/project/financials/{disbursement}/approve` — Authorize/reconcile/reject financial voucher enforcing 4-eye SoD (`approved_by !== created_by`) and recalculating project `released_funds_bdt`, `expenditure_bdt`, `remaining_balance_bdt`, and `financial_progress_pct`.
+- `GET /api/v1/project/financials/{disbursement}/document` — Authenticated private supporting financial document download.
+- `POST /api/v1/project/schemes/{project}/monitoring-reports` & `GET /api/v1/project/monitoring-reports/{report}/attachment` — Submit site monitoring visit reports (with observed physical/financial %, delay flags/reasons, geo-tagged coordinates, and private attachment) and download evidence.
+- `POST /api/v1/project/schemes/{project}/risks` & `PUT /api/v1/project/risks/{risk}` — Log and update project risks and issues (`OPEN`, `MITIGATING`, `RESOLVED`, `CLOSED`).
+
+

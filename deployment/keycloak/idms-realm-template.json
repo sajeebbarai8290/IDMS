@@ -265,6 +265,351 @@
         "designation": ["Field Surveyor / Ward Enumerator"],
         "scope_id": ["7c2a1e3b-5d4f-4a6e-9c8b-1e2f3a4b5c6d"]
       }
+    },
+    {
+      "username": "ministry_exec",
+      "enabled": true,
+      "email": "secretary@modmr.gov.bd",
+      "firstName": "Md. Kamrul",
+      "lastName": "Hasan (Secretary)",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "Password@123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_MINISTRY_EXECUTIVE"],
+      "attributes": {
+        "tier_level": ["NATIONAL"],
+        "ancestry_path": ["/"],
+        "designation": ["Senior Secretary, MoDMR"],
+        "scope_id": ["10000000-0000-0000-0000-000000000001"]
+      }
+    },
+    {
+      "username": "neoc_director",
+      "enabled": true,
+      "email": "neoc.director@modmr.gov.bd",
+      "firstName": "Brig Gen",
+      "lastName": "Tariqul Islam (NEOC)",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "Password@123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_NEOC_DIRECTOR"],
+      "attributes": {
+        "tier_level": ["NATIONAL"],
+        "ancestry_path": ["/"],
+        "designation": ["Director, National Emergency Operations Centre"],
+        "scope_id": ["10000000-0000-0000-0000-000000000001"]
+      }
+    },
+    {
+      "username": "national_auditor",
+      "enabled": true,
+      "email": "audit.cell@modmr.gov.bd",
+      "firstName": "Shahnaz",
+      "lastName": "Begum (Auditor)",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "Password@123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_NATIONAL_AUDITOR"],
+      "attributes": {
+        "tier_level": ["NATIONAL"],
+        "ancestry_path": ["/"],
+        "designation": ["Audit Director, MoDMR Audit Cell"],
+        "scope_id": ["10000000-0000-0000-0000-000000000001"]
+      }
+    },
+    {
+      "username": "ddm_dg",
+      "enabled": true,
+      "email": "dg@ddm.gov.bd",
+      "firstName": "Md. Mizanur",
+      "lastName": "Rahman (DG DDM)",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "Password@123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_DDM_DIRECTOR_GENERAL"],
+      "attributes": {
+        "tier_level": ["NATIONAL"],
+        "ancestry_path": ["/"],
+        "designation": ["Director General, Department of Disaster Management"],
+        "scope_id": ["10000000-0000-0000-0000-000000000001"]
+      }
+    },
+    {
+      "username": "ddm_relief",
+      "enabled": true,
+      "email": "relief.director@ddm.gov.bd",
+      "firstName": "Anisur",
+      "lastName": "Rahman (Relief Dir)",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "Password@123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_DDM_RELIEF_DIRECTOR"],
+      "attributes": {
+        "tier_level": ["NATIONAL"],
+        "ancestry_path": ["/"],
+        "designation": ["Director (Relief, Logistics & Warehousing), DDM"],
+        "scope_id": ["10000000-0000-0000-0000-000000000001"]
+      }
+    },
+    {
+      "username": "ddm_planning",
+      "enabled": true,
+      "email": "planning.director@ddm.gov.bd",
+      "firstName": "Farhana",
+      "lastName": "Yasmin (Planning Dir)",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "Password@123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_DDM_PLANNING_DIRECTOR"],
+      "attributes": {
+        "tier_level": ["NATIONAL"],
+        "ancestry_path": ["/"],
+        "designation": ["Director (Planning, M&E & Reconstruction), DDM"],
+        "scope_id": ["10000000-0000-0000-0000-000000000001"]
+      }
+    },
+    {
+      "username": "div_comm_khulna",
+      "enabled": true,
+      "email": "divcomm.khulna@modmr.gov.bd",
+      "firstName": "Helal",
+      "lastName": "Mahmud (Div Comm)",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "Password@123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_DIVISIONAL_COMMISSIONER"],
+      "attributes": {
+        "tier_level": ["DIVISION"],
+        "ancestry_path": ["/40/"],
+        "division_code": ["40"],
+        "designation": ["Divisional Commissioner, Khulna"]
+      }
+    },
+    {
+      "username": "dc_khulna",
+      "enabled": true,
+      "email": "dc.khulna@modmr.gov.bd",
+      "firstName": "Khondokar",
+      "lastName": "Yasir (DC Khulna)",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "Password@123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_DEPUTY_COMMISSIONER"],
+      "attributes": {
+        "tier_level": ["DISTRICT"],
+        "ancestry_path": ["/40/47/"],
+        "division_code": ["40"],
+        "district_code": ["47"],
+        "designation": ["Deputy Commissioner (DC), Khulna"]
+      }
+    },
+    {
+      "username": "drro_barishal",
+      "enabled": true,
+      "email": "drro.barishal@modmr.gov.bd",
+      "firstName": "Habibur",
+      "lastName": "Rahman (DRRO Barishal)",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "Password@123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_DRRO"],
+      "attributes": {
+        "tier_level": ["DISTRICT"],
+        "ancestry_path": ["/10/"],
+        "division_code": ["10"],
+        "designation": ["District Relief and Rehabilitation Officer, Barishal"]
+      }
+    },
+    {
+      "username": "pio_dacope",
+      "enabled": true,
+      "email": "pio.dacope@modmr.gov.bd",
+      "firstName": "Mahmudul",
+      "lastName": "Hasan (PIO Dacope)",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "Password@123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_PIO"],
+      "attributes": {
+        "tier_level": ["UPAZILA"],
+        "ancestry_path": ["/40/47/12/"],
+        "division_code": ["40"],
+        "district_code": ["47"],
+        "upazila_code": ["12"],
+        "designation": ["Project Implementation Officer, Dacope"]
+      }
+    },
+    {
+      "username": "up_chair_chalna",
+      "enabled": true,
+      "email": "chair.chalna@modmr.gov.bd",
+      "firstName": "Sanat",
+      "lastName": "Kumar (UP Chair)",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "Password@123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_UP_CHAIRMAN"],
+      "attributes": {
+        "tier_level": ["UNION"],
+        "ancestry_path": ["/40/47/12/35/"],
+        "division_code": ["40"],
+        "district_code": ["47"],
+        "upazila_code": ["12"],
+        "union_code": ["35"],
+        "designation": ["Union Parishad Chairman, Chalna"]
+      }
+    },
+    {
+      "username": "up_sec_chalna",
+      "enabled": true,
+      "email": "sec.chalna@modmr.gov.bd",
+      "firstName": "Rasheda",
+      "lastName": "Akter (UP Secretary)",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "Password@123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_UP_SECRETARY"],
+      "attributes": {
+        "tier_level": ["UNION"],
+        "ancestry_path": ["/40/47/12/35/"],
+        "division_code": ["40"],
+        "district_code": ["47"],
+        "upazila_code": ["12"],
+        "union_code": ["35"],
+        "designation": ["Union Parishad Secretary, Chalna"]
+      }
+    },
+    {
+      "username": "tag_officer_dacope",
+      "enabled": true,
+      "email": "tag.dacope@modmr.gov.bd",
+      "firstName": "Nazmul",
+      "lastName": "Haque (Tag Officer)",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "Password@123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_TAG_OFFICER"],
+      "attributes": {
+        "tier_level": ["FIELD"],
+        "ancestry_path": ["/40/47/12/"],
+        "division_code": ["40"],
+        "district_code": ["47"],
+        "upazila_code": ["12"],
+        "designation": ["Designated Verification & Tag Officer, Dacope"]
+      }
+    },
+    {
+      "username": "warehouse_khulna",
+      "enabled": true,
+      "email": "warehouse.khulna@modmr.gov.bd",
+      "firstName": "Monirul",
+      "lastName": "Islam (Godown Officer)",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "Password@123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_WAREHOUSE_OFFICER"],
+      "attributes": {
+        "tier_level": ["DISTRICT"],
+        "ancestry_path": ["/40/47/"],
+        "division_code": ["40"],
+        "district_code": ["47"],
+        "designation": ["District Godown Officer, Khulna LSD"]
+      }
+    },
+    {
+      "username": "shelter_chalna",
+      "enabled": true,
+      "email": "shelter.chalna@modmr.gov.bd",
+      "firstName": "Asma",
+      "lastName": "Khatun (Shelter Mgr)",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "Password@123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_SHELTER_MANAGER"],
+      "attributes": {
+        "tier_level": ["FIELD"],
+        "ancestry_path": ["/40/47/12/35/"],
+        "division_code": ["40"],
+        "district_code": ["47"],
+        "upazila_code": ["12"],
+        "union_code": ["35"],
+        "designation": ["Cyclone Shelter In-Charge, Chalna"]
+      }
+    },
+    {
+      "username": "cpp_leader_dacope",
+      "enabled": true,
+      "email": "cpp.dacope@modmr.gov.bd",
+      "firstName": "Babul",
+      "lastName": "Biswas (CPP Leader)",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "Password@123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_CPP_LEADER"],
+      "attributes": {
+        "tier_level": ["FIELD"],
+        "ancestry_path": ["/40/47/12/35/"],
+        "division_code": ["40"],
+        "district_code": ["47"],
+        "upazila_code": ["12"],
+        "union_code": ["35"],
+        "designation": ["CPP Unit Leader, Chalna"]
+      }
+    },
+    {
+      "username": "volunteer_dacope",
+      "enabled": true,
+      "email": "volunteer.dacope@modmr.gov.bd",
+      "firstName": "Sadia",
+      "lastName": "Afrin (Responder)",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "Password@123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_VOLUNTEER_RESPONDER"],
+      "attributes": {
+        "tier_level": ["FIELD"],
+        "ancestry_path": ["/40/47/12/35/"],
+        "division_code": ["40"],
+        "district_code": ["47"],
+        "upazila_code": ["12"],
+        "union_code": ["35"],
+        "designation": ["Red Crescent / Community First Responder"]
+      }
+    },
+    {
+      "username": "partner_wfp",
+      "enabled": true,
+      "email": "observer.wfp@partner.org",
+      "firstName": "Humanitarian",
+      "lastName": "Observer (WFP)",
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "Password@123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_EXTERNAL_PARTNER"],
+      "attributes": {
+        "tier_level": ["NATIONAL"],
+        "ancestry_path": ["/"],
+        "designation": ["External Humanitarian Observer (WFP)"],
+        "scope_id": ["10000000-0000-0000-0000-000000000001"]
+      }
     }
   ]
 }

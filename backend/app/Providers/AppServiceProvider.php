@@ -13,6 +13,11 @@ use App\Modules\NidVerification\Adapters\MockNidAdapter;
 use App\Modules\NidVerification\Contracts\NidVerificationServiceInterface;
 use App\Modules\NidVerification\Models\NidVerification;
 use App\Modules\NidVerification\Policies\NidVerificationPolicy;
+use App\Modules\Project\Models\Project;
+use App\Modules\Project\Models\ProjectCategory;
+use App\Modules\Project\Models\ProjectDisbursement;
+use App\Modules\Project\Models\ProjectMilestone;
+use App\Modules\Project\Policies\ProjectPolicy;
 use App\Modules\Relief\Models\DistributionVoucher;
 use App\Modules\Relief\Models\ReliefAllocation;
 use App\Modules\Relief\Models\ReliefCategory;
@@ -64,5 +69,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ResponseActivityType::class, ResponsePolicy::class);
         Gate::policy(ResponseOperation::class, ResponsePolicy::class);
         Gate::policy(ResponseSituationReport::class, ResponsePolicy::class);
+        Gate::policy(ProjectCategory::class, ProjectPolicy::class);
+        Gate::policy(Project::class, ProjectPolicy::class);
+        Gate::policy(ProjectMilestone::class, ProjectPolicy::class);
+        Gate::policy(ProjectDisbursement::class, ProjectPolicy::class);
     }
 }

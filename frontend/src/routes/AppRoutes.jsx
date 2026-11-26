@@ -48,6 +48,14 @@ import ResponseOperationFormPage from '../modules/response/pages/ResponseOperati
 import ResponseOperationDetailPage from '../modules/response/pages/ResponseOperationDetailPage';
 import ResponseMapPage from '../modules/response/pages/ResponseMapPage';
 
+// Module 06: Project Management Pages
+import ProjectDashboardPage from '../modules/project/pages/ProjectDashboardPage';
+import ProjectListPage from '../modules/project/pages/ProjectListPage';
+import ProjectFormPage from '../modules/project/pages/ProjectFormPage';
+import ProjectDetailPage from '../modules/project/pages/ProjectDetailPage';
+import ProjectReportsPage from '../modules/project/pages/ProjectReportsPage';
+import ProjectMapPage from '../modules/project/pages/ProjectMapPage';
+
 export const AppRoutes = () => {
   return (
     <Routes>
@@ -399,6 +407,78 @@ export const AppRoutes = () => {
           <ProtectedRoute>
             <MainLayout>
               <ResponseMapPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Module 06: Project Management Routes */}
+      <Route
+        path="/project/dashboard"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ProjectDashboardPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/project/schemes"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ProjectListPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/project/schemes/new"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ProjectFormPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/project/schemes/:id/edit"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ProjectFormPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/project/schemes/:id"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ProjectDetailPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/project/reports"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ProjectReportsPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/project/map"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ProjectMapPage />
             </MainLayout>
           </ProtectedRoute>
         }

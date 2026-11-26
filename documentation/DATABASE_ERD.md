@@ -91,9 +91,14 @@ erDiagram
     ADMINISTRATIVE_UNITS ||--o{ DISTRIBUTION_POINTS : "located_in"
     STOCK_TRANSACTIONS ||--o| DISTRIBUTION_VOUCHERS : "deducted_for_voucher"
 
-    %% RECONSTRUCTION PROJECTS
+    %% PROJECT MANAGEMENT (M06)
+    PROJECT_CATEGORIES ||--o{ PROJECTS : "categorizes"
+    PROJECTS ||--o{ PROJECT_LOCATIONS : "covers_sites"
     PROJECTS ||--|{ PROJECT_MILESTONES : "scheduled_in"
+    PROJECTS ||--o{ PROJECT_DISBURSEMENTS : "tracks_financials"
     PROJECT_MILESTONES ||--o{ PROJECT_DISBURSEMENTS : "authorizes_payment"
+    PROJECTS ||--o{ PROJECT_MONITORING_REPORTS : "inspected_by"
+    PROJECTS ||--o{ PROJECT_RISKS : "logs_risks"
     ADMINISTRATIVE_UNITS ||--o{ PROJECTS : "implemented_within"
 
     %% VOLUNTEER & FIELD OPERATIONS
@@ -567,18 +572,31 @@ erDiagram
 
     PROJECTS {
         uuid id PK
+        uuid category_id FK
         uuid disaster_event_id FK
         uuid administrative_unit_id FK
         string project_code UK
+        string reference_no UK
         string title_en
-        decimal allocated_budget_bdt
+        string title_bn
+        decimal approved_budget_bdt
+        decimal revised_budget_bdt
+        decimal released_funds_bdt
+        decimal expenditure_bdt
+        decimal physical_progress_pct
+        decimal financial_progress_pct
         string status
+        boolean is_delayed
     }
 
     PROJECT_MILESTONES {
         uuid id PK
         uuid project_id FK
+        uuid parent_milestone_id FK
+        string wbs_code
         string milestone_title
+        string item_type
+        decimal weight_percentage
         decimal target_percentage
         decimal completion_percentage
         string approval_status
@@ -586,7 +604,9 @@ erDiagram
 
     PROJECT_DISBURSEMENTS {
         uuid id PK
+        uuid project_id FK
         uuid project_milestone_id FK
+        string record_type
         string voucher_no UK
         decimal amount_bdt
         string payment_status

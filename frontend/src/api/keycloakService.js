@@ -235,11 +235,20 @@ class KeycloakService {
    * Local Dev/Mock Login simulator for development testing.
    */
   devLogin(role = 'ROLE_DRRO', tier = 'DISTRICT') {
+    const ancestryByTier = {
+      NATIONAL: '/',
+      DIVISION: '/40/',
+      DISTRICT: '/40/47/',
+      UPAZILA: '/40/47/12/',
+      UNION: '/40/47/12/35/',
+      FIELD: '/40/47/12/35/',
+    };
+
     const mockPayload = {
       sub: '4a7f29b0-8c21-41e9-b541-6e3e57f20108',
-      preferred_username: 'drro_khulna',
-      name: 'Md. Rafiqul Islam (DRRO)',
-      email: 'drro.khulna@modmr.gov.bd',
+      preferred_username: role.toLowerCase(),
+      name: `${role} (Dev Simulator)`,
+      email: `${role.toLowerCase()}@modmr.gov.bd`,
       roles: [role],
       exp: Math.floor(Date.now() / 1000) + 3600 * 8,
       nbf: Math.floor(Date.now() / 1000),
@@ -247,8 +256,8 @@ class KeycloakService {
       iss: `${KEYCLOAK_CONFIG.url}/realms/${KEYCLOAK_CONFIG.realm}`,
       aud: 'idms-backend-api',
       tier_level: tier,
-      ancestry_path: tier === 'NATIONAL' ? '/' : '/40/47/',
-      designation: 'District Relief and Rehabilitation Officer',
+      ancestry_path: ancestryByTier[tier] || '/',
+      designation: role,
     };
 
     const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT', kid: 'dev-key' }));

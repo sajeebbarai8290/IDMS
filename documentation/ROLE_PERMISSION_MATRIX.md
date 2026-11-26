@@ -261,6 +261,8 @@ Module 06: Project Management (project.*)
   ├── project.milestone.certify            # Tag Officer / PIO physical inspection certification
   ├── project.disbursement.create          # Prepare contractor payment voucher
   ├── project.disbursement.approve         # Authorize public treasury payment disbursement
+  ├── project.monitoring.create            # Submit field monitoring visit reports & risk/issue entries
+  ├── project.category.manage              # Configure project categories (DEVELOPMENT, DRR, REHABILITATION, etc.)
   └── project.scheme.export
 
 Module 07: Resource Management (resource.*)

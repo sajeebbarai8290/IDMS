@@ -669,53 +669,125 @@ Official hand-off record to beneficiary household with atomic stock deduction, G
 
 ---
 
-## 7. Schema: `project` (Post-Disaster Rehabilitation Schemes)
+## 7. Schema: `project` (Module 06: Disaster Management Projects)
 
-### 7.1 `project.projects`
-Infrastructure reconstruction and rehabilitation schemes.
+### 7.1 `project.project_categories`
+Configurable catalog of disaster management project categories (`DEVELOPMENT`, `DRR`, `REHABILITATION`, `RECOVERY`, `TR_KABITA`, `SHELTER_INFRA`, `EMBANKMENT`).
+
+| Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
+| :--- | :--- | :---: | :--- | :--- | :--- |
+| `id` | `uuid` | NO | PK | B-Tree (PK) | Category ID |
+| `code` | `varchar(50)` | NO | UNIQUE | B-Tree (UQ) | Uppercase category code |
+| `name_en` | `varchar(120)` | NO | | | English category name |
+| `name_bn` | `varchar(160)` | NO | | | Bangla category name |
+| `description` | `text` | YES | | | Category description |
+| `color_hex` | `varchar(20)` | YES | | | Map/UI badge color |
+| `is_system` | `boolean` | NO | true | | Seeded system category flag |
+| `is_active` | `boolean` | NO | true | B-Tree | Active flag |
+
+---
+
+### 7.2 `project.projects`
+Development, disaster risk reduction (DRR), rehabilitation, and recovery initiatives.
 
 | Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
 | :--- | :--- | :---: | :--- | :--- | :--- |
 | `id` | `uuid` | NO | PK | B-Tree (PK) | Project ID |
-| `disaster_event_id`| `uuid` | NO | FK &rarr; `disaster.disaster_events(id)` ON DELETE RESTRICT | B-Tree | Root disaster event |
-| `administrative_unit_id`| `uuid`| NO | FK &rarr; `core.administrative_units(id)` ON DELETE RESTRICT | B-Tree | Project jurisdiction |
-| `project_code` | `varchar(50)` | NO | UNIQUE | B-Tree (UQ) | Government scheme code |
-| `title_en` | `varchar(200)`| NO | | B-Tree | Scheme title (English) |
-| `title_bn` | `varchar(250)`| NO | | | Scheme title (Bangla) |
-| `allocated_budget_bdt`| `decimal(15,2)`| NO | CHECK (allocated_budget_bdt > 0) | | Approved budget in BDT |
-| `status` | `varchar(30)` | NO | CHECK in ('TENDER', 'ACTIVE', 'INSPECTION', 'COMPLETED', 'HALTED') | B-Tree | Project lifecycle status |
-| `site_geom` | `geometry(Point, 4326)`| YES | | GIST | Physical worksite coordinate |
-| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
-| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
-| `deleted_at` | `timestamptz` | YES | NULL | | Soft delete timestamp |
+| `category_id` | `uuid` | NO | FK &rarr; `project.project_categories(id)` ON DELETE RESTRICT | B-Tree | Project category |
+| `disaster_event_id` | `uuid` | YES | FK &rarr; `disaster.disaster_events(id)` ON DELETE RESTRICT | B-Tree | Linked disaster event (nullable for standalone DRR) |
+| `administrative_unit_id` | `uuid` | NO | FK &rarr; `core.administrative_units(id)` ON DELETE RESTRICT | B-Tree | Primary project jurisdiction |
+| `project_code` | `varchar(50)` | NO | UNIQUE | B-Tree (UQ) | Government project code |
+| `reference_no` | `varchar(80)` | YES | UNIQUE | B-Tree (UQ) | Official DPP/TAPP/Memo reference |
+| `title_en` | `varchar(220)` | NO | | | Project title (English) |
+| `title_bn` | `varchar(260)` | NO | | | Project title (Bangla) |
+| `description` | `text` | YES | | | Scope & description |
+| `objectives` | `text` | YES | | | Key objectives |
+| `implementing_organization` | `varchar(180)` | NO | | | Implementing agency/office |
+| `project_manager_name` | `varchar(150)` | NO | | | Assigned project manager |
+| `project_manager_contact` | `varchar(60)` | YES | | | Contact (masked for external observers) |
+| `funding_source` | `varchar(150)` | NO | | | GoB / ADP / Donor source |
+| `approved_budget_bdt` | `decimal(15,2)` | NO | | | Approved budget in BDT |
+| `revised_budget_bdt` | `decimal(15,2)` | YES | | | Revised budget ceiling in BDT |
+| `released_funds_bdt` | `decimal(15,2)` | NO | 0 | | Cumulative approved released funds |
+| `expenditure_bdt` | `decimal(15,2)` | NO | 0 | | Cumulative reconciled expenditure |
+| `physical_progress_pct` | `decimal(5,2)` | NO | 0 | | Weighted physical completion percentage |
+| `financial_progress_pct` | `decimal(5,2)` | NO | 0 | | Financial utilization percentage |
+| `start_date` | `date` | NO | | B-Tree | Planned start date |
+| `expected_end_date` | `date` | NO | | B-Tree | Planned end date |
+| `actual_end_date` | `date` | YES | | | Actual completion date |
+| `ward_no` | `varchar(40)` | YES | | | Target ward(s) |
+| `latitude` | `decimal(10,7)` | YES | | | Primary site GPS latitude |
+| `longitude` | `decimal(10,7)` | YES | | | Primary site GPS longitude |
+| `boundary_geojson` | `json` | YES | | | Normalized GeoJSON Polygon/MultiPolygon |
+| `site_geom` | `geometry(Point, 4326)` | YES | Populated on PostgreSQL/PostGIS | GIST | Worksite GPS point |
+| `boundary_geom` | `geometry(MultiPolygon, 4326)` | YES | Populated on PostgreSQL/PostGIS | GIST | Project boundary polygon |
+| `status` | `varchar(30)` | NO | 'PROPOSED' (`PROPOSED`, `UNDER_REVIEW`, `APPROVED`, `ONGOING`, `SUSPENDED`, `COMPLETED`, `CLOSED`) | B-Tree | 7-stage lifecycle status |
+| `is_delayed` | `boolean` | NO | false | B-Tree | Delay flag |
+| `delay_days` | `integer` | NO | 0 | | Observed delay in days |
+| `delay_reason` | `text` | YES | | | Documented delay explanation |
+| `created_by`, `updated_by`, `reviewed_by`, `approved_by`, `closed_by` | `uuid` | YES | FK &rarr; `core.users(id)` | B-Tree | Lifecycle actor audit columns |
+| `created_at`, `updated_at`, `deleted_at` | `timestamptz` | YES | | | Audit & soft delete timestamps |
 
 ---
 
-### 7.2 `project.project_milestones`
-Physical stages and delivery goals.
+### 7.3 `project.project_locations`
+Multiple geographical coverage points/wards/sites per project.
+
+| Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
+| :--- | :--- | :---: | :--- | :--- | :--- |
+| `id` | `uuid` | NO | PK | B-Tree (PK) | Location ID |
+| `project_id` | `uuid` | NO | FK &rarr; `project.projects(id)` ON DELETE CASCADE | B-Tree | Parent project |
+| `administrative_unit_id` | `uuid` | NO | FK &rarr; `core.administrative_units(id)` ON DELETE RESTRICT | B-Tree | Division/District/Upazila/Union |
+| `ward_no` | `varchar(40)` | YES | | | Ward number |
+| `site_name_en`, `site_name_bn` | `varchar` | YES | | | Bilingual site name |
+| `latitude`, `longitude` | `decimal(10,7)` | YES | | | Site GPS coordinates |
+| `location_geom` | `geometry(Point, 4326)` | YES | Populated on PostgreSQL/PostGIS | GIST | Site GPS geometry |
+
+---
+
+### 7.4 `project.project_milestones`
+Work Breakdown Structure (WBS) phases, activities, deliverables, timelines, and certified milestones.
 
 | Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
 | :--- | :--- | :---: | :--- | :--- | :--- |
 | `id` | `uuid` | NO | PK | B-Tree (PK) | Milestone ID |
 | `project_id` | `uuid` | NO | FK &rarr; `project.projects(id)` ON DELETE CASCADE | B-Tree | Parent project |
-| `milestone_title`| `varchar(150)`| NO | | | Milestone description |
-| `target_percentage`| `decimal(5,2)`| NO | CHECK (target_percentage > 0) | | Planned progress percentage |
-| `completion_percentage`| `decimal(5,2)`| NO | DEFAULT 0.00 | | Actual assessed physical progress |
-| `approval_status`| `varchar(30)`| NO | CHECK in ('PENDING', 'VERIFIED_ENGINEER', 'APPROVED_PIO') | B-Tree | Sign-off state |
+| `parent_milestone_id` | `uuid` | YES | FK &rarr; `project.project_milestones(id)` ON DELETE SET NULL | B-Tree | Parent WBS node |
+| `wbs_code` | `varchar(40)` | NO | UNIQUE (`project_id`, `wbs_code`) | B-Tree | WBS hierarchy code |
+| `milestone_title`, `milestone_title_bn` | `varchar` | NO/YES | | | Bilingual milestone/activity title |
+| `item_type` | `varchar(20)` | NO | 'MILESTONE' (`PHASE`, `ACTIVITY`, `MILESTONE`) | B-Tree | WBS item type |
+| `deliverables` | `text` | YES | | | Expected deliverables |
+| `responsible_organization`, `assigned_officer_name` | `varchar` | YES | | | Execution responsibility |
+| `planned_start_date`, `planned_end_date`, `actual_start_date`, `actual_end_date` | `date` | YES | | | Planned vs actual schedule |
+| `weight_percentage` | `decimal(5,2)` | NO | 10.00 | | Weight for physical progress rollup |
+| `target_percentage` | `decimal(5,2)` | NO | 100.00 | | Target completion % |
+| `completion_percentage` | `decimal(5,2)` | NO | 0.00 | | Actual physical progress % |
+| `approval_status` | `varchar(30)` | NO | 'PENDING' (`PENDING`, `SUBMITTED`, `VERIFIED_ENGINEER`, `APPROVED_PIO`, `REJECTED`) | B-Tree | 4-eye inspection certification state |
 
 ---
 
-### 7.3 `project.project_disbursements`
-Financial contractor disbursements tied to verified milestones.
+### 7.5 `project.project_disbursements`
+Financial tracking ledger (budget revisions, fund releases, and recorded expenditures — no unrestricted payment execution).
 
 | Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
 | :--- | :--- | :---: | :--- | :--- | :--- |
-| `id` | `uuid` | NO | PK | B-Tree (PK) | Disbursement ID |
-| `project_milestone_id`| `uuid`| NO | FK &rarr; `project.project_milestones(id)` ON DELETE RESTRICT | B-Tree | Verified milestone |
-| `voucher_no` | `varchar(50)` | NO | UNIQUE | B-Tree (UQ) | Payment voucher number |
-| `amount_bdt` | `decimal(14,2)`| NO | CHECK (amount_bdt > 0) | | Amount released in BDT |
-| `payment_status`| `varchar(30)` | NO | CHECK in ('PENDING', 'RELEASED', 'RECONCILED') | B-Tree | Payment status |
-| `disbursed_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | B-Tree | Financial release timestamp |
+| `id` | `uuid` | NO | PK | B-Tree (PK) | Financial record ID |
+| `project_id` | `uuid` | NO | FK &rarr; `project.projects(id)` ON DELETE CASCADE | B-Tree | Parent project |
+| `project_milestone_id` | `uuid` | YES | FK &rarr; `project.project_milestones(id)` ON DELETE RESTRICT | B-Tree | Optional linked milestone |
+| `record_type` | `varchar(30)` | NO | 'EXPENDITURE' (`BUDGET_REVISION`, `FUND_RELEASE`, `EXPENDITURE`) | B-Tree | Transaction classification |
+| `voucher_no` | `varchar(60)` | NO | UNIQUE | B-Tree (UQ) | Voucher / release reference |
+| `fiscal_year` | `varchar(20)` | YES | | | Government fiscal year |
+| `amount_bdt` | `decimal(15,2)` | NO | | | Amount in BDT |
+| `payment_status` | `varchar(30)` | NO | 'PENDING' (`PENDING`, `APPROVED`, `RELEASED`, `RECONCILED`, `REJECTED`) | B-Tree | Authorization status |
+| `supporting_doc_path`, `supporting_doc_name`, `supporting_doc_sha256` | `varchar` | YES | | | Private supporting document & checksum |
+| `disbursed_at` | `timestamptz` | NO | | B-Tree | Record date/timestamp |
+| `created_by`, `approved_by` | `uuid` | NO/YES | FK &rarr; `core.users(id)` | B-Tree | 4-eye SoD preparer & authorizer |
+
+---
+
+### 7.6 `project.project_monitoring_reports` & `project.project_risks`
+- `project.project_monitoring_reports`: Site visit inspections (`report_no` UQ, `visit_date`, `inspector_name`, `observed_physical_pct`, `observed_financial_pct`, `delay_observed`, `delay_days`, `delay_reason`, `findings`, `recommendations`, `latitude`, `longitude`, private SHA-256 `attachment_*`).
+- `project.project_risks`: Project risks and issues register (`risk_code`, `record_kind` in `RISK`/`ISSUE`, `title`, `severity` in `LOW`/`MEDIUM`/`HIGH`/`CRITICAL`, `likelihood`, `mitigation_plan`, `owner_name`, `status` in `OPEN`/`MITIGATING`/`RESOLVED`/`CLOSED`, `identified_date`, `resolved_date`).
 
 ---
 

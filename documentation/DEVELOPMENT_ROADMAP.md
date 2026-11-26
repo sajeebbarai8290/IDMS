@@ -105,7 +105,7 @@ In accordance with Section 11 of `AGENTS.md` (*"Never generate the entire applic
 
 ### Phase 6: Governance, Workflows & Communications
 - **Module 11 (Workflow Engine):** State machine engine governing multi-tier approvals (Union &rarr; Upazila &rarr; District &rarr; Directorate &rarr; Ministry) with escalation timeouts.
-- **Module 06 (Project Management):** Post-disaster rehabilitation schemes, milestone inspections with timestamped photographs, and disbursement authorizations.
+- [x] **Module 06 (Project Management):** Configurable project categories (`DEVELOPMENT`, `DRR`, `REHABILITATION`, `RECOVERY`, `TR_KABITA`, `SHELTER_INFRA`, `EMBANKMENT`), `project.*` schema with PostGIS `site_geom` & `boundary_geom`, multi-location geographic coverage, 7-stage lifecycle (`PROPOSED` &rarr; `UNDER_REVIEW` &rarr; `APPROVED` &rarr; `ONGOING` &rarr; `SUSPENDED` &rarr; `COMPLETED` &rarr; `CLOSED`) with 4-eye SoD & `ROLE_SUPER_ADMIN` blackout, WBS activities & weighted milestones with Engineer/PIO 4-eye certification, financial tracking ledger (budget revisions, fund releases, expenditures, ceiling checks, SHA-256 private supporting documents without unrestricted payment execution), monitoring visit reports & risk register, 5 report views + UTF-8 CSV export, bilingual React dashboard/registry/form/detail/reports/GIS map UI, and unit/feature automated tests.
 - **Module 13 (Notification & Alert Management):** Teletalk SMS gateway adapter and priority Redis queue dispatcher.
 
 ### Phase 7: Analytics, Assistive AI & System Hardening

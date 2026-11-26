@@ -80,23 +80,53 @@ export const LoginPage = () => {
                     className="form-select form-select-sm"
                     value={selectedRole}
                     onChange={(e) => {
-                      setSelectedRole(e.target.value);
-                      if (e.target.value === 'ROLE_MINISTRY_EXECUTIVE') setSelectedTier('NATIONAL');
-                      else if (e.target.value === 'ROLE_DRRO' || e.target.value === 'ROLE_DEPUTY_COMMISSIONER') setSelectedTier('DISTRICT');
-                      else if (e.target.value === 'ROLE_UNO' || e.target.value === 'ROLE_PIO') setSelectedTier('UPAZILA');
-                      else if (e.target.value === 'ROLE_UP_CHAIRMAN') setSelectedTier('UNION');
-                      else setSelectedTier('FIELD');
+                      const nextRole = e.target.value;
+                      setSelectedRole(nextRole);
+                      if ([
+                        'ROLE_SUPER_ADMIN',
+                        'ROLE_MINISTRY_EXECUTIVE',
+                        'ROLE_NEOC_DIRECTOR',
+                        'ROLE_NATIONAL_AUDITOR',
+                        'ROLE_DDM_DIRECTOR_GENERAL',
+                        'ROLE_DDM_RELIEF_DIRECTOR',
+                        'ROLE_DDM_PLANNING_DIRECTOR',
+                        'ROLE_EXTERNAL_PARTNER',
+                      ].includes(nextRole)) {
+                        setSelectedTier('NATIONAL');
+                      } else if (nextRole === 'ROLE_DIVISIONAL_COMMISSIONER') {
+                        setSelectedTier('DIVISION');
+                      } else if (['ROLE_DRRO', 'ROLE_DEPUTY_COMMISSIONER', 'ROLE_WAREHOUSE_OFFICER'].includes(nextRole)) {
+                        setSelectedTier('DISTRICT');
+                      } else if (['ROLE_UNO', 'ROLE_PIO'].includes(nextRole)) {
+                        setSelectedTier('UPAZILA');
+                      } else if (['ROLE_UP_CHAIRMAN', 'ROLE_UP_SECRETARY'].includes(nextRole)) {
+                        setSelectedTier('UNION');
+                      } else {
+                        setSelectedTier('FIELD');
+                      }
                     }}
                   >
+                    <option value="ROLE_SUPER_ADMIN">সিস্টেম অ্যাডমিন (ROLE_SUPER_ADMIN)</option>
                     <option value="ROLE_MINISTRY_EXECUTIVE">জাতীয় / সচিব (ROLE_MINISTRY_EXECUTIVE)</option>
+                    <option value="ROLE_NEOC_DIRECTOR">এনইওসি পরিচালক (ROLE_NEOC_DIRECTOR)</option>
+                    <option value="ROLE_NATIONAL_AUDITOR">সিএজি / অডিটর (ROLE_NATIONAL_AUDITOR)</option>
                     <option value="ROLE_DDM_DIRECTOR_GENERAL">মহাপরিচালক, ডিডিএম (ROLE_DDM_DIRECTOR_GENERAL)</option>
+                    <option value="ROLE_DDM_RELIEF_DIRECTOR">পরিচালক - ত্রাণ, ডিডিএম (ROLE_DDM_RELIEF_DIRECTOR)</option>
+                    <option value="ROLE_DDM_PLANNING_DIRECTOR">পরিচালক - পরিকল্পনা, ডিডিএম (ROLE_DDM_PLANNING_DIRECTOR)</option>
+                    <option value="ROLE_DIVISIONAL_COMMISSIONER">বিভাগীয় কমিশনার (ROLE_DIVISIONAL_COMMISSIONER)</option>
                     <option value="ROLE_DEPUTY_COMMISSIONER">জেলা প্রশাসক - ডিসি (ROLE_DEPUTY_COMMISSIONER)</option>
                     <option value="ROLE_DRRO">জেলা ত্রাণ ও পুনর্বাসন কর্মকর্তা - ডিআরআরও (ROLE_DRRO)</option>
                     <option value="ROLE_UNO">উপজেলা নির্বাহী অফিসার - ইউএনও (ROLE_UNO)</option>
                     <option value="ROLE_PIO">প্রকল্প বাস্তবায়ন কর্মকর্তা - পিআইও (ROLE_PIO)</option>
                     <option value="ROLE_UP_CHAIRMAN">ইউনিয়ন পরিষদ চেয়ারম্যান (ROLE_UP_CHAIRMAN)</option>
+                    <option value="ROLE_UP_SECRETARY">ইউনিয়ন পরিষদ সচিব (ROLE_UP_SECRETARY)</option>
                     <option value="ROLE_FIELD_ENUMERATOR">মাঠ তথ্য সংগ্রহকারী (ROLE_FIELD_ENUMERATOR)</option>
-                    <option value="ROLE_NATIONAL_AUDITOR">সিএজি / অডিটর (ROLE_NATIONAL_AUDITOR)</option>
+                    <option value="ROLE_TAG_OFFICER">ট্যাগ / পরিদর্শন কর্মকর্তা (ROLE_TAG_OFFICER)</option>
+                    <option value="ROLE_WAREHOUSE_OFFICER">গুদাম কর্মকর্তা (ROLE_WAREHOUSE_OFFICER)</option>
+                    <option value="ROLE_SHELTER_MANAGER">আশ্রয়কেন্দ্র ব্যবস্থাপক (ROLE_SHELTER_MANAGER)</option>
+                    <option value="ROLE_CPP_LEADER">সিপিপি টিম লিডার (ROLE_CPP_LEADER)</option>
+                    <option value="ROLE_VOLUNTEER_RESPONDER">স্বেচ্ছাসেবক (ROLE_VOLUNTEER_RESPONDER)</option>
+                    <option value="ROLE_EXTERNAL_PARTNER">বহিরাগত পর্যবেক্ষক (ROLE_EXTERNAL_PARTNER)</option>
                   </select>
                 </div>
 

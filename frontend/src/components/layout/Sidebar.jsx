@@ -10,6 +10,7 @@ import {
   canRecordDistribution,
 } from '../../modules/relief/utils/reliefPermissions';
 import { canCreateOperation } from '../../modules/response/utils/responsePermissions';
+import { canCreateProject } from '../../modules/project/utils/projectPermissions';
 
 export const Sidebar = ({ isOpen }) => {
   const { user } = useAuth();
@@ -22,6 +23,7 @@ export const Sidebar = ({ isOpen }) => {
   const showReliefAllocCreate = canCreateAllocation(user);
   const showReliefDistribute = canRecordDistribution(user);
   const showResponseOpCreate = canCreateOperation(user);
+  const showProjectCreate = canCreateProject(user);
 
   return (
     <aside className={`idms-sidebar ${isOpen ? 'show' : ''}`}>
@@ -154,6 +156,32 @@ export const Sidebar = ({ isOpen }) => {
         <NavLink to="/response/map" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
           <i className="bi bi-map me-2 text-success"></i>
           <span>{t('সাড়াদান জিআইএস মানচিত্র', 'Response GIS Map')}</span>
+        </NavLink>
+
+        <div className="idms-sidebar-section-title">
+          {t('প্রকল্প ব্যবস্থাপনা (M06)', 'Project Management (M06)')}
+        </div>
+        <NavLink to="/project/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-kanban-fill me-2 text-primary"></i>
+          <span>{t('প্রকল্প ড্যাশবোর্ড', 'Project Dashboard')}</span>
+        </NavLink>
+        <NavLink to="/project/schemes" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-list-check me-2 text-info"></i>
+          <span>{t('প্রকল্প তালিকা', 'Project Registry')}</span>
+        </NavLink>
+        {showProjectCreate && (
+          <NavLink to="/project/schemes/new" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <i className="bi bi-plus-circle me-2 text-primary"></i>
+            <span>{t('নতুন প্রকল্প নিবন্ধন', 'Register Project')}</span>
+          </NavLink>
+        )}
+        <NavLink to="/project/reports" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-file-earmark-bar-graph me-2 text-warning"></i>
+          <span>{t('প্রকল্প প্রতিবেদন', 'Project Reports')}</span>
+        </NavLink>
+        <NavLink to="/project/map" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-geo-alt-fill me-2 text-success"></i>
+          <span>{t('প্রকল্প জিআইএস মানচিত্র', 'Project GIS Map')}</span>
         </NavLink>
 
         <div className="idms-sidebar-section-title">অন্যান্য মডিউল (Planned)</div>

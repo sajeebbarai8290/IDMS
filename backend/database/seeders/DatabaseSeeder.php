@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             BeneficiarySeeder::class,
             ReliefCatalogAndWarehouseSeeder::class,
             ResponseCatalogSeeder::class,
+            ProjectSeeder::class,
         ]);
     }
 }
