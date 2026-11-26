@@ -62,6 +62,19 @@ erDiagram
     RESOURCE_ASSETS ||--o{ RESPONSE_RESOURCE_ALLOCATIONS : "deployed_to_operation"
     RESPONSE_OPERATIONS ||--o{ RESPONSE_SITUATION_REPORTS : "receives_sitreps"
 
+    %% RESOURCE MANAGEMENT (M07)
+    RESOURCE_CATEGORIES ||--o{ RESOURCE_ASSETS : "classifies_resource"
+    RESOURCE_ASSETS ||--o{ RESOURCE_ATTACHMENTS : "documented_by"
+    RESOURCE_ASSETS ||--o{ RESOURCE_ALLOCATIONS : "allocated_via"
+    DISASTER_EVENTS ||--o{ RESOURCE_ALLOCATIONS : "allocates_resources"
+    RESPONSE_OPERATIONS ||--o{ RESOURCE_ALLOCATIONS : "deploys_resources"
+    ADMINISTRATIVE_UNITS ||--o{ RESOURCE_ALLOCATIONS : "allocation_location"
+    RESOURCE_ASSETS ||--o{ RESOURCE_MAINTENANCES : "serviced_via"
+    RESOURCE_ASSETS ||--o{ HUMAN_RESOURCE_DEPLOYMENTS : "assigned_personnel"
+    RESPONSE_TEAMS ||--o{ HUMAN_RESOURCE_DEPLOYMENTS : "assigned_team"
+    RESPONSE_OPERATIONS ||--o{ HUMAN_RESOURCE_DEPLOYMENTS : "personnel_deployed_to"
+    DISASTER_EVENTS ||--o{ HUMAN_RESOURCE_DEPLOYMENTS : "personnel_for_disaster"
+
     %% DAMAGE ASSESSMENT (D-FORM)
     DAMAGE_ASSESSMENTS ||--|{ DAMAGE_SECTOR_ITEMS : "details_sector_loss"
     ADMINISTRATIVE_UNITS ||--o{ DAMAGE_ASSESSMENTS : "assessed_at"
@@ -317,14 +330,92 @@ erDiagram
         geometry_point location_geom
     }
 
+    RESOURCE_CATEGORIES {
+        uuid id PK
+        string code UK
+        string name_en
+        string name_bn
+        boolean is_human_resource
+        boolean is_system
+        boolean is_active
+    }
+
     RESOURCE_ASSETS {
         uuid id PK
+        uuid category_id FK
         uuid administrative_unit_id FK
         string asset_code UK
         string asset_type
+        string resource_type
         string name_en
         string name_bn
+        string owning_organization
+        string current_location
+        string responsible_officer_name
+        uuid responsible_user_id FK
+        date acquisition_date
+        decimal acquisition_value_bdt
+        date next_maintenance_due_at
         string status
+        geometry_point location_geom
+    }
+
+    RESOURCE_ATTACHMENTS {
+        uuid id PK
+        uuid resource_asset_id FK
+        string attachment_kind
+        string original_name
+        string storage_path
+        string sha256_hash
+    }
+
+    RESOURCE_ALLOCATIONS {
+        uuid id PK
+        uuid resource_asset_id FK
+        uuid disaster_event_id FK
+        uuid response_operation_id FK
+        uuid administrative_unit_id FK
+        string allocation_no UK
+        string allocation_location
+        date assignment_date
+        date expected_return_date
+        date actual_return_date
+        string responsible_officer_name
+        string status
+        geometry_point location_geom
+    }
+
+    RESOURCE_MAINTENANCES {
+        uuid id PK
+        uuid resource_asset_id FK
+        uuid administrative_unit_id FK
+        string maintenance_no UK
+        string record_type
+        string title
+        date scheduled_date
+        date performed_date
+        date next_due_date
+        string inspection_result
+        decimal repair_cost_bdt
+        string status
+        string attachment_path
+    }
+
+    HUMAN_RESOURCE_DEPLOYMENTS {
+        uuid id PK
+        uuid resource_asset_id FK
+        uuid user_id FK
+        uuid response_team_id FK
+        uuid response_operation_id FK
+        uuid disaster_event_id FK
+        uuid administrative_unit_id FK
+        string deployment_no UK
+        string personnel_name
+        text assigned_duty
+        date deployment_start_date
+        date deployment_end_date
+        date actual_return_date
+        string availability_status
     }
 
     RESPONSE_OPERATIONS {

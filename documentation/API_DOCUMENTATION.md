@@ -362,4 +362,33 @@ interface NidVerificationServiceInterface
 - `POST /api/v1/project/schemes/{project}/monitoring-reports` & `GET /api/v1/project/monitoring-reports/{report}/attachment` — Submit site monitoring visit reports (with observed physical/financial %, delay flags/reasons, geo-tagged coordinates, and private attachment) and download evidence.
 - `POST /api/v1/project/schemes/{project}/risks` & `PUT /api/v1/project/risks/{risk}` — Log and update project risks and issues (`OPEN`, `MITIGATING`, `RESOLVED`, `CLOSED`).
 
+---
+
+## 10. Module 07: Resource Management Implemented Endpoints (`/api/v1/resource/*`)
+
+### 10.1 Dashboard, Categories, Reminders, GIS & CSV Export
+- `GET /api/v1/resource/dashboard` — Scoped resource analytics (Redis cached with version invalidation): total resources, available, assigned/in-use, under maintenance, damaged, retired, active human resource deployments, asset valuation & repair costs, category breakdown, utilization by disaster, geographical distribution, and upcoming/overdue maintenance reminders.
+- `GET /api/v1/resource/lookups` — Active configurable resource categories, disaster events, active response operations, response teams, scoped administrative units, and personnel list (`ROLE_EXTERNAL_PARTNER` receives redacted personnel).
+- `GET /api/v1/resource/gis/geojson` — Scoped RFC 7946 `FeatureCollection` of registered resource points and active allocations (supports `category_id`, `status`, `disaster_event_id`, `bbox`); coordinates are privacy-masked for external partners.
+- `GET /api/v1/resource/reminders?days=30` — Overdue and upcoming maintenance due assets and scheduled maintenance tasks within the horizon window.
+- `GET /api/v1/resource/export` — Download UTF-8 BOM CSV resource register (`resource.asset.export`) with formula-injection sanitization and external partner officer redaction.
+- `GET /api/v1/resource/categories` & `POST /api/v1/resource/categories` — List and add configurable resource categories (`VEHICLES`, `BOATS`, `RESCUE_EQUIPMENT`, `MEDICAL_EQUIPMENT`, `COMMUNICATION_EQUIPMENT`, `HEAVY_MACHINERY`, `EMERGENCY_RESPONSE_EQUIPMENT`, `HUMAN_RESOURCES`, and custom categories).
+
+### 10.2 Resource Registration, Specifications & Supporting Attachments
+- `GET /api/v1/resource/assets` — Scoped, paginated, searchable, filterable (`category_id`, `status`, `administrative_unit_id`, `search`), and sortable resource register.
+- `POST /api/v1/resource/assets` — Register resource with unique `asset_code`, category, `resource_type`, specifications JSON, owning organization, administrative unit, current location, GPS coordinates + PostGIS `location_geom`, responsible officer, acquisition date/value, and next maintenance due date.
+- `GET /api/v1/resource/assets/{asset}` — Full resource profile with attachments, allocation utilization history, maintenance/inspection logs, and human resource deployments.
+- `PUT /api/v1/resource/assets/{asset}` & `DELETE /api/v1/resource/assets/{asset}` — Update resource metadata (prevents manual status override while active allocations exist) or retire/soft-delete non-deployed assets.
+- `POST /api/v1/resource/assets/{asset}/attachments` & `GET /api/v1/resource/assets/{asset}/attachments/{attachment}` — Upload private supporting documents/photographs (`DOCUMENT`, `PHOTOGRAPH`) with SHA-256 checksums and authenticated download (blocked for `ROLE_EXTERNAL_PARTNER`).
+
+### 10.3 Transaction-Safe Resource Allocation & Utilization History
+- `GET /api/v1/resource/allocations` — Scoped, paginated allocation ledger (`status`, `disaster_event_id`, `response_operation_id`, `resource_asset_id`, `search`).
+- `POST /api/v1/resource/allocations` — Transaction-safe allocation (`lockForUpdate()`) linking an `AVAILABLE` resource to a disaster event and/or response operation with location, assignment date, expected return date, and responsible officer; rejects unavailable (`ASSIGNED`, `IN_USE`, `DEPLOYED`, `UNDER_MAINTENANCE`, `DAMAGED`, `RETIRED`) resources with HTTP 422 and enforces `ROLE_SUPER_ADMIN` operational blackout (403).
+- `POST /api/v1/resource/allocations/{allocation}/in-use` — Transition `ASSIGNED` allocation and resource asset to `IN_USE`.
+- `POST /api/v1/resource/allocations/{allocation}/release` — Transaction-safe release (`RETURNED`/`CANCELLED`), recording `actual_return_date` and return condition (`GOOD` &rarr; `AVAILABLE`, `MAINTENANCE_REQUIRED` &rarr; `UNDER_MAINTENANCE`, `DAMAGED` &rarr; `DAMAGED`).
+
+### 10.4 Maintenance Schedules, Inspection Reports & Human Resource Deployments
+- `GET /api/v1/resource/maintenances`, `POST /api/v1/resource/assets/{asset}/maintenances`, `PUT /api/v1/resource/maintenances/{maintenance}`, & `GET /api/v1/resource/maintenances/{maintenance}/attachment` — Manage maintenance schedules, preventive/corrective logs, inspection findings/results (`PASS`, `CONDITIONAL`, `FAIL`), repair costs (`repair_cost_bdt`), maintenance reminders, and SHA-256 private inspection report uploads/downloads.
+- `GET /api/v1/resource/human-deployments`, `POST /api/v1/resource/human-deployments`, & `POST /api/v1/resource/human-deployments/{deployment}/release` — Deploy registered HR specialists, system officers, or response teams to response operations/disasters with duty descriptions and deployment periods, preventing double-deployment conflicts and tracking full assignment history.
+
 

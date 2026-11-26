@@ -23,6 +23,12 @@ use App\Modules\Relief\Models\ReliefAllocation;
 use App\Modules\Relief\Models\ReliefCategory;
 use App\Modules\Relief\Models\ReliefRequisition;
 use App\Modules\Relief\Policies\ReliefPolicy;
+use App\Modules\Resource\Models\HumanResourceDeployment;
+use App\Modules\Resource\Models\ResourceAllocation;
+use App\Modules\Resource\Models\ResourceAsset;
+use App\Modules\Resource\Models\ResourceCategory;
+use App\Modules\Resource\Models\ResourceMaintenance;
+use App\Modules\Resource\Policies\ResourcePolicy;
 use App\Modules\Response\Models\ResponseActivityType;
 use App\Modules\Response\Models\ResponseOperation;
 use App\Modules\Response\Models\ResponseSituationReport;
@@ -73,5 +79,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Project::class, ProjectPolicy::class);
         Gate::policy(ProjectMilestone::class, ProjectPolicy::class);
         Gate::policy(ProjectDisbursement::class, ProjectPolicy::class);
+        Gate::policy(ResourceCategory::class, ResourcePolicy::class);
+        Gate::policy(ResourceAsset::class, ResourcePolicy::class);
+        Gate::policy(ResourceAllocation::class, ResourcePolicy::class);
+        Gate::policy(ResourceMaintenance::class, ResourcePolicy::class);
+        Gate::policy(HumanResourceDeployment::class, ResourcePolicy::class);
     }
 }

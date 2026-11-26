@@ -11,6 +11,7 @@ import {
 } from '../../modules/relief/utils/reliefPermissions';
 import { canCreateOperation } from '../../modules/response/utils/responsePermissions';
 import { canCreateProject } from '../../modules/project/utils/projectPermissions';
+import { canWriteResourceAssets } from '../../modules/resource/utils/resourcePermissions';
 
 export const Sidebar = ({ isOpen }) => {
   const { user } = useAuth();
@@ -24,6 +25,7 @@ export const Sidebar = ({ isOpen }) => {
   const showReliefDistribute = canRecordDistribution(user);
   const showResponseOpCreate = canCreateOperation(user);
   const showProjectCreate = canCreateProject(user);
+  const showResourceCreate = canWriteResourceAssets(user);
 
   return (
     <aside className={`idms-sidebar ${isOpen ? 'show' : ''}`}>
@@ -182,6 +184,40 @@ export const Sidebar = ({ isOpen }) => {
         <NavLink to="/project/map" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
           <i className="bi bi-geo-alt-fill me-2 text-success"></i>
           <span>{t('প্রকল্প জিআইএস মানচিত্র', 'Project GIS Map')}</span>
+        </NavLink>
+
+        <div className="idms-sidebar-section-title">
+          {t('সম্পদ ব্যবস্থাপনা (M07)', 'Resource Management (M07)')}
+        </div>
+        <NavLink to="/resource/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-truck-front-fill me-2 text-primary"></i>
+          <span>{t('সম্পদ ড্যাশবোর্ড', 'Resource Dashboard')}</span>
+        </NavLink>
+        <NavLink to="/resource/assets" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-boxes me-2 text-info"></i>
+          <span>{t('সম্পদ রেজিস্টার', 'Resource Register')}</span>
+        </NavLink>
+        {showResourceCreate && (
+          <NavLink to="/resource/assets/new" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <i className="bi bi-plus-circle me-2 text-primary"></i>
+            <span>{t('নতুন সম্পদ নিবন্ধন', 'Register Resource')}</span>
+          </NavLink>
+        )}
+        <NavLink to="/resource/allocations" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-send-check me-2 text-success"></i>
+          <span>{t('সম্পদ বরাদ্দ ও ব্যবহার', 'Allocations & Returns')}</span>
+        </NavLink>
+        <NavLink to="/resource/maintenance" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-wrench-adjustable-circle me-2 text-warning"></i>
+          <span>{t('রক্ষণাবেক্ষণ ও পরিদর্শন', 'Maintenance & Alerts')}</span>
+        </NavLink>
+        <NavLink to="/resource/human-deployments" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-people-fill me-2 text-secondary"></i>
+          <span>{t('মানবসম্পদ মোতায়েন', 'Human Resources')}</span>
+        </NavLink>
+        <NavLink to="/resource/map" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-geo-alt-fill me-2 text-danger"></i>
+          <span>{t('সম্পদ জিআইএস মানচিত্র', 'Resource GIS Map')}</span>
         </NavLink>
 
         <div className="idms-sidebar-section-title">অন্যান্য মডিউল (Planned)</div>

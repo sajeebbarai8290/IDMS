@@ -24,6 +24,11 @@ use App\Modules\Relief\Controllers\Api\V1\ReliefCategoryController;
 use App\Modules\Relief\Controllers\Api\V1\ReliefDashboardController;
 use App\Modules\Relief\Controllers\Api\V1\ReliefDistributionController;
 use App\Modules\Relief\Controllers\Api\V1\ReliefRequisitionController;
+use App\Modules\Resource\Controllers\Api\V1\HumanResourceDeploymentController;
+use App\Modules\Resource\Controllers\Api\V1\ResourceAllocationController;
+use App\Modules\Resource\Controllers\Api\V1\ResourceAssetController;
+use App\Modules\Resource\Controllers\Api\V1\ResourceDashboardController;
+use App\Modules\Resource\Controllers\Api\V1\ResourceMaintenanceController;
 use App\Modules\Response\Controllers\Api\V1\ResponseCoordinationController;
 use App\Modules\Response\Controllers\Api\V1\ResponseDashboardController;
 use App\Modules\Response\Controllers\Api\V1\ResponseOperationController;
@@ -230,6 +235,39 @@ Route::prefix('v1')->group(function () {
             Route::get('/monitoring-reports/{report}/attachment', [ProjectMonitoringController::class, 'downloadAttachment'])->name('api.v1.project.monitoring.attachment');
             Route::post('/schemes/{project}/risks', [ProjectMonitoringController::class, 'storeRisk'])->name('api.v1.project.schemes.risks.store');
             Route::put('/risks/{risk}', [ProjectMonitoringController::class, 'updateRisk'])->name('api.v1.project.risks.update');
+        });
+
+        // 9. Module 07: Resource Management (resource.*)
+        Route::prefix('resource')->group(function () {
+            Route::get('/dashboard', [ResourceDashboardController::class, 'summary'])->name('api.v1.resource.dashboard');
+            Route::get('/lookups', [ResourceDashboardController::class, 'lookups'])->name('api.v1.resource.lookups');
+            Route::get('/gis/geojson', [ResourceDashboardController::class, 'geojson'])->name('api.v1.resource.gis.geojson');
+            Route::get('/reminders', [ResourceDashboardController::class, 'reminders'])->name('api.v1.resource.reminders');
+            Route::get('/export', [ResourceDashboardController::class, 'export'])->name('api.v1.resource.export');
+            Route::get('/categories', [ResourceDashboardController::class, 'categories'])->name('api.v1.resource.categories.index');
+            Route::post('/categories', [ResourceDashboardController::class, 'storeCategory'])->name('api.v1.resource.categories.store');
+
+            Route::get('/assets', [ResourceAssetController::class, 'index'])->name('api.v1.resource.assets.index');
+            Route::post('/assets', [ResourceAssetController::class, 'store'])->name('api.v1.resource.assets.store');
+            Route::get('/assets/{asset}', [ResourceAssetController::class, 'show'])->name('api.v1.resource.assets.show');
+            Route::put('/assets/{asset}', [ResourceAssetController::class, 'update'])->name('api.v1.resource.assets.update');
+            Route::delete('/assets/{asset}', [ResourceAssetController::class, 'destroy'])->name('api.v1.resource.assets.destroy');
+            Route::post('/assets/{asset}/attachments', [ResourceAssetController::class, 'uploadAttachment'])->name('api.v1.resource.assets.attachments.store');
+            Route::get('/assets/{asset}/attachments/{attachment}', [ResourceAssetController::class, 'downloadAttachment'])->name('api.v1.resource.assets.attachments.download');
+
+            Route::get('/allocations', [ResourceAllocationController::class, 'index'])->name('api.v1.resource.allocations.index');
+            Route::post('/allocations', [ResourceAllocationController::class, 'store'])->name('api.v1.resource.allocations.store');
+            Route::post('/allocations/{allocation}/in-use', [ResourceAllocationController::class, 'markInUse'])->name('api.v1.resource.allocations.in_use');
+            Route::post('/allocations/{allocation}/release', [ResourceAllocationController::class, 'release'])->name('api.v1.resource.allocations.release');
+
+            Route::get('/maintenances', [ResourceMaintenanceController::class, 'index'])->name('api.v1.resource.maintenances.index');
+            Route::post('/assets/{asset}/maintenances', [ResourceMaintenanceController::class, 'store'])->name('api.v1.resource.assets.maintenances.store');
+            Route::put('/maintenances/{maintenance}', [ResourceMaintenanceController::class, 'update'])->name('api.v1.resource.maintenances.update');
+            Route::get('/maintenances/{maintenance}/attachment', [ResourceMaintenanceController::class, 'downloadAttachment'])->name('api.v1.resource.maintenances.attachment');
+
+            Route::get('/human-deployments', [HumanResourceDeploymentController::class, 'index'])->name('api.v1.resource.human.index');
+            Route::post('/human-deployments', [HumanResourceDeploymentController::class, 'store'])->name('api.v1.resource.human.store');
+            Route::post('/human-deployments/{deployment}/release', [HumanResourceDeploymentController::class, 'release'])->name('api.v1.resource.human.release');
         });
 
         // Administrative Overview Scenarios

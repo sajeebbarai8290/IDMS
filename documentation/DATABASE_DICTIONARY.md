@@ -939,3 +939,25 @@ Resource requirements and deployed vehicle/equipment links tied to operations an
 
 ### 12.8 `response.response_situation_reports`
 Emergency incident reports, field updates, casualty/missing/rescued/evacuated figures, emergency requirements, GPS coordinates + PostGIS `location_geom`, and `privacy_level` (`PUBLIC_AREA`, `RESTRICTED_EXACT`).
+
+---
+
+## 13. Schema: `resource` (Module 07: Resource Management)
+
+### 13.1 `resource.resource_categories`
+Configurable resource category catalog supporting system categories (`VEHICLES`, `BOATS`, `RESCUE_EQUIPMENT`, `MEDICAL_EQUIPMENT`, `COMMUNICATION_EQUIPMENT`, `HEAVY_MACHINERY`, `EMERGENCY_RESPONSE_EQUIPMENT`, `HUMAN_RESOURCES`) and custom categories (`is_system = false`), with `is_human_resource`, icon, and color metadata.
+
+### 13.2 `resource.resource_assets` (Extended from Module 05 Foundation)
+Centralized sovereign resource register sharing the `resource.resource_assets` foundation with Module 05. Adds `category_id` FK &rarr; `resource.resource_categories(id)`, `resource_type`, `description`, `specifications` (JSON), `owning_organization`, `current_location`, `responsible_officer_name`, `responsible_officer_contact`, `responsible_user_id` FK &rarr; `core.users(id)`, `acquisition_date`, `acquisition_value_bdt`, `next_maintenance_due_at`, `created_by`, `updated_by`, and PostGIS `location_geom` (`geometry(Point, 4326)` with GIST index). Supports availability states `AVAILABLE`, `ASSIGNED`, `IN_USE`, `UNDER_MAINTENANCE`, `DAMAGED`, `RETIRED` (plus Module 05 `DEPLOYED`/`MAINTENANCE` compatibility).
+
+### 13.3 `resource.resource_attachments`
+Private supporting documents and photographs (`DOCUMENT`, `PHOTOGRAPH`) for registered resources, stored on private local storage with MIME validation, byte size, and SHA-256 integrity hash.
+
+### 13.4 `resource.resource_allocations`
+Transaction-safe resource assignment and utilization history linking `resource_asset_id` to `disaster.disaster_events`, optional `response.response_operations`, and `core.administrative_units`, tracking `allocation_no`, `allocation_location`, GPS coordinates + PostGIS `location_geom`, `assignment_date`, `expected_return_date`, `actual_return_date`, `responsible_officer_name`, `responsible_officer_contact`, `status` (`ASSIGNED`, `IN_USE`, `RETURNED`, `CANCELLED`), and return condition notes.
+
+### 13.5 `resource.resource_maintenances`
+Maintenance schedules, preventive/corrective maintenance records, inspection reports (`PASS`, `CONDITIONAL`, `FAIL`), repair costs (`repair_cost_bdt`), vendor/workshop details, `next_due_date` + `reminder_days_before` for maintenance reminders, and SHA-256 hashed private inspection attachments.
+
+### 13.6 `resource.human_resource_deployments`
+Human resource deployment tracking linking personnel (`resource_asset_id`, `user_id`, or named personnel) and/or `response.response_teams` to `response.response_operations` and/or `disaster.disaster_events`, recording `deployment_no`, `assigned_duty`, `deployment_location`, `deployment_start_date`, `deployment_end_date`, `actual_return_date`, and `availability_status` (`ASSIGNED`, `IN_USE`, `COMPLETED`, `CANCELLED`).

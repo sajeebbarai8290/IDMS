@@ -56,6 +56,16 @@ import ProjectDetailPage from '../modules/project/pages/ProjectDetailPage';
 import ProjectReportsPage from '../modules/project/pages/ProjectReportsPage';
 import ProjectMapPage from '../modules/project/pages/ProjectMapPage';
 
+// Module 07: Resource Management Pages
+import ResourceDashboardPage from '../modules/resource/pages/ResourceDashboardPage';
+import ResourceListPage from '../modules/resource/pages/ResourceListPage';
+import ResourceFormPage from '../modules/resource/pages/ResourceFormPage';
+import ResourceDetailPage from '../modules/resource/pages/ResourceDetailPage';
+import ResourceAllocationPage from '../modules/resource/pages/ResourceAllocationPage';
+import ResourceMaintenancePage from '../modules/resource/pages/ResourceMaintenancePage';
+import HumanResourceDeploymentPage from '../modules/resource/pages/HumanResourceDeploymentPage';
+import ResourceMapPage from '../modules/resource/pages/ResourceMapPage';
+
 export const AppRoutes = () => {
   return (
     <Routes>
@@ -479,6 +489,98 @@ export const AppRoutes = () => {
           <ProtectedRoute>
             <MainLayout>
               <ProjectMapPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Module 07: Resource Management Routes */}
+      <Route
+        path="/resource/dashboard"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ResourceDashboardPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/resource/assets"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ResourceListPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/resource/assets/new"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ResourceFormPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/resource/assets/:id/edit"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ResourceFormPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/resource/assets/:id"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ResourceDetailPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/resource/allocations"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ResourceAllocationPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/resource/maintenance"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ResourceMaintenancePage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/resource/human-deployments"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <HumanResourceDeploymentPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/resource/map"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ResourceMapPage />
             </MainLayout>
           </ProtectedRoute>
         }

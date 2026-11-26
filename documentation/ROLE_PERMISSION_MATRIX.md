@@ -266,6 +266,7 @@ Module 06: Project Management (project.*)
   └── project.scheme.export
 
 Module 07: Resource Management (resource.*)
+  ├── resource.category.manage             # Configure resource categories (Vehicles, Boats, HR, custom)
   ├── resource.asset.view
   ├── resource.asset.create                # Register rescue boats, water purification units, vehicles
   ├── resource.asset.update                # Update operational status & maintenance log
@@ -415,6 +416,7 @@ The following matrix maps every system role across all 17 functional modules.
 | `project.disbursement.approve` | -- | ✔ | -- | -- | ✔[D]| -- | ✔[D]| -- | [S][D]| [S][D]| [S][D]| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
 | `project.scheme.export` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | [S] | -- | -- | -- | -- | [A] |
 | **M07: RESOURCE MANAGEMENT**| | | | | | | | | | | | | | | | | | | | | |
+| `resource.category.manage` | ✔ | ✔ | ✔ | -- | ✔ | ✔ | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
 | `resource.asset.view` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [A] |
 | `resource.asset.create` | ✔ | -- | ✔ | -- | ✔ | ✔ | -- | -- | [S] | [S] | [S] | [S] | -- | -- | -- | -- | [S] | -- | -- | -- | -- |
 | `resource.asset.update` | ✔ | -- | ✔ | -- | ✔ | ✔ | -- | -- | [S] | [S] | [S] | [S] | -- | -- | -- | -- | [S] | -- | -- | -- | -- |
