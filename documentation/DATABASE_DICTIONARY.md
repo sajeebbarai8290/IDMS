@@ -357,42 +357,64 @@ Time-series log of shelter utilization during active disasters.
 
 ## 4. Schema: `damage` (D-Form Damage & Needs Assessment)
 
+### 4.0 `damage.damage_categories`
+Configurable damage categories (`HOUSING`, `ROADS_BRIDGES`, `EDUCATION`, `HEALTHCARE`, `AGRICULTURE`, `LIVESTOCK_FISHERIES`, `WATER_SANITATION`, `ELECTRICITY_COMM`, `PUBLIC_INFRASTRUCTURE`, plus custom categories).
+
+| Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
+| :--- | :--- | :---: | :--- | :--- | :--- |
+| `id` | `uuid` | NO | PK | B-Tree (PK) | Category ID |
+| `code` | `varchar(50)` | NO | UNIQUE | B-Tree (UQ) | Uppercase category code |
+| `name_en` | `varchar(120)` | NO | | | English category name |
+| `name_bn` | `varchar(160)` | NO | | | Bangla category name |
+| `description` | `text` | YES | | | Category description |
+| `default_unit` | `varchar(40)` | NO | `'UNITS'` | | Default damage unit |
+| `color_hex` | `varchar(20)` | YES | | | GIS/chart color hex |
+| `sort_order` | `int` | NO | 100 | | Display sort order |
+| `is_system` | `boolean` | NO | true | | Built-in category flag |
+| `is_active` | `boolean` | NO | true | B-Tree | Active status flag |
+
 ### 4.1 `damage.damage_assessments`
-Official Government of Bangladesh D-Form master records.
+Official Government of Bangladesh D-Form master records with spatial coverage and Flutter offline sync metadata.
 
 | Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
 | :--- | :--- | :---: | :--- | :--- | :--- |
 | `id` | `uuid` | NO | PK | B-Tree (PK) | Assessment identifier |
 | `disaster_event_id`| `uuid` | NO | FK &rarr; `disaster.disaster_events(id)` ON DELETE RESTRICT | B-Tree | Associated disaster |
-| `administrative_unit_id`| `uuid`| NO | FK &rarr; `core.administrative_units(id)` ON DELETE RESTRICT | B-Tree | Assessed administrative jurisdiction |
-| `d_form_code` | `varchar(50)` | NO | UNIQUE | B-Tree (UQ) | D-form serial number |
-| `assessment_stage`| `varchar(30)`| NO | CHECK in ('INITIAL_SOS', 'PRELIMINARY_D_FORM', 'FINAL_CONSOLIDATED') | B-Tree | Assessment phase |
-| `validation_status`| `varchar(30)`| NO | CHECK in ('DRAFT', 'SUBMITTED_UNION', 'VERIFIED_PIO', 'ENDORSED_DRRO', 'APPROVED_DDM') | B-Tree | Workflow validation state |
+| `administrative_unit_id`| `uuid`| NO | FK &rarr; `core.administrative_units(id)` ON DELETE RESTRICT | B-Tree | Primary assessed jurisdiction |
+| `d_form_code` | `varchar(50)` | NO | UNIQUE | B-Tree (UQ) | D-form serial reference number |
+| `reference_no` | `varchar(80)` | YES | UNIQUE | B-Tree (UQ) | Official dispatch reference |
+| `assessment_type`| `varchar(40)`| NO | `'PRELIMINARY_D_FORM'` | B-Tree | `INITIAL_RAPID`, `PRELIMINARY_D_FORM`, `DETAILED_SECTORAL`, `FINAL_CONSOLIDATED` |
+| `assessment_date`| `date` | NO | | B-Tree | Assessment date |
+| `assessed_at` | `timestamptz` | YES | | B-Tree | Field collection date & time |
+| `assessing_organization`| `varchar(180)`| NO | | | Organization conducting assessment |
+| `team_name` | `varchar(150)` | YES | | | Assigned assessment team |
+| `assessor_name` | `varchar(150)` | NO | | | Primary assessor name |
+| `severity_level` | `varchar(30)` | NO | `'MODERATE'` | B-Tree | `LOW`, `MODERATE`, `SEVERE`, `CRITICAL` |
+| `affected_households`| `int` | NO | 0 | | Total households affected |
 | `affected_population`| `int` | NO | 0 | | Total persons affected |
-| `displaced_population`| `int`| NO | 0 | | Displaced persons in camps/shelters |
+| `displaced_population`| `int`| NO | 0 | | Displaced persons |
 | `deaths_count` | `int` | NO | 0 | | Confirmed human deaths |
 | `injured_count` | `int` | NO | 0 | | Confirmed injured persons |
 | `missing_count` | `int` | NO | 0 | | Missing persons |
+| `total_fully_damaged` | `int` | NO | 0 | | Sum of fully damaged units |
+| `total_partially_damaged` | `int` | NO | 0 | | Sum of partially damaged units |
+| `total_minor_damaged` | `int` | NO | 0 | | Sum of minor damaged units |
 | `total_estimated_loss_bdt`| `decimal(15,2)`| NO | 0.00 | B-Tree | Total monetary loss in BDT |
+| `verification_status`| `varchar(30)`| NO | `'DRAFT'` | B-Tree | `DRAFT`, `SUBMITTED`, `UNDER_VERIFICATION`, `CORRECTION_REQUESTED`, `VERIFIED`, `REJECTED`, `APPROVED` |
+| `location_geom` | `geometry(Point, 4326)` | YES | | GIST | Primary GPS point |
 | `damage_area_geom`| `geometry(MultiPolygon, 4326)`| YES | | GIST | Spatial polygon of surveyed damage |
-| `assessed_by` | `uuid` | NO | FK &rarr; `core.users(id)` | | Submitting officer |
+| `client_uuid` | `varchar(64)` | YES | UNIQUE | B-Tree (UQ) | Mobile client UUID for offline sync |
+| `idempotency_key`| `varchar(80)` | YES | UNIQUE | B-Tree (UQ) | Sync deduplication key |
+| `sync_status` | `varchar(25)` | NO | `'ONLINE'` | B-Tree | `ONLINE`, `SYNCED`, `CONFLICT` |
+| `sync_version` | `int` | NO | 1 | | Optimistic concurrency version |
+| `created_by` | `uuid` | NO | FK &rarr; `core.users(id)` | B-Tree | Creating field officer |
 | `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | B-Tree | Submission timestamp |
 | `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Modification timestamp |
 
 ---
 
-### 4.2 `damage.damage_sector_items`
-Granular sectoral breakdown of losses (Housing, Agriculture, Livestock, Fisheries, Infrastructure).
-
-| Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
-| :--- | :--- | :---: | :--- | :--- | :--- |
-| `id` | `uuid` | NO | PK | B-Tree (PK) | Sector item ID |
-| `damage_assessment_id`| `uuid`| NO | FK &rarr; `damage.damage_assessments(id)` ON DELETE CASCADE | B-Tree | Parent D-form record |
-| `sector_code` | `varchar(50)` | NO | CHECK in ('HOUSING', 'AGRICULTURE', 'LIVESTOCK', 'FISHERIES', 'ROADS_BRIDGES', 'EMBANKMENT', 'TUBE_WELLS') | B-Tree | Damaged sector |
-| `fully_damaged_count`| `int` | NO | 0 | | Fully destroyed units/structures/acres |
-| `partially_damaged_count`| `int`| NO | 0 | | Partially damaged units |
-| `estimated_loss_bdt`| `decimal(14,2)`| NO | 0.00 | | Economic loss in BDT for this sector |
-| `remarks` | `text` | YES | | | Field notes and descriptions |
+### 4.2 `damage.damage_locations`, `damage.damage_sector_items`, `damage.damage_attachments`, `damage.damage_verification_logs`
+Supporting child tables capturing multi-unit geographical coverage (`damage_locations`), sectoral damage breakdowns (`damage_sector_items` linked via `category_id` FK &rarr; `damage.damage_categories`), SHA-256 geo-tagged evidence files (`damage_attachments`), and immutable workflow transition logs (`damage_verification_logs`).
 
 ---
 
@@ -428,10 +450,15 @@ Standardized catalog of disaster relief goods linked to relief categories.
 | `name_bn` | `varchar(200)` | NO | | | Bangla item name |
 | `category` | `varchar(50)` | NO | | B-Tree | Category code |
 | `unit_of_measure` | `varchar(20)` | NO | e.g. `METRIC_TON`, `KG`, `LITER`, `PACKET`, `BDT`, `PIECE` | | Measurement unit |
+| `description` | `text` | YES | NULL | | Item specification / description |
+| `minimum_stock_level` | `decimal(12,2)` | NO | 0, CHECK (minimum_stock_level >= 0) | | Minimum stock threshold triggering low-stock alert |
 | `is_perishable` | `boolean` | NO | false | | Perishability indicator |
 | `is_active` | `boolean` | NO | true | B-Tree | Active flag |
+| `created_by` | `uuid` | YES | FK &rarr; `core.users(id)` | | Creator user |
+| `updated_by` | `uuid` | YES | FK &rarr; `core.users(id)` | | Last updater user |
 | `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Creation timestamp |
 | `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Update timestamp |
+| `deleted_at` | `timestamptz` | YES | NULL | | Soft delete timestamp |
 
 ---
 
@@ -446,11 +473,21 @@ Storage depots across the national hierarchy.
 | `warehouse_name`| `varchar(150)`| NO | | B-Tree | Facility name (EN) |
 | `warehouse_name_bn`| `varchar(200)`| YES | | | Facility name (BN) |
 | `tier` | `varchar(30)` | NO | CHECK in ('CENTRAL_CSD', 'REGIONAL_LSD', 'DISTRICT_GODOWN', 'UPAZILA_STORE') | B-Tree | Godown echelon |
+| `warehouse_type` | `varchar(40)` | YES | 'RELIEF_GODOWN' | B-Tree | Functional facility type (e.g., `RELIEF_GODOWN`, `COLD_STORAGE`, `FOOD_SILO`, `EMERGENCY_HUB`) |
+| `owning_organization` | `varchar(160)` | YES | NULL | | Owning / operating organization (MoDMR, DDM, DRRO, PIO, NGO partner) |
+| `responsible_officer_name` | `varchar(120)` | YES | NULL | | Name of warehouse in-charge |
+| `responsible_officer_contact` | `varchar(40)` | YES | NULL | | Contact number of responsible officer |
+| `responsible_user_id` | `uuid` | YES | FK &rarr; `core.users(id)` | B-Tree | System user assigned as officer in charge |
+| `address` | `text` | YES | NULL | | Street / facility physical address |
+| `contact_phone` | `varchar(40)` | YES | NULL | | Facility phone |
+| `contact_email` | `varchar(150)` | YES | NULL | | Facility email |
 | `capacity_mt` | `decimal(10,2)`| NO | | | Storage capacity in Metric Tons |
 | `latitude` | `decimal(10,7)` | YES | | | GPS latitude |
 | `longitude` | `decimal(10,7)` | YES | | | GPS longitude |
 | `location_geom` | `geometry(Point, 4326)`| YES | Populated on PostgreSQL/PostGIS | GIST | Warehouse GPS coordinates |
 | `is_active` | `boolean` | NO | true | B-Tree | Operational flag |
+| `created_by` | `uuid` | YES | FK &rarr; `core.users(id)` | | Creator user |
+| `updated_by` | `uuid` | YES | FK &rarr; `core.users(id)` | | Last updater user |
 | `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
 | `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
 | `deleted_at` | `timestamptz` | YES | NULL | | Soft delete timestamp |
@@ -466,11 +503,16 @@ Stock on hand per warehouse, commodity, and batch (FIFO/FEFO tracked).
 | `warehouse_id` | `uuid` | NO | FK &rarr; `logistics.warehouses(id)` ON DELETE RESTRICT | B-Tree | Facility holding stock |
 | `commodity_id` | `uuid` | NO | FK &rarr; `logistics.commodities(id)` ON DELETE RESTRICT | B-Tree | Commodity stocked |
 | `batch_number` | `varchar(50)` | NO | | B-Tree | Lot / Batch serial |
-| `current_quantity`| `decimal(12,2)`| NO | CHECK (current_quantity >= 0) | B-Tree | Available stock balance |
+| `opening_quantity` | `decimal(12,2)` | NO | 0, CHECK (opening_quantity >= 0) | | Initial opening quantity recorded for this batch |
+| `current_quantity`| `decimal(12,2)`| NO | CHECK (current_quantity >= 0) | B-Tree | Physical usable stock balance |
 | `reserved_quantity`| `decimal(12,2)`| NO | 0, CHECK (reserved_quantity >= 0) | | Quantity reserved for approved allocations |
+| `damaged_quantity` | `decimal(12,2)` | NO | 0, CHECK (damaged_quantity >= 0) | | Written-off / damaged stock quantity for this batch |
+| `expired_quantity` | `decimal(12,2)` | NO | 0, CHECK (expired_quantity >= 0) | | Quarantined / expired stock quantity for this batch |
 | `unit_cost_bdt` | `decimal(12,2)` | YES | | | Unit valuation in BDT |
 | `received_date` | `date` | YES | | B-Tree | Batch receipt date |
 | `expiry_date` | `date` | YES | | B-Tree | Expiration date for food/medicines (FEFO ordering) |
+| `status` | `varchar(30)` | NO | 'ACTIVE' | B-Tree | Lot status (`ACTIVE`, `EXHAUSTED`, `EXPIRED`, `QUARANTINED`) |
+| `notes` | `text` | YES | NULL | | Batch remarks |
 | `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Lot creation timestamp |
 | `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Lot modification timestamp |
 
@@ -479,20 +521,29 @@ Stock on hand per warehouse, commodity, and batch (FIFO/FEFO tracked).
 ---
 
 ### 5.4 `logistics.stock_transactions` (Immutable Ledger)
-Double-entry inventory audit ledger.
+Double-entry inventory audit ledger. Historical rows cannot be updated or deleted once written; corrections require an authorized adjustment transaction.
 
 | Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
 | :--- | :--- | :---: | :--- | :--- | :--- |
 | `id` | `uuid` | NO | PK | B-Tree (PK) | Transaction ID |
 | `warehouse_inventory_id`| `uuid`| NO | FK &rarr; `logistics.warehouse_inventories(id)` ON DELETE RESTRICT | B-Tree | Affected inventory lot |
-| `transaction_type`| `varchar(35)`| NO | CHECK in ('STOCK_IN_GRN', 'INTER_WAREHOUSE_TRANSFER', 'DISTRIBUTION_ISSUE', 'ALLOCATION_RETURN', 'WRITE_OFF_DAMAGED') | B-Tree | Ledger movement type |
+| `warehouse_id` | `uuid` | YES | FK &rarr; `logistics.warehouses(id)` ON DELETE RESTRICT | B-Tree | Denormalized warehouse reference for ledger queries |
+| `commodity_id` | `uuid` | YES | FK &rarr; `logistics.commodities(id)` ON DELETE RESTRICT | B-Tree | Denormalized commodity reference for ledger queries |
+| `stock_receipt_id` | `uuid` | YES | FK &rarr; `logistics.stock_receipts(id)` ON DELETE SET NULL | B-Tree | Source verified GRN receipt |
+| `warehouse_transfer_id` | `uuid` | YES | FK &rarr; `logistics.warehouse_transfers(id)` ON DELETE SET NULL | B-Tree | Source inter-warehouse transfer order |
+| `transaction_type`| `varchar(35)`| NO | CHECK in ('OPENING_STOCK', 'STOCK_IN_GRN', 'INTER_WAREHOUSE_TRANSFER', 'DISTRIBUTION_ISSUE', 'STOCK_ISSUE', 'ALLOCATION_RETURN', 'RETURN_IN', 'STOCK_ADJUSTMENT', 'WRITE_OFF_DAMAGED', 'EXPIRED_STOCK') | B-Tree | Ledger movement type |
+| `reference_type` | `varchar(40)` | YES | NULL | B-Tree | Reference origin (`GRN`, `TRANSFER`, `RELIEF_ALLOCATION`, `DISTRIBUTION_VOUCHER`, `ADJUSTMENT`, `OPENING_BALANCE`, `RETURN`) |
+| `reason_code` | `varchar(60)` | YES | NULL | | Standardized reason code for adjustments / write-offs / returns |
 | `quantity` | `decimal(12,2)`| NO | CHECK (quantity != 0) | | Quantity moved (+ for in, - for out) |
 | `balance_after` | `decimal(12,2)`| NO | CHECK (balance_after >= 0) | | Running balance post-transaction |
 | `reference_voucher_no`| `varchar(60)`| NO | | B-Tree | Source invoice, transfer order, or distribution voucher |
+| `idempotency_key` | `varchar(120)` | YES | UNIQUE | B-Tree (UQ) | Optional request idempotency token preventing duplicate ledger postings |
 | `relief_allocation_item_id`| `uuid` | YES | FK &rarr; `logistics.relief_allocation_items(id)` ON DELETE SET NULL | B-Tree | Related allocation item (if applicable) |
 | `distribution_voucher_id`| `uuid` | YES | FK &rarr; `distribution.distribution_vouchers(id)` ON DELETE SET NULL | B-Tree | Related distribution voucher (if applicable) |
 | `notes` | `text` | YES | | | Movement remarks |
 | `authorized_by` | `uuid` | NO | FK &rarr; `core.users(id)` | B-Tree | Authorizing officer |
+| `approved_by` | `uuid` | YES | FK &rarr; `core.users(id)` | B-Tree | Second approving officer (4-eye dual auth) |
+| `created_by` | `uuid` | YES | FK &rarr; `core.users(id)` | | Recording officer |
 | `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | B-Tree | Ledger record timestamp (Immutable) |
 | `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Record timestamp |
 
@@ -603,6 +654,105 @@ Pre-selected eligible beneficiary households assigned to an allocation round.
 | `selection_status` | `varchar(20)` | NO | 'SELECTED', CHECK in ('SELECTED', 'DISTRIBUTED', 'ABSENT', 'REMOVED') | B-Tree | Roster status |
 | `assigned_by` | `uuid` | YES | FK &rarr; `core.users(id)` | | Assigning officer |
 | `notes` | `text` | YES | | | Roster remarks |
+
+---
+
+### 5.10 `logistics.stock_receipts`
+Goods Received Note (GRN) procurement and incoming supply receiving headers requiring verification before adding to usable inventory.
+
+| Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
+| :--- | :--- | :---: | :--- | :--- | :--- |
+| `id` | `uuid` | NO | PK | B-Tree (PK) | Receipt ID |
+| `receipt_no` | `varchar(60)` | NO | UNIQUE | B-Tree (UQ) | Unique GRN reference serial (`GRN-YYYYMMDD-XXXX`) |
+| `warehouse_id` | `uuid` | NO | FK &rarr; `logistics.warehouses(id)` ON DELETE RESTRICT | B-Tree | Receiving warehouse |
+| `supplier_name` | `varchar(180)` | NO | | B-Tree | Supplier / donor / vendor organization name |
+| `supplier_contact` | `varchar(80)` | YES | NULL | | Supplier phone / contact person |
+| `purchase_order_no` | `varchar(80)` | YES | NULL | B-Tree | Procurement PO / chalan / dispatch ref |
+| `received_date` | `date` | NO | | B-Tree | Physical delivery date |
+| `status` | `varchar(20)` | NO | 'PENDING_VERIFICATION', CHECK in ('PENDING_VERIFICATION', 'VERIFIED', 'REJECTED') | B-Tree | Verification workflow status |
+| `verification_notes` | `text` | YES | NULL | | Receiving verification / rejection notes |
+| `attachment_path` | `varchar(255)` | YES | NULL | | Private storage path for scanned chalan / GRN |
+| `attachment_original_name` | `varchar(200)` | YES | NULL | | Original uploaded filename |
+| `attachment_mime` | `varchar(100)` | YES | NULL | | Verified MIME type |
+| `attachment_size_bytes` | `bigint` | YES | NULL | | File byte size |
+| `attachment_sha256` | `varchar(64)` | YES | NULL | | SHA-256 file integrity checksum |
+| `idempotency_key` | `varchar(120)` | YES | UNIQUE | B-Tree (UQ) | Duplicate submission prevention key |
+| `received_by` | `uuid` | NO | FK &rarr; `core.users(id)` | B-Tree | Receiving storekeeper |
+| `verified_by` | `uuid` | YES | FK &rarr; `core.users(id)` | B-Tree | Verifying officer (must differ from `received_by` when 4-eye enforced) |
+| `verified_at` | `timestamptz` | YES | NULL | | Verification timestamp |
+| `notes` | `text` | YES | NULL | | General remarks |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Creation timestamp |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Update timestamp |
+| `deleted_at` | `timestamptz` | YES | NULL | | Soft delete timestamp |
+
+---
+
+### 5.11 `logistics.stock_receipt_items`
+Line items belonging to a GRN receipt, mapping each batch/expiry to its resulting inventory lot upon verification.
+
+| Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
+| :--- | :--- | :---: | :--- | :--- | :--- |
+| `id` | `uuid` | NO | PK | B-Tree (PK) | Receipt line ID |
+| `stock_receipt_id` | `uuid` | NO | FK &rarr; `logistics.stock_receipts(id)` ON DELETE CASCADE | B-Tree | Parent GRN receipt |
+| `commodity_id` | `uuid` | NO | FK &rarr; `logistics.commodities(id)` ON DELETE RESTRICT | B-Tree | Commodity received |
+| `batch_number` | `varchar(50)` | NO | | B-Tree | Lot / batch serial |
+| `quantity_received` | `decimal(12,2)` | NO | CHECK (quantity_received > 0) | | Quantity received |
+| `unit_cost_bdt` | `decimal(12,2)` | YES | NULL, CHECK (unit_cost_bdt >= 0) | | Unit valuation in BDT |
+| `expiry_date` | `date` | YES | NULL | | Expiry date for perishables |
+| `warehouse_inventory_id` | `uuid` | YES | FK &rarr; `logistics.warehouse_inventories(id)` ON DELETE SET NULL | B-Tree | Credited lot after verification |
+| `notes` | `text` | YES | NULL | | Line remarks |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Creation timestamp |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Update timestamp |
+
+---
+
+### 5.12 `logistics.warehouse_transfers`
+Controlled inter-warehouse stock transfer orders (Request &rarr; 4-Eye Approval &rarr; Dispatch &rarr; Receipt Confirmation).
+
+| Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
+| :--- | :--- | :---: | :--- | :--- | :--- |
+| `id` | `uuid` | NO | PK | B-Tree (PK) | Transfer order ID |
+| `transfer_no` | `varchar(60)` | NO | UNIQUE | B-Tree (UQ) | Unique transfer order number (`TRF-YYYYMMDD-XXXX`) |
+| `source_warehouse_id` | `uuid` | NO | FK &rarr; `logistics.warehouses(id)` ON DELETE RESTRICT | B-Tree | Dispatching source warehouse |
+| `destination_warehouse_id` | `uuid` | NO | FK &rarr; `logistics.warehouses(id)` ON DELETE RESTRICT | B-Tree | Receiving destination warehouse |
+| `status` | `varchar(20)` | NO | 'REQUESTED', CHECK in ('REQUESTED', 'APPROVED', 'DISPATCHED', 'RECEIVED', 'CANCELLED') | B-Tree | Transfer workflow state |
+| `requested_date` | `date` | NO | | B-Tree | Request date |
+| `expected_delivery_date` | `date` | YES | NULL | | Expected arrival date |
+| `vehicle_info` | `varchar(180)` | YES | NULL | | Transport truck/boat/driver reference |
+| `dispatch_reference` | `varchar(100)` | YES | NULL | | Waybill / chalan number on dispatch |
+| `idempotency_key` | `varchar(120)` | YES | UNIQUE | B-Tree (UQ) | Request idempotency guard |
+| `requested_by` | `uuid` | NO | FK &rarr; `core.users(id)` | B-Tree | Requesting officer |
+| `approved_by` | `uuid` | YES | FK &rarr; `core.users(id)` | B-Tree | Approving officer (must differ from `requested_by`) |
+| `approved_at` | `timestamptz` | YES | NULL | | Approval timestamp |
+| `dispatched_by` | `uuid` | YES | FK &rarr; `core.users(id)` | B-Tree | Dispatching officer at source warehouse |
+| `dispatched_at` | `timestamptz` | YES | NULL | | Dispatch timestamp |
+| `received_by` | `uuid` | YES | FK &rarr; `core.users(id)` | B-Tree | Receiving officer at destination warehouse |
+| `received_at` | `timestamptz` | YES | NULL | | Receipt confirmation timestamp |
+| `cancellation_reason` | `text` | YES | NULL | | Reason if cancelled |
+| `notes` | `text` | YES | NULL | | Transfer remarks |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Creation timestamp |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Update timestamp |
+| `deleted_at` | `timestamptz` | YES | NULL | | Soft delete timestamp |
+
+---
+
+### 5.13 `logistics.warehouse_transfer_items`
+Line items within an inter-warehouse transfer order, tracking requested, dispatched, and confirmed received quantities per batch.
+
+| Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
+| :--- | :--- | :---: | :--- | :--- | :--- |
+| `id` | `uuid` | NO | PK | B-Tree (PK) | Transfer item ID |
+| `warehouse_transfer_id` | `uuid` | NO | FK &rarr; `logistics.warehouse_transfers(id)` ON DELETE CASCADE | B-Tree | Parent transfer order |
+| `commodity_id` | `uuid` | NO | FK &rarr; `logistics.commodities(id)` ON DELETE RESTRICT | B-Tree | Commodity transferred |
+| `batch_number` | `varchar(50)` | YES | NULL | | Specific batch dispatched (auto-assigned from FEFO if omitted) |
+| `quantity_requested` | `decimal(12,2)` | NO | CHECK (quantity_requested > 0) | | Requested transfer quantity |
+| `quantity_dispatched` | `decimal(12,2)` | NO | 0, CHECK (quantity_dispatched >= 0) | | Dispatched quantity deducted from source |
+| `quantity_received` | `decimal(12,2)` | NO | 0, CHECK (quantity_received >= 0) | | Confirmed quantity credited to destination |
+| `unit_cost_bdt` | `decimal(12,2)` | YES | NULL | | Unit cost carried forward |
+| `expiry_date` | `date` | YES | NULL | | Batch expiry date carried forward |
+| `notes` | `text` | YES | NULL | | Line remarks / variance note |
+| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Creation timestamp |
+| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Update timestamp |
 | `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
 | `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
 

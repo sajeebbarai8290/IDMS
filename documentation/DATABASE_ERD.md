@@ -76,14 +76,26 @@ erDiagram
     DISASTER_EVENTS ||--o{ HUMAN_RESOURCE_DEPLOYMENTS : "personnel_for_disaster"
 
     %% DAMAGE ASSESSMENT (D-FORM)
+    DAMAGE_CATEGORIES ||--o{ DAMAGE_SECTOR_ITEMS : "categorizes"
     DAMAGE_ASSESSMENTS ||--|{ DAMAGE_SECTOR_ITEMS : "details_sector_loss"
+    DAMAGE_ASSESSMENTS ||--o{ DAMAGE_LOCATIONS : "covers_areas"
+    DAMAGE_ASSESSMENTS ||--o{ DAMAGE_ATTACHMENTS : "evidenced_by"
+    DAMAGE_ASSESSMENTS ||--o{ DAMAGE_VERIFICATION_LOGS : "logs_verification"
     ADMINISTRATIVE_UNITS ||--o{ DAMAGE_ASSESSMENTS : "assessed_at"
+    ADMINISTRATIVE_UNITS ||--o{ DAMAGE_LOCATIONS : "covered_unit"
 
     %% LOGISTICS, WAREHOUSING & RELIEF CHAIN
     RELIEF_CATEGORIES ||--o{ COMMODITIES : "categorizes"
     COMMODITIES ||--o{ WAREHOUSE_INVENTORIES : "stocked_as"
     WAREHOUSES ||--|{ WAREHOUSE_INVENTORIES : "stores_lots"
     WAREHOUSE_INVENTORIES ||--o{ STOCK_TRANSACTIONS : "ledger_records"
+    WAREHOUSES ||--o{ STOCK_RECEIPTS : "receives_grn"
+    STOCK_RECEIPTS ||--|{ STOCK_RECEIPT_ITEMS : "contains_received_items"
+    COMMODITIES ||--o{ STOCK_RECEIPT_ITEMS : "received_as"
+    WAREHOUSES ||--o{ WAREHOUSE_TRANSFERS : "dispatches_from"
+    WAREHOUSES ||--o{ WAREHOUSE_TRANSFERS : "receives_to"
+    WAREHOUSE_TRANSFERS ||--|{ WAREHOUSE_TRANSFER_ITEMS : "transfers_items"
+    COMMODITIES ||--o{ WAREHOUSE_TRANSFER_ITEMS : "transferred_as"
 
     DISASTER_EVENTS ||--o{ RELIEF_ALLOCATIONS : "funds_allocations"
     ADMINISTRATIVE_UNITS ||--o{ RELIEF_ALLOCATIONS : "allocated_to_unit"
@@ -508,23 +520,73 @@ erDiagram
         timestamptz reported_at
     }
 
+    DAMAGE_CATEGORIES {
+        uuid id PK
+        string code UK
+        string name_en
+        string name_bn
+        string default_unit
+        boolean is_system
+        boolean is_active
+    }
+
     DAMAGE_ASSESSMENTS {
         uuid id PK
         uuid disaster_event_id FK
         uuid administrative_unit_id FK
         string d_form_code UK
-        string assessment_stage
-        string validation_status
+        string assessment_type
+        date assessment_date
+        string assessing_organization
+        string severity_level
+        string verification_status
+        int affected_households
+        int affected_population
         decimal total_estimated_loss_bdt
+        string client_uuid UK
+        string idempotency_key UK
+        string sync_status
+        geometry_point location_geom
+        geometry_multipolygon damage_area_geom
+    }
+
+    DAMAGE_LOCATIONS {
+        uuid id PK
+        uuid damage_assessment_id FK
+        uuid administrative_unit_id FK
+        string ward_no
+        int affected_households
+        string severity_level
+        geometry_point location_geom
     }
 
     DAMAGE_SECTOR_ITEMS {
         uuid id PK
         uuid damage_assessment_id FK
+        uuid category_id FK
         string sector_code
         int fully_damaged_count
         int partially_damaged_count
+        int minor_damaged_count
         decimal estimated_loss_bdt
+    }
+
+    DAMAGE_ATTACHMENTS {
+        uuid id PK
+        uuid damage_assessment_id FK
+        string attachment_kind
+        string original_name
+        string storage_path
+        string sha256_hash
+    }
+
+    DAMAGE_VERIFICATION_LOGS {
+        uuid id PK
+        uuid damage_assessment_id FK
+        string action
+        string from_status
+        string to_status
+        uuid actor_id FK
     }
 
     RELIEF_CATEGORIES {
@@ -544,6 +606,12 @@ erDiagram
         string name_bn
         string category
         string unit_of_measure
+        text description
+        decimal minimum_stock_level
+        boolean is_perishable
+        boolean is_active
+        uuid created_by FK
+        uuid updated_by FK
     }
 
     WAREHOUSES {
@@ -551,11 +619,22 @@ erDiagram
         uuid administrative_unit_id FK
         string warehouse_code UK
         string warehouse_name
+        string warehouse_name_bn
         string tier
+        string warehouse_type
+        string owning_organization
+        string responsible_officer_name
+        string responsible_officer_contact
+        uuid responsible_user_id FK
+        text address
+        string contact_phone
+        string contact_email
         decimal capacity_mt
         decimal latitude
         decimal longitude
         geometry_point location_geom
+        uuid created_by FK
+        uuid updated_by FK
     }
 
     WAREHOUSE_INVENTORIES {
@@ -563,20 +642,89 @@ erDiagram
         uuid warehouse_id FK
         uuid commodity_id FK
         string batch_number
+        decimal opening_quantity
         decimal current_quantity
         decimal reserved_quantity
+        decimal damaged_quantity
+        decimal expired_quantity
+        decimal unit_cost_bdt
         date expiry_date
+        string status
+        text notes
     }
 
     STOCK_TRANSACTIONS {
         uuid id PK
         uuid warehouse_inventory_id FK
+        uuid warehouse_id FK
+        uuid commodity_id FK
+        uuid warehouse_transfer_id FK
+        uuid stock_receipt_id FK
         string transaction_type
+        string reference_type
+        string reason_code
         decimal quantity
         decimal balance_after
         string reference_voucher_no
+        string idempotency_key UK
         uuid relief_allocation_item_id FK
         uuid distribution_voucher_id FK
+        uuid approved_by FK
+        uuid created_by FK
+    }
+
+    STOCK_RECEIPTS {
+        uuid id PK
+        string receipt_no UK
+        uuid warehouse_id FK
+        string supplier_name
+        string supplier_contact
+        string purchase_order_no
+        date received_date
+        string status
+        string attachment_path
+        string attachment_sha256
+        string idempotency_key UK
+        uuid received_by FK
+        uuid verified_by FK
+    }
+
+    STOCK_RECEIPT_ITEMS {
+        uuid id PK
+        uuid stock_receipt_id FK
+        uuid commodity_id FK
+        string batch_number
+        decimal quantity_received
+        decimal unit_cost_bdt
+        date expiry_date
+        uuid warehouse_inventory_id FK
+    }
+
+    WAREHOUSE_TRANSFERS {
+        uuid id PK
+        string transfer_no UK
+        uuid source_warehouse_id FK
+        uuid destination_warehouse_id FK
+        string status
+        date requested_date
+        string vehicle_info
+        string idempotency_key UK
+        uuid requested_by FK
+        uuid approved_by FK
+        uuid dispatched_by FK
+        uuid received_by FK
+    }
+
+    WAREHOUSE_TRANSFER_ITEMS {
+        uuid id PK
+        uuid warehouse_transfer_id FK
+        uuid commodity_id FK
+        string batch_number
+        decimal quantity_requested
+        decimal quantity_dispatched
+        decimal quantity_received
+        decimal unit_cost_bdt
+        date expiry_date
     }
 
     RELIEF_REQUISITIONS {

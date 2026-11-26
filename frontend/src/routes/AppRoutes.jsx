@@ -63,8 +63,27 @@ import ResourceFormPage from '../modules/resource/pages/ResourceFormPage';
 import ResourceDetailPage from '../modules/resource/pages/ResourceDetailPage';
 import ResourceAllocationPage from '../modules/resource/pages/ResourceAllocationPage';
 import ResourceMaintenancePage from '../modules/resource/pages/ResourceMaintenancePage';
+
+// Module 08: Warehouse & Inventory Management Pages
+import { WarehouseDashboardPage } from '../modules/warehouse/pages/WarehouseDashboardPage';
+import { WarehouseFacilityListPage } from '../modules/warehouse/pages/WarehouseFacilityListPage';
+import { WarehouseFacilityFormPage } from '../modules/warehouse/pages/WarehouseFacilityFormPage';
+import { WarehouseItemListPage } from '../modules/warehouse/pages/WarehouseItemListPage';
+import { WarehouseInventoryPage } from '../modules/warehouse/pages/WarehouseInventoryPage';
+import { StockReceiptPage } from '../modules/warehouse/pages/StockReceiptPage';
+import { WarehouseTransferPage } from '../modules/warehouse/pages/WarehouseTransferPage';
+import { WarehouseReliefIssuePage } from '../modules/warehouse/pages/WarehouseReliefIssuePage';
+import { WarehouseReportsPage } from '../modules/warehouse/pages/WarehouseReportsPage';
 import HumanResourceDeploymentPage from '../modules/resource/pages/HumanResourceDeploymentPage';
 import ResourceMapPage from '../modules/resource/pages/ResourceMapPage';
+
+// Module 09: Damage Assessment (D-Form) Pages
+import DamageDashboardPage from '../modules/damage/pages/DamageDashboardPage';
+import DamageAssessmentListPage from '../modules/damage/pages/DamageAssessmentListPage';
+import DamageAssessmentFormPage from '../modules/damage/pages/DamageAssessmentFormPage';
+import DamageAssessmentDetailPage from '../modules/damage/pages/DamageAssessmentDetailPage';
+import DamageMapPage from '../modules/damage/pages/DamageMapPage';
+import DamageReportsPage from '../modules/damage/pages/DamageReportsPage';
 
 export const AppRoutes = () => {
   return (
@@ -581,6 +600,180 @@ export const AppRoutes = () => {
           <ProtectedRoute>
             <MainLayout>
               <ResourceMapPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Module 08: Warehouse & Inventory Management Routes */}
+      <Route
+        path="/warehouse/dashboard"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <WarehouseDashboardPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/warehouse/facilities"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <WarehouseFacilityListPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/warehouse/facilities/new"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <WarehouseFacilityFormPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/warehouse/facilities/:id/edit"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <WarehouseFacilityFormPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/warehouse/items"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <WarehouseItemListPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/warehouse/inventory"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <WarehouseInventoryPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/warehouse/receipts"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <StockReceiptPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/warehouse/transfers"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <WarehouseTransferPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/warehouse/relief-issue"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <WarehouseReliefIssuePage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/warehouse/reports"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <WarehouseReportsPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Module 09: Damage Assessment (D-Form) Routes */}
+      <Route
+        path="/damage/dashboard"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <DamageDashboardPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/damage/assessments"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <DamageAssessmentListPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/damage/assessments/new"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <DamageAssessmentFormPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/damage/assessments/:id"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <DamageAssessmentDetailPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/damage/assessments/:id/edit"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <DamageAssessmentFormPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/damage/map"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <DamageMapPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/damage/reports"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <DamageReportsPage />
             </MainLayout>
           </ProtectedRoute>
         }

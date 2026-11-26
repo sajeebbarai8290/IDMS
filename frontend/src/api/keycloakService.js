@@ -79,63 +79,87 @@ class KeycloakService {
 
   /**
    * Handle OIDC Authorization Code exchange at /auth/callback.
+   * Deduplicates concurrent React StrictMode mounts sharing the same single-use code.
    *
    * @param {string} code
    * @param {string} state
    * @returns {Promise<object>} Decoded user profile
    */
   async handleCallback(code, state) {
-    const savedState = sessionStorage.getItem(STORAGE_KEYS.OAUTH_STATE);
-    const verifier = sessionStorage.getItem(STORAGE_KEYS.CODE_VERIFIER);
+    const callbackKey = `${state}:${code}`;
 
-    if (!savedState || savedState !== state) {
-      throw new Error('OAuth state mismatch. Potential CSRF attack detected.');
+    if (this._completedCallbackKey === callbackKey && this._completedCallbackProfile) {
+      return this._completedCallbackProfile;
     }
 
-    if (!verifier) {
-      throw new Error('PKCE code verifier not found in session.');
+    if (this._pendingCallbackKey === callbackKey && this._pendingCallbackPromise) {
+      return this._pendingCallbackPromise;
     }
 
-    const redirectUri = `${window.location.origin}/auth/callback`;
+    this._pendingCallbackKey = callbackKey;
+    this._pendingCallbackPromise = (async () => {
+      try {
+        const savedState = sessionStorage.getItem(STORAGE_KEYS.OAUTH_STATE);
+        const verifier = sessionStorage.getItem(STORAGE_KEYS.CODE_VERIFIER);
 
-    const params = new URLSearchParams();
-    params.append('grant_type', 'authorization_code');
-    params.append('client_id', KEYCLOAK_CONFIG.clientId);
-    params.append('code', code);
-    params.append('code_verifier', verifier);
-    params.append('redirect_uri', redirectUri);
+        if (!savedState || savedState !== state) {
+          throw new Error('OAuth state mismatch. Potential CSRF attack detected.');
+        }
 
-    const tokenUrl = `${KEYCLOAK_CONFIG.url}/realms/${KEYCLOAK_CONFIG.realm}/protocol/openid-connect/token`;
+        if (!verifier) {
+          throw new Error('PKCE code verifier not found in session.');
+        }
 
-    const response = await fetch(tokenUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: params.toString(),
-    });
+        const redirectUri = `${window.location.origin}/auth/callback`;
 
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error_description || err.error || 'Failed to exchange authorization code for tokens.');
-    }
+        const params = new URLSearchParams();
+        params.append('grant_type', 'authorization_code');
+        params.append('client_id', KEYCLOAK_CONFIG.clientId);
+        params.append('code', code);
+        params.append('code_verifier', verifier);
+        params.append('redirect_uri', redirectUri);
 
-    const data = await response.json();
+        const tokenUrl = `${KEYCLOAK_CONFIG.url}/realms/${KEYCLOAK_CONFIG.realm}/protocol/openid-connect/token`;
 
-    // Store tokens securely
-    sessionStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, data.access_token);
-    if (data.refresh_token) {
-      sessionStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, data.refresh_token);
-    }
-    if (data.id_token) {
-      sessionStorage.setItem(STORAGE_KEYS.ID_TOKEN, data.id_token);
-    }
+        const response = await fetch(tokenUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: params.toString(),
+        });
 
-    // Clean up PKCE verifier and state
-    sessionStorage.removeItem(STORAGE_KEYS.CODE_VERIFIER);
-    sessionStorage.removeItem(STORAGE_KEYS.OAUTH_STATE);
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          throw new Error(err.error_description || err.error || 'Failed to exchange authorization code for tokens.');
+        }
 
-    return this.getUserProfile();
+        const data = await response.json();
+
+        // Store tokens securely
+        sessionStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, data.access_token);
+        if (data.refresh_token) {
+          sessionStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, data.refresh_token);
+        }
+        if (data.id_token) {
+          sessionStorage.setItem(STORAGE_KEYS.ID_TOKEN, data.id_token);
+        }
+
+        // Clean up PKCE verifier and state
+        sessionStorage.removeItem(STORAGE_KEYS.CODE_VERIFIER);
+        sessionStorage.removeItem(STORAGE_KEYS.OAUTH_STATE);
+
+        const profile = this.getUserProfile();
+        this._completedCallbackKey = callbackKey;
+        this._completedCallbackProfile = profile;
+        return profile;
+      } finally {
+        this._pendingCallbackKey = null;
+        this._pendingCallbackPromise = null;
+      }
+    })();
+
+    return this._pendingCallbackPromise;
   }
 
   /**

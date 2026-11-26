@@ -12,6 +12,8 @@ import {
 import { canCreateOperation } from '../../modules/response/utils/responsePermissions';
 import { canCreateProject } from '../../modules/project/utils/projectPermissions';
 import { canWriteResourceAssets } from '../../modules/resource/utils/resourcePermissions';
+import { canManageFacilities } from '../../modules/warehouse/utils/warehousePermissions';
+import { canCreateDamage } from '../../modules/damage/utils/damagePermissions';
 
 export const Sidebar = ({ isOpen }) => {
   const { user } = useAuth();
@@ -26,6 +28,8 @@ export const Sidebar = ({ isOpen }) => {
   const showResponseOpCreate = canCreateOperation(user);
   const showProjectCreate = canCreateProject(user);
   const showResourceCreate = canWriteResourceAssets(user);
+  const showWarehouseManage = canManageFacilities(user);
+  const showDamageCreate = canCreateDamage(user);
 
   return (
     <aside className={`idms-sidebar ${isOpen ? 'show' : ''}`}>
@@ -220,15 +224,75 @@ export const Sidebar = ({ isOpen }) => {
           <span>{t('সম্পদ জিআইএস মানচিত্র', 'Resource GIS Map')}</span>
         </NavLink>
 
+        <div className="idms-sidebar-section-title">
+          {t('গুদাম ও মজুদ ব্যবস্থাপনা (M08)', 'Warehouse & Inventory (M08)')}
+        </div>
+        <NavLink to="/warehouse/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-building-fill-check me-2 text-primary"></i>
+          <span>{t('গুদাম ড্যাশবোর্ড ও সতর্কতা', 'Warehouse Dashboard')}</span>
+        </NavLink>
+        <NavLink to="/warehouse/facilities" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-houses-fill me-2 text-info"></i>
+          <span>{t('গুদাম ও সংরক্ষণাগার', 'Warehouses')}</span>
+        </NavLink>
+        {showWarehouseManage && (
+          <NavLink to="/warehouse/facilities/new" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <i className="bi bi-plus-circle me-2 text-primary"></i>
+            <span>{t('নতুন গুদাম নিবন্ধন', 'Register Warehouse')}</span>
+          </NavLink>
+        )}
+        <NavLink to="/warehouse/items" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-tags-fill me-2 text-secondary"></i>
+          <span>{t('পণ্য ক্যাটালগ (Items)', 'Inventory Items')}</span>
+        </NavLink>
+        <NavLink to="/warehouse/inventory" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-boxes me-2 text-success"></i>
+          <span>{t('মজুদ ও অপরিবর্তনীয় লেজার', 'Stock & Ledger')}</span>
+        </NavLink>
+        <NavLink to="/warehouse/receipts" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-box-arrow-in-down me-2 text-success"></i>
+          <span>{t('ক্রয় ও মালামাল গ্রহণ (GRN)', 'Receiving (GRN)')}</span>
+        </NavLink>
+        <NavLink to="/warehouse/transfers" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-arrow-left-right me-2 text-primary"></i>
+          <span>{t('আন্তঃগুদাম স্থানান্তর', 'Warehouse Transfers')}</span>
+        </NavLink>
+        <NavLink to="/warehouse/relief-issue" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-truck me-2 text-warning"></i>
+          <span>{t('ত্রাণ বরাদ্দ স্টক ইস্যু', 'Relief Stock Issue')}</span>
+        </NavLink>
+        <NavLink to="/warehouse/reports" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-file-earmark-spreadsheet-fill me-2 text-danger"></i>
+          <span>{t('গুদাম প্রতিবেদনসমূহ', 'Warehouse Reports')}</span>
+        </NavLink>
+
+        <div className="idms-sidebar-section-title">
+          {t('ক্ষয়ক্ষতি নিরূপণ - ডি-ফর্ম (M09)', 'Damage Assessment (M09)')}
+        </div>
+        <NavLink to="/damage/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-clipboard2-data-fill me-2 text-danger"></i>
+          <span>{t('ক্ষয়ক্ষতি ড্যাশবোর্ড', 'Damage Dashboard')}</span>
+        </NavLink>
+        <NavLink to="/damage/assessments" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-list-ul me-2 text-primary"></i>
+          <span>{t('ডি-ফর্ম তালিকা', 'D-Form Registry')}</span>
+        </NavLink>
+        {showDamageCreate && (
+          <NavLink to="/damage/assessments/new" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <i className="bi bi-plus-circle-fill me-2 text-danger"></i>
+            <span>{t('নতুন ডি-ফর্ম নিবন্ধন', 'New D-Form')}</span>
+          </NavLink>
+        )}
+        <NavLink to="/damage/map" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-geo-alt-fill me-2 text-warning"></i>
+          <span>{t('ক্ষয়ক্ষতি জিআইএস ও হিটম্যাপ', 'Damage GIS & Heatmap')}</span>
+        </NavLink>
+        <NavLink to="/damage/reports" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-file-earmark-bar-graph-fill me-2 text-success"></i>
+          <span>{t('ক্ষয়ক্ষতি প্রতিবেদন', 'Damage Reports')}</span>
+        </NavLink>
+
         <div className="idms-sidebar-section-title">অন্যান্য মডিউল (Planned)</div>
-        <div className="nav-link text-muted opacity-75 d-flex justify-content-between align-items-center">
-          <span><i className="bi bi-clipboard2-data me-2"></i>ক্ষয়ক্ষতি নিরূপণ (D-Form)</span>
-          <span className="badge bg-light text-secondary border">M09</span>
-        </div>
-        <div className="nav-link text-muted opacity-75 d-flex justify-content-between align-items-center">
-          <span><i className="bi bi-building me-2"></i>গুদাম ও মজুদ (Warehouse)</span>
-          <span className="badge bg-light text-secondary border">M08</span>
-        </div>
         <div className="nav-link text-muted opacity-75 d-flex justify-content-between align-items-center">
           <span><i className="bi bi-shield-lock me-2"></i>নিরাপত্তা ও অডিট ট্রেইল</span>
           <span className="badge bg-light text-secondary border">M16</span>

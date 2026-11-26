@@ -11,6 +11,11 @@ class WarehouseInventory extends Model
 {
     use HasUuids;
 
+    public const STATUS_ACTIVE = 'ACTIVE';
+    public const STATUS_EXHAUSTED = 'EXHAUSTED';
+    public const STATUS_EXPIRED = 'EXPIRED';
+    public const STATUS_QUARANTINED = 'QUARANTINED';
+
     protected $table = 'logistics.warehouse_inventories';
 
     public function getTable(): string
@@ -24,17 +29,25 @@ class WarehouseInventory extends Model
         'warehouse_id',
         'commodity_id',
         'batch_number',
+        'opening_quantity',
         'current_quantity',
         'reserved_quantity',
+        'damaged_quantity',
+        'expired_quantity',
         'unit_cost_bdt',
         'received_date',
         'expiry_date',
+        'status',
+        'notes',
     ];
 
     protected $casts = [
-        'current_quantity' => 'decimal:2',
-        'reserved_quantity' => 'decimal:2',
-        'unit_cost_bdt' => 'decimal:2',
+        'opening_quantity' => 'float',
+        'current_quantity' => 'float',
+        'reserved_quantity' => 'float',
+        'damaged_quantity' => 'float',
+        'expired_quantity' => 'float',
+        'unit_cost_bdt' => 'float',
         'received_date' => 'date',
         'expiry_date' => 'date',
     ];

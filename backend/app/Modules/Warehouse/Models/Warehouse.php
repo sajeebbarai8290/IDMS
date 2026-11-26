@@ -21,6 +21,12 @@ class Warehouse extends Model
     public const TIER_DISTRICT_GODOWN = 'DISTRICT_GODOWN';
     public const TIER_UPAZILA_STORE = 'UPAZILA_STORE';
 
+    public const TYPE_RELIEF_GODOWN = 'RELIEF_GODOWN';
+    public const TYPE_COLD_STORAGE = 'COLD_STORAGE';
+    public const TYPE_FOOD_SILO = 'FOOD_SILO';
+    public const TYPE_EMERGENCY_HUB = 'EMERGENCY_HUB';
+    public const TYPE_MEDICAL_DEPOT = 'MEDICAL_DEPOT';
+
     protected $table = 'logistics.warehouses';
 
     public function getTable(): string
@@ -36,14 +42,24 @@ class Warehouse extends Model
         'warehouse_name',
         'warehouse_name_bn',
         'tier',
+        'warehouse_type',
+        'owning_organization',
+        'responsible_officer_name',
+        'responsible_officer_contact',
+        'responsible_user_id',
+        'address',
+        'contact_phone',
+        'contact_email',
         'capacity_mt',
         'latitude',
         'longitude',
         'is_active',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
-        'capacity_mt' => 'decimal:2',
+        'capacity_mt' => 'float',
         'latitude' => 'float',
         'longitude' => 'float',
         'is_active' => 'boolean',
@@ -92,8 +108,33 @@ class Warehouse extends Model
         return $this->belongsTo(AdministrativeUnit::class, 'administrative_unit_id');
     }
 
+    public function responsibleUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'responsible_user_id');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     public function inventories(): HasMany
     {
         return $this->hasMany(WarehouseInventory::class, 'warehouse_id');
+    }
+
+    public function stockReceipts(): HasMany
+    {
+        return $this->hasMany(StockReceipt::class, 'warehouse_id');
+    }
+
+    public function outgoingTransfers(): HasMany
+    {
+        return $this->hasMany(WarehouseTransfer::class, 'source_warehouse_id');
+    }
+
+    public function incomingTransfers(): HasMany
+    {
+        return $this->hasMany(WarehouseTransfer::class, 'destination_warehouse_id');
     }
 }

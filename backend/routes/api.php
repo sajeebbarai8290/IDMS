@@ -11,6 +11,9 @@ use App\Modules\Beneficiary\Controllers\Api\V1\HouseholdMemberController;
 use App\Modules\Beneficiary\Controllers\Api\V1\ImportExportController;
 use App\Modules\Beneficiary\Controllers\Api\V1\NidVerificationController;
 use App\Modules\Beneficiary\Controllers\Api\V1\VerificationController;
+use App\Modules\DamageAssessment\Controllers\Api\V1\DamageAssessmentController;
+use App\Modules\DamageAssessment\Controllers\Api\V1\DamageDashboardController;
+use App\Modules\DamageAssessment\Controllers\Api\V1\DamageVerificationController;
 use App\Modules\Disaster\Controllers\Api\V1\DisasterCategoryController;
 use App\Modules\Disaster\Controllers\Api\V1\DisasterController;
 use App\Modules\NidVerification\Controllers\Api\V1\NidVerificationController as ModuleNidVerificationController;
@@ -34,6 +37,13 @@ use App\Modules\Response\Controllers\Api\V1\ResponseDashboardController;
 use App\Modules\Response\Controllers\Api\V1\ResponseOperationController;
 use App\Modules\Response\Controllers\Api\V1\ResponseSituationReportController;
 use App\Modules\Response\Controllers\Api\V1\ResponseTaskController;
+use App\Modules\Warehouse\Controllers\Api\V1\StockReceiptController;
+use App\Modules\Warehouse\Controllers\Api\V1\StockTransactionController;
+use App\Modules\Warehouse\Controllers\Api\V1\WarehouseDashboardController;
+use App\Modules\Warehouse\Controllers\Api\V1\WarehouseFacilityController;
+use App\Modules\Warehouse\Controllers\Api\V1\WarehouseItemController;
+use App\Modules\Warehouse\Controllers\Api\V1\WarehouseReliefIntegrationController;
+use App\Modules\Warehouse\Controllers\Api\V1\WarehouseTransferController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -268,6 +278,82 @@ Route::prefix('v1')->group(function () {
             Route::get('/human-deployments', [HumanResourceDeploymentController::class, 'index'])->name('api.v1.resource.human.index');
             Route::post('/human-deployments', [HumanResourceDeploymentController::class, 'store'])->name('api.v1.resource.human.store');
             Route::post('/human-deployments/{deployment}/release', [HumanResourceDeploymentController::class, 'release'])->name('api.v1.resource.human.release');
+        });
+
+        // 10. Module 08: Warehouse & Inventory Management (warehouse.*)
+        Route::prefix('warehouse')->group(function () {
+            Route::get('/dashboard', [WarehouseDashboardController::class, 'summary'])->name('api.v1.warehouse.dashboard');
+            Route::get('/lookups', [WarehouseDashboardController::class, 'lookups'])->name('api.v1.warehouse.lookups');
+            Route::get('/gis/geojson', [WarehouseDashboardController::class, 'geojson'])->name('api.v1.warehouse.gis.geojson');
+            Route::get('/alerts', [WarehouseDashboardController::class, 'alerts'])->name('api.v1.warehouse.alerts');
+            Route::get('/reports', [WarehouseDashboardController::class, 'reports'])->name('api.v1.warehouse.reports');
+            Route::get('/export-ledger', [WarehouseDashboardController::class, 'export'])->name('api.v1.warehouse.export_ledger');
+
+            Route::get('/facilities', [WarehouseFacilityController::class, 'index'])->name('api.v1.warehouse.facilities.index');
+            Route::post('/facilities', [WarehouseFacilityController::class, 'store'])->name('api.v1.warehouse.facilities.store');
+            Route::get('/facilities/{id}', [WarehouseFacilityController::class, 'show'])->name('api.v1.warehouse.facilities.show');
+            Route::put('/facilities/{id}', [WarehouseFacilityController::class, 'update'])->name('api.v1.warehouse.facilities.update');
+
+            Route::get('/items', [WarehouseItemController::class, 'index'])->name('api.v1.warehouse.items.index');
+            Route::post('/items', [WarehouseItemController::class, 'store'])->name('api.v1.warehouse.items.store');
+            Route::get('/items/{id}', [WarehouseItemController::class, 'show'])->name('api.v1.warehouse.items.show');
+            Route::put('/items/{id}', [WarehouseItemController::class, 'update'])->name('api.v1.warehouse.items.update');
+
+            Route::get('/inventories', [StockTransactionController::class, 'inventories'])->name('api.v1.warehouse.inventories.index');
+            Route::get('/transactions', [StockTransactionController::class, 'index'])->name('api.v1.warehouse.transactions.index');
+            Route::post('/transactions/adjustment', [StockTransactionController::class, 'storeAdjustment'])->name('api.v1.warehouse.transactions.adjustment');
+
+            Route::get('/receipts', [StockReceiptController::class, 'index'])->name('api.v1.warehouse.receipts.index');
+            Route::post('/receipts', [StockReceiptController::class, 'store'])->name('api.v1.warehouse.receipts.store');
+            Route::get('/receipts/{id}', [StockReceiptController::class, 'show'])->name('api.v1.warehouse.receipts.show');
+            Route::post('/receipts/{id}/verify', [StockReceiptController::class, 'verify'])->name('api.v1.warehouse.receipts.verify');
+            Route::post('/receipts/{id}/reject', [StockReceiptController::class, 'reject'])->name('api.v1.warehouse.receipts.reject');
+            Route::get('/receipts/{id}/attachment', [StockReceiptController::class, 'downloadAttachment'])->name('api.v1.warehouse.receipts.attachment');
+
+            Route::get('/transfers', [WarehouseTransferController::class, 'index'])->name('api.v1.warehouse.transfers.index');
+            Route::post('/transfers', [WarehouseTransferController::class, 'store'])->name('api.v1.warehouse.transfers.store');
+            Route::get('/transfers/{id}', [WarehouseTransferController::class, 'show'])->name('api.v1.warehouse.transfers.show');
+            Route::post('/transfers/{id}/approve', [WarehouseTransferController::class, 'approve'])->name('api.v1.warehouse.transfers.approve');
+            Route::post('/transfers/{id}/dispatch', [WarehouseTransferController::class, 'dispatchOrder'])->name('api.v1.warehouse.transfers.dispatch');
+            Route::post('/transfers/{id}/receive', [WarehouseTransferController::class, 'receiveOrder'])->name('api.v1.warehouse.transfers.receive');
+            Route::post('/transfers/{id}/cancel', [WarehouseTransferController::class, 'cancel'])->name('api.v1.warehouse.transfers.cancel');
+
+            Route::get('/relief-allocations', [WarehouseReliefIntegrationController::class, 'allocations'])->name('api.v1.warehouse.relief.allocations');
+            Route::post('/relief-allocations/{allocationId}/issue', [WarehouseReliefIntegrationController::class, 'issueStock'])->name('api.v1.warehouse.relief.issue');
+        });
+
+        // 11. Module 09: Damage Assessment - D-Form (damage.*)
+        Route::prefix('damage')->group(function () {
+            Route::get('/dashboard', [DamageDashboardController::class, 'summary'])->name('api.v1.damage.dashboard');
+            Route::get('/lookups', [DamageDashboardController::class, 'lookups'])->name('api.v1.damage.lookups');
+            Route::get('/categories', [DamageDashboardController::class, 'categories'])->name('api.v1.damage.categories.index');
+            Route::post('/categories', [DamageDashboardController::class, 'storeCategory'])->name('api.v1.damage.categories.store');
+            Route::put('/categories/{category}', [DamageDashboardController::class, 'updateCategory'])->name('api.v1.damage.categories.update');
+
+            Route::get('/gis/geojson', [DamageDashboardController::class, 'geojson'])->name('api.v1.damage.gis.geojson');
+            Route::get('/gis/heatmap', [DamageDashboardController::class, 'heatmap'])->name('api.v1.damage.gis.heatmap');
+            Route::get('/gis/spatial-aggregation', [DamageDashboardController::class, 'spatialAggregation'])->name('api.v1.damage.gis.aggregation');
+            Route::get('/reports', [DamageDashboardController::class, 'reports'])->name('api.v1.damage.reports');
+            Route::get('/export', [DamageDashboardController::class, 'export'])->name('api.v1.damage.export');
+
+            Route::post('/assessments/sync', [DamageAssessmentController::class, 'sync'])->name('api.v1.damage.assessments.sync');
+            Route::get('/assessments', [DamageAssessmentController::class, 'index'])->name('api.v1.damage.assessments.index');
+            Route::post('/assessments', [DamageAssessmentController::class, 'store'])->name('api.v1.damage.assessments.store');
+            Route::get('/assessments/{assessment}', [DamageAssessmentController::class, 'show'])->name('api.v1.damage.assessments.show');
+            Route::put('/assessments/{assessment}', [DamageAssessmentController::class, 'update'])->name('api.v1.damage.assessments.update');
+            Route::delete('/assessments/{assessment}', [DamageAssessmentController::class, 'destroy'])->name('api.v1.damage.assessments.destroy');
+            Route::post('/assessments/{assessment}/boundary', [DamageAssessmentController::class, 'uploadBoundary'])->name('api.v1.damage.assessments.boundary');
+
+            Route::post('/assessments/{assessment}/attachments', [DamageAssessmentController::class, 'uploadAttachment'])->name('api.v1.damage.assessments.attachments.store');
+            Route::get('/assessments/{assessment}/attachments/{attachment}', [DamageAssessmentController::class, 'downloadAttachment'])->name('api.v1.damage.assessments.attachments.download');
+            Route::delete('/assessments/{assessment}/attachments/{attachment}', [DamageAssessmentController::class, 'deleteAttachment'])->name('api.v1.damage.assessments.attachments.destroy');
+
+            Route::post('/assessments/{assessment}/submit', [DamageVerificationController::class, 'submit'])->name('api.v1.damage.assessments.submit');
+            Route::post('/assessments/{assessment}/start-verification', [DamageVerificationController::class, 'startVerification'])->name('api.v1.damage.assessments.start_verification');
+            Route::post('/assessments/{assessment}/request-correction', [DamageVerificationController::class, 'requestCorrection'])->name('api.v1.damage.assessments.request_correction');
+            Route::post('/assessments/{assessment}/verify', [DamageVerificationController::class, 'verify'])->name('api.v1.damage.assessments.verify');
+            Route::post('/assessments/{assessment}/reject', [DamageVerificationController::class, 'reject'])->name('api.v1.damage.assessments.reject');
+            Route::post('/assessments/{assessment}/approve', [DamageVerificationController::class, 'approve'])->name('api.v1.damage.assessments.approve');
         });
 
         // Administrative Overview Scenarios

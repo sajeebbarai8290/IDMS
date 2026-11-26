@@ -2,15 +2,17 @@
 
 namespace App\Modules\Warehouse\Models;
 
+use App\Core\Models\User;
 use App\Modules\Relief\Models\ReliefCategory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Commodity extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $table = 'logistics.commodities';
 
@@ -28,11 +30,16 @@ class Commodity extends Model
         'name_bn',
         'category',
         'unit_of_measure',
+        'description',
+        'minimum_stock_level',
         'is_perishable',
         'is_active',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
+        'minimum_stock_level' => 'float',
         'is_perishable' => 'boolean',
         'is_active' => 'boolean',
     ];
@@ -45,5 +52,10 @@ class Commodity extends Model
     public function inventories(): HasMany
     {
         return $this->hasMany(WarehouseInventory::class, 'commodity_id');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

@@ -18,9 +18,11 @@ class DatabaseSeeder extends Seeder
             DisasterEventSeeder::class,
             BeneficiarySeeder::class,
             ReliefCatalogAndWarehouseSeeder::class,
+            WarehouseModuleSeeder::class,
             ResponseCatalogSeeder::class,
             ResourceSeeder::class,
             ProjectSeeder::class,
+            DamageAssessmentSeeder::class,
         ]);
     }
 }

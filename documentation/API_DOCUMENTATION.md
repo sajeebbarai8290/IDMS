@@ -391,4 +391,57 @@ interface NidVerificationServiceInterface
 - `GET /api/v1/resource/maintenances`, `POST /api/v1/resource/assets/{asset}/maintenances`, `PUT /api/v1/resource/maintenances/{maintenance}`, & `GET /api/v1/resource/maintenances/{maintenance}/attachment` — Manage maintenance schedules, preventive/corrective logs, inspection findings/results (`PASS`, `CONDITIONAL`, `FAIL`), repair costs (`repair_cost_bdt`), maintenance reminders, and SHA-256 private inspection report uploads/downloads.
 - `GET /api/v1/resource/human-deployments`, `POST /api/v1/resource/human-deployments`, & `POST /api/v1/resource/human-deployments/{deployment}/release` — Deploy registered HR specialists, system officers, or response teams to response operations/disasters with duty descriptions and deployment periods, preventing double-deployment conflicts and tracking full assignment history.
 
+---
+
+## 11. Module 08: Warehouse & Inventory Management Implemented Endpoints (`/api/v1/warehouse/*`)
+
+### 11.1 Dashboard, Lookups, Alerts, GIS & Reports
+- `GET /api/v1/warehouse/dashboard` — Scoped warehouse portfolio analytics (Redis cached with version invalidation): active/total warehouses, total capacity (MT), physical/reserved/available/damaged/expired stock totals, active batch valuation (BDT), pending GRN verifications, active inter-warehouse transfers, stock alerts summary, and recent immutable transactions.
+- `GET /api/v1/warehouse/lookups` — Tier/type/status/transaction constants, scoped warehouses (including supplying upstream depots), active commodities, relief categories, scoped administrative units, and eligible 4-eye co-authorizers (`ROLE_DDM_DIRECTOR_GENERAL`, `ROLE_DDM_RELIEF_DIRECTOR`, `ROLE_DEPUTY_COMMISSIONER`, `ROLE_DRRO`).
+- `GET /api/v1/warehouse/gis/geojson` — RFC 7946 `FeatureCollection` of warehouse coordinates (`PostGIS` `location_geom`) with live physical/reserved/available inventory totals.
+- `GET /api/v1/warehouse/alerts?days=30` — Real-time stock alerts across low stock (`available < minimum_stock_level`), out of stock, expiring soon, expired batches, and unusual adjustments/write-offs.
+- `GET /api/v1/warehouse/reports?type={STOCK_BALANCE|STOCK_MOVEMENT|WAREHOUSE_INVENTORY|ITEM_INVENTORY|EXPIRY|TRANSACTION_HISTORY}` — Scoped operational reporting datasets.
+- `GET /api/v1/warehouse/export-ledger` — Download UTF-8 BOM CSV of immutable stock transactions (`warehouse.stock.export_ledger`; blocked for `ROLE_EXTERNAL_PARTNER`).
+
+### 11.2 Warehouses, Items & Immutable Stock Ledger
+- `GET /api/v1/warehouse/facilities`, `POST /api/v1/warehouse/facilities`, `GET /api/v1/warehouse/facilities/{id}`, `PUT /api/v1/warehouse/facilities/{id}` — Register and update multi-echelon depots (`CENTRAL_CSD`, `REGIONAL_LSD`, `DISTRICT_GODOWN`, `UPAZILA_STORE`) with responsible officer, owning organization, address, contact details, capacity, and PostGIS GPS coordinates (`ROLE_EXTERNAL_PARTNER` receives redacted officer/facility contact info).
+- `GET /api/v1/warehouse/items`, `POST /api/v1/warehouse/items`, `GET /api/v1/warehouse/items/{id}`, `PUT /api/v1/warehouse/items/{id}` — Manage bilingual commodity definitions (`name_bn`, `name_en`), unique `commodity_code`, unit of measure, description, `minimum_stock_level`, and perishability flag.
+- `GET /api/v1/warehouse/inventories` — Scoped, FEFO-ordered batch inventory register showing `opening_quantity`, `current_quantity`, `reserved_quantity`, `available_quantity`, `damaged_quantity`, `expired_quantity`, unit valuation, and days to expiry.
+- `GET /api/v1/warehouse/transactions` & `POST /api/v1/warehouse/transactions/adjustment` — Inspect immutable `logistics.stock_transactions` ledger (`StockTransaction` blocks Eloquent updates/deletes via `LogicException`) and post authorized ledger entries (`OPENING_STOCK`, `RETURN_IN`, `STOCK_ADJUSTMENT`, `WRITE_OFF_DAMAGED`, `EXPIRED_STOCK`). Write-offs and adjustments require `warehouse.stock.writeoff`, valid `reason_code`, and 4-eye dual authorization (`approved_by !== authorized_by`); `ROLE_SUPER_ADMIN` is blocked by operational blackout.
+
+### 11.3 Procurement (GRN), Inter-Warehouse Transfers & Relief Integration
+- `GET /api/v1/warehouse/receipts`, `POST /api/v1/warehouse/receipts`, `GET /api/v1/warehouse/receipts/{id}`, `POST /api/v1/warehouse/receipts/{id}/verify`, `POST /api/v1/warehouse/receipts/{id}/reject`, `GET /api/v1/warehouse/receipts/{id}/attachment` — Two-step GRN receiving workflow with supplier metadata, batch/expiry tracking, idempotency guard, SHA-256 private document upload/download, and 4-eye verification (`verified_by !== received_by`) required before stock enters usable inventory.
+- `GET /api/v1/warehouse/transfers`, `POST /api/v1/warehouse/transfers`, `GET /api/v1/warehouse/transfers/{id}`, `POST /api/v1/warehouse/transfers/{id}/approve`, `POST /api/v1/warehouse/transfers/{id}/dispatch`, `POST /api/v1/warehouse/transfers/{id}/receive`, `POST /api/v1/warehouse/transfers/{id}/cancel` — Controlled 4-stage transfer order workflow (`REQUESTED` &rarr; `APPROVED` [4-eye SoD] &rarr; `DISPATCHED` [deducts unreserved source stock] &rarr; `RECEIVED` [credits destination batch]).
+- `GET /api/v1/warehouse/relief-allocations` & `POST /api/v1/warehouse/relief-allocations/{allocationId}/issue` — Issue warehouse stock directly against `SANCTIONED` or `DISPATCHED` Module 04 `ReliefAllocation` items, updating `quantity_distributed` and blocking excess issuance (`quantity_to_issue <= remaining_quantity`) to prevent double-deduction.
+
+---
+
+## 12. Module 09: Damage Assessment (D-Form) Implemented Endpoints (`/api/v1/damage/*`)
+
+### 12.1 Dashboard, Configurable Categories, GIS & Reports
+- `GET /api/v1/damage/dashboard` — Scoped damage analytics (Redis cached with key-list invalidation): total assessments, verified/approved counts, pending verification, affected households & population, damaged unit totals (fully/partially/minor), total estimated loss (BDT), breakdown by category, status, type, severity, and geographical area.
+- `GET /api/v1/damage/lookups` — Active configurable damage categories, disaster events, scoped administrative units, and assessment/verification/severity constants.
+- `GET /api/v1/damage/categories`, `POST /api/v1/damage/categories`, `PUT /api/v1/damage/categories/{category}` — List, create, and update configurable damage categories (9 built-in sectors + custom categories).
+- `GET /api/v1/damage/gis/geojson` — Scoped RFC 7946 `FeatureCollection` of damage assessment points, polygons, coverage locations, and geo-tagged damaged infrastructure items (supports `disaster_event_id`, `verification_status`, `severity_level`, `category_id`, `bbox`).
+- `GET /api/v1/damage/gis/heatmap` — Weighted damage heatmap intensity points (`0.15–1.0` normalized by severity, financial loss, and affected households) plus geographical area severity summary.
+- `GET /api/v1/damage/gis/spatial-aggregation` — Administrative area-level spatial aggregation of assessments, verified counts, households, and estimated losses.
+- `GET /api/v1/damage/reports?type={summary|disaster|location|category|financial}` — Disaster-wise, location-wise, category-wise, and financial loss reports (defaults to `VERIFIED` & `APPROVED` assessments).
+- `GET /api/v1/damage/export` — Download UTF-8 BOM CSV export of scoped damage assessments (`damage.assessment.export`; assessor PII redacted for `ROLE_EXTERNAL_PARTNER`).
+
+### 12.2 Assessment Registration, Field Collection, Attachments & Offline Sync
+- `GET /api/v1/damage/assessments` — Scoped, paginated, searchable, filterable, and sortable list of D-Form assessments (`ROLE_EXTERNAL_PARTNER` sees `VERIFIED`/`APPROVED` only with assessor contact/name redacted).
+- `POST /api/v1/damage/assessments` & `PUT /api/v1/damage/assessments/{assessment}` — Register or update a D-Form (editable only in `DRAFT` or `CORRECTION_REQUESTED` states) with multi-location geographical coverage, sectoral damage items, GPS/GeoJSON, and optimistic `sync_version` checking.
+- `GET /api/v1/damage/assessments/{assessment}` & `DELETE /api/v1/damage/assessments/{assessment}` — Full D-Form detail (with locations, sector items, attachments, verification logs) or soft-delete `DRAFT` records.
+- `POST /api/v1/damage/assessments/sync` — Batch offline mobile synchronization endpoint for Flutter app compatibility (`client_uuid`, `idempotency_key` deduplication, `device_id`, `offline_created_at`, `sync_version` conflict detection returning `CREATED`, `UPDATED`, `DUPLICATE_SKIPPED`, or `CONFLICT`).
+- `POST /api/v1/damage/assessments/{assessment}/boundary` — Update GeoJSON Polygon/MultiPolygon footprint and PostGIS `damage_area_geom`.
+- `POST /api/v1/damage/assessments/{assessment}/attachments`, `GET /api/v1/damage/assessments/{assessment}/attachments/{attachment}`, `DELETE /api/v1/damage/assessments/{assessment}/attachments/{attachment}` — Geo-tagged private photograph/document upload with SHA-256 checksums and authenticated streamed download.
+
+### 12.3 Verification & Approval Workflow (4-Eye SoD + Audit Trail)
+- `POST /api/v1/damage/assessments/{assessment}/submit` — Field officer submits `DRAFT` or `CORRECTION_REQUESTED` assessment (`SUBMITTED`).
+- `POST /api/v1/damage/assessments/{assessment}/start-verification` — Supervisor begins review (`UNDER_VERIFICATION`); enforces 4-eye SoD (`actor !== created_by && actor !== submitted_by`).
+- `POST /api/v1/damage/assessments/{assessment}/request-correction` — Supervisor returns assessment with mandatory `notes` (`CORRECTION_REQUESTED`) so the field officer can amend and resubmit.
+- `POST /api/v1/damage/assessments/{assessment}/verify` — Supervisor verifies assessment (`VERIFIED`), making it available for official reporting.
+- `POST /api/v1/damage/assessments/{assessment}/reject` — Supervisor rejects assessment with mandatory `reason` (`REJECTED`).
+- `POST /api/v1/damage/assessments/{assessment}/approve` — District/Directorate/Ministry authority grants final approval (`APPROVED`) enforcing 4-eye SoD and `ROLE_SUPER_ADMIN` operational blackout.
+
 

@@ -4,6 +4,9 @@ namespace App\Providers;
 
 use App\Modules\Beneficiary\Models\Household;
 use App\Modules\Beneficiary\Policies\HouseholdPolicy;
+use App\Modules\DamageAssessment\Models\DamageAssessment;
+use App\Modules\DamageAssessment\Models\DamageCategory;
+use App\Modules\DamageAssessment\Policies\DamageAssessmentPolicy;
 use App\Modules\Disaster\Adapters\MockDisasterNotificationAdapter;
 use App\Modules\Disaster\Contracts\DisasterNotificationInterface;
 use App\Modules\Disaster\Models\DisasterEvent;
@@ -33,6 +36,13 @@ use App\Modules\Response\Models\ResponseActivityType;
 use App\Modules\Response\Models\ResponseOperation;
 use App\Modules\Response\Models\ResponseSituationReport;
 use App\Modules\Response\Policies\ResponsePolicy;
+use App\Modules\Warehouse\Models\Commodity;
+use App\Modules\Warehouse\Models\StockReceipt;
+use App\Modules\Warehouse\Models\StockTransaction;
+use App\Modules\Warehouse\Models\Warehouse;
+use App\Modules\Warehouse\Models\WarehouseInventory;
+use App\Modules\Warehouse\Models\WarehouseTransfer;
+use App\Modules\Warehouse\Policies\WarehousePolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -84,5 +94,13 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ResourceAllocation::class, ResourcePolicy::class);
         Gate::policy(ResourceMaintenance::class, ResourcePolicy::class);
         Gate::policy(HumanResourceDeployment::class, ResourcePolicy::class);
+        Gate::policy(Warehouse::class, WarehousePolicy::class);
+        Gate::policy(Commodity::class, WarehousePolicy::class);
+        Gate::policy(WarehouseInventory::class, WarehousePolicy::class);
+        Gate::policy(StockTransaction::class, WarehousePolicy::class);
+        Gate::policy(StockReceipt::class, WarehousePolicy::class);
+        Gate::policy(WarehouseTransfer::class, WarehousePolicy::class);
+        Gate::policy(DamageCategory::class, DamageAssessmentPolicy::class);
+        Gate::policy(DamageAssessment::class, DamageAssessmentPolicy::class);
     }
 }
