@@ -51,6 +51,13 @@ use App\Modules\Warehouse\Models\Warehouse;
 use App\Modules\Warehouse\Models\WarehouseInventory;
 use App\Modules\Warehouse\Models\WarehouseTransfer;
 use App\Modules\Warehouse\Policies\WarehousePolicy;
+use App\Modules\Workflow\Adapters\DatabaseWorkflowNotificationAdapter;
+use App\Modules\Workflow\Contracts\WorkflowNotificationInterface;
+use App\Modules\Workflow\Models\WorkflowDefinition;
+use App\Modules\Workflow\Models\WorkflowDelegation;
+use App\Modules\Workflow\Models\WorkflowInstance;
+use App\Modules\Workflow\Models\WorkflowNotification;
+use App\Modules\Workflow\Policies\WorkflowPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -75,6 +82,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             DisasterNotificationInterface::class,
             MockDisasterNotificationAdapter::class
+        );
+
+        $this->app->bind(
+            WorkflowNotificationInterface::class,
+            DatabaseWorkflowNotificationAdapter::class
         );
     }
 
@@ -117,5 +129,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(VolunteerAttendance::class, VolunteerPolicy::class);
         Gate::policy(VolunteerTrainingProgram::class, VolunteerPolicy::class);
         Gate::policy(VolunteerTrainingSession::class, VolunteerPolicy::class);
+        Gate::policy(WorkflowDefinition::class, WorkflowPolicy::class);
+        Gate::policy(WorkflowInstance::class, WorkflowPolicy::class);
+        Gate::policy(WorkflowDelegation::class, WorkflowPolicy::class);
+        Gate::policy(WorkflowNotification::class, WorkflowPolicy::class);
     }
 }

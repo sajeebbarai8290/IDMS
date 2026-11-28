@@ -971,34 +971,30 @@ Check-in/check-out records (`check_in_at`, `check_out_at`, `duration_minutes`), 
 
 ---
 
-## 9. Schema: `workflow` (State Machines & Approvals)
+## 9. Schema: `workflow` (Configurable Workflow & Multi-Tier Approvals)
 
-### 9.1 `workflow.workflow_instances`
-State machine instances governing relief, damage, and project approvals.
+### 9.1 `workflow.workflow_definitions`
+Configurable workflow templates per module and target entity (`code`, `name_en`, `name_bn`, `module_code`, `entity_type`, `is_active`, `is_default`, `is_system`, `allow_self_approval`, `allow_delegation`, `sync_entity_status`, `sla_hours`, `escalation_enabled`, `version`, `config_metadata`).
 
-| Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
-| :--- | :--- | :---: | :--- | :--- | :--- |
-| `id` | `uuid` | NO | PK | B-Tree (PK) | Instance ID |
-| `entity_type` | `varchar(100)`| NO | | B-Tree | Eloquent model class |
-| `entity_id` | `uuid` | NO | | B-Tree | Target entity UUID |
-| `current_state` | `varchar(50)` | NO | | B-Tree | Active workflow state |
-| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Instance creation timestamp |
-| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Latest transition timestamp |
+### 9.2 `workflow.workflow_stages` & `workflow.workflow_stage_assignments`
+- `workflow.workflow_stages`: Ordered sequential or parallel (`SEQUENTIAL`, `PARALLEL_ALL`, `PARALLEL_ANY`) approval gates across levels (`SUBMITTED`, `INITIAL_REVIEW`, `SUPERVISOR_APPROVAL`, `DISTRICT_APPROVAL`, `DIRECTORATE_APPROVAL`, `MINISTRY_APPROVAL`, `FINAL_APPROVAL`), `required_approvals`, `sla_hours`, `escalation_role_code`, and action permissions (`allow_delegation`, `allow_return_for_correction`, `allow_info_request`, `allow_forward`).
+- `workflow.workflow_stage_assignments`: Flexible stage assignee bindings (`USER`, `ROLE`, `ADMINISTRATIVE_UNIT`) and authority (`REVIEWER`, `APPROVER`, `ENDORSE`, `OBSERVER`).
 
----
+### 9.3 `workflow.workflow_delegations`
+Authorized time-bound approval delegations (`workflow_definition_id`, `delegator_user_id`, `delegate_user_id`, `administrative_unit_id`, `delegated_role_code`, `valid_from`, `valid_until`, `reason`, `is_active`, `revoked_by`, `revoked_at`).
 
-### 9.2 `workflow.workflow_transitions` (Permanent Audit)
-Sequential log of state changes.
+### 9.4 `workflow.workflow_instances`
+Runtime workflow instances across integrated IDMS modules (`instance_no`, `workflow_definition_id`, `module_code`, `entity_type`, `entity_id`, `entity_reference`, `administrative_unit_id`, `current_stage_id`, `current_state`, `priority`, `submitted_by`, `submitted_at`, `assigned_to_user_id`, `assigned_role_code`, `due_at`, `escalated_at`, `escalation_count`, `completed_at`, `metadata`).
 
-| Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
-| :--- | :--- | :---: | :--- | :--- | :--- |
-| `id` | `uuid` | NO | PK | B-Tree (PK) | Transition ID |
-| `workflow_instance_id`| `uuid`| NO | FK &rarr; `workflow.workflow_instances(id)` ON DELETE RESTRICT | B-Tree | Target instance |
-| `from_state` | `varchar(50)` | NO | | | Previous state |
-| `to_state` | `varchar(50)` | NO | | B-Tree | New approved state |
-| `action_by_user_id`| `uuid` | NO | FK &rarr; `core.users(id)` | B-Tree | Officer signing off |
-| `remarks` | `text` | YES | | | Official comments / reasons |
-| `transitioned_at`| `timestamptz` | NO | CURRENT_TIMESTAMP | B-Tree | Timestamp of approval |
+### 9.5 `workflow.workflow_stage_tasks`
+Active and historical stage-level reviewer/approver tasks supporting parallel dual-authorization (`step_sequence`, `assignee_type`, `assignee_user_id`, `assignee_role_code`, `delegated_from_user_id`, `authority_type`, `status`, `acted_by_user_id`, `acted_at`, `comments`).
+
+### 9.6 `workflow.workflow_transitions` (Immutable Permanent Audit)
+Append-only immutable log of all state changes and decisions (`workflow_instance_id`, `workflow_stage_task_id`, `from_stage_id`, `to_stage_id`, `action`, `from_state`, `to_state`, `action_by_user_id`, `acted_on_behalf_of_user_id`, `actor_name`, `actor_role`, `remarks`, `metadata`, `transitioned_at`).
+
+### 9.7 `workflow.workflow_attachments` & `workflow.workflow_notifications`
+- `workflow.workflow_attachments`: Private disk supporting documents/files with MIME validation and SHA-256 checksums (`workflow_instance_id`, `workflow_transition_id`, `original_name`, `storage_path`, `mime_type`, `file_size_bytes`, `sha256_hash`).
+- `workflow.workflow_notifications`: Queued/dispatched assignment notices, status updates, pending approval reminders, and SLA escalation alerts (`notification_type`, `channel`, `title_en`, `title_bn`, `message_en`, `message_bn`, `delivery_status`, `read_at`).
 
 ---
 

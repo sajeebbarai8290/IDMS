@@ -95,6 +95,15 @@ import VolunteerDeploymentPage from '../modules/volunteer/pages/VolunteerDeploym
 import VolunteerTrainingPage from '../modules/volunteer/pages/VolunteerTrainingPage';
 import VolunteerReportsPage from '../modules/volunteer/pages/VolunteerReportsPage';
 
+// Module 11: Workflow Management Pages
+import WorkflowDashboardPage from '../modules/workflow/pages/WorkflowDashboardPage';
+import WorkflowInstanceListPage from '../modules/workflow/pages/WorkflowInstanceListPage';
+import WorkflowSubmitPage from '../modules/workflow/pages/WorkflowSubmitPage';
+import WorkflowInstanceDetailPage from '../modules/workflow/pages/WorkflowInstanceDetailPage';
+import WorkflowConfigListPage from '../modules/workflow/pages/WorkflowConfigListPage';
+import WorkflowConfigFormPage from '../modules/workflow/pages/WorkflowConfigFormPage';
+import WorkflowDelegationPage from '../modules/workflow/pages/WorkflowDelegationPage';
+
 export const AppRoutes = () => {
   return (
     <Routes>
@@ -799,6 +808,16 @@ export const AppRoutes = () => {
       <Route path="/volunteer/deployments" element={<ProtectedRoute><MainLayout><VolunteerDeploymentPage /></MainLayout></ProtectedRoute>} />
       <Route path="/volunteer/training" element={<ProtectedRoute><MainLayout><VolunteerTrainingPage /></MainLayout></ProtectedRoute>} />
       <Route path="/volunteer/reports" element={<ProtectedRoute><MainLayout><VolunteerReportsPage /></MainLayout></ProtectedRoute>} />
+
+      {/* Module 11: Workflow Management Routes */}
+      <Route path="/workflow/dashboard" element={<ProtectedRoute><MainLayout><WorkflowDashboardPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/workflow/instances" element={<ProtectedRoute><MainLayout><WorkflowInstanceListPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/workflow/submit" element={<ProtectedRoute><MainLayout><WorkflowSubmitPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/workflow/instances/:id" element={<ProtectedRoute><MainLayout><WorkflowInstanceDetailPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/workflow/configurations" element={<ProtectedRoute><MainLayout><WorkflowConfigListPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/workflow/configurations/new" element={<ProtectedRoute><MainLayout><WorkflowConfigFormPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/workflow/configurations/:id/edit" element={<ProtectedRoute><MainLayout><WorkflowConfigFormPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/workflow/delegations" element={<ProtectedRoute><MainLayout><WorkflowDelegationPage /></MainLayout></ProtectedRoute>} />
 
       {/* Root Redirection */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />

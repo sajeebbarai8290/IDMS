@@ -142,8 +142,15 @@ erDiagram
     VOLUNTEER_TRAINING_SESSIONS ||--o{ VOLUNTEER_TRAINING_ENROLLMENTS : "enrolls"
     VOLUNTEERS ||--o{ VOLUNTEER_TRAINING_ENROLLMENTS : "attends_and_certified"
 
-    %% WORKFLOW ENGINE
+    %% WORKFLOW ENGINE (MODULE 11)
+    WORKFLOW_DEFINITIONS ||--|{ WORKFLOW_STAGES : "configures"
+    WORKFLOW_STAGES ||--|{ WORKFLOW_STAGE_ASSIGNMENTS : "assigns"
+    WORKFLOW_DEFINITIONS ||--o{ WORKFLOW_DELEGATIONS : "delegates"
+    WORKFLOW_DEFINITIONS ||--o{ WORKFLOW_INSTANCES : "instantiates"
+    WORKFLOW_INSTANCES ||--|{ WORKFLOW_STAGE_TASKS : "tracks_tasks"
     WORKFLOW_INSTANCES ||--|{ WORKFLOW_TRANSITIONS : "progresses_via"
+    WORKFLOW_INSTANCES ||--o{ WORKFLOW_ATTACHMENTS : "attaches"
+    WORKFLOW_INSTANCES ||--o{ WORKFLOW_NOTIFICATIONS : "notifies"
     RELIEF_REQUISITIONS ||--o{ WORKFLOW_INSTANCES : "governed_by"
     DAMAGE_ASSESSMENTS ||--o{ WORKFLOW_INSTANCES : "governed_by"
     PROJECT_DISBURSEMENTS ||--o{ WORKFLOW_INSTANCES : "governed_by"
@@ -977,21 +984,94 @@ erDiagram
         string certificate_no UK
     }
 
+    WORKFLOW_DEFINITIONS {
+        uuid id PK
+        string code UK
+        string module_code
+        string entity_type
+        boolean is_active
+        boolean allow_self_approval
+        integer sla_hours
+    }
+
+    WORKFLOW_STAGES {
+        uuid id PK
+        uuid workflow_definition_id FK
+        integer stage_order
+        string stage_code
+        string approval_level
+        string execution_mode
+        integer required_approvals
+        integer sla_hours
+    }
+
+    WORKFLOW_STAGE_ASSIGNMENTS {
+        uuid id PK
+        uuid workflow_stage_id FK
+        string assignee_type
+        uuid user_id FK
+        string role_code
+        uuid administrative_unit_id FK
+        string authority_type
+    }
+
+    WORKFLOW_DELEGATIONS {
+        uuid id PK
+        uuid workflow_definition_id FK
+        uuid delegator_user_id FK
+        uuid delegate_user_id FK
+        timestamptz valid_from
+        timestamptz valid_until
+        boolean is_active
+    }
+
     WORKFLOW_INSTANCES {
         uuid id PK
+        string instance_no UK
+        uuid workflow_definition_id FK
+        string module_code
         string entity_type
         uuid entity_id
+        uuid administrative_unit_id FK
+        uuid current_stage_id FK
         string current_state
+        timestamptz due_at
+    }
+
+    WORKFLOW_STAGE_TASKS {
+        uuid id PK
+        uuid workflow_instance_id FK
+        uuid workflow_stage_id FK
+        uuid assignee_user_id FK
+        string assignee_role_code
+        string status
     }
 
     WORKFLOW_TRANSITIONS {
         uuid id PK
         uuid workflow_instance_id FK
+        string action
         string from_state
         string to_state
         uuid action_by_user_id FK
+        uuid acted_on_behalf_of_user_id FK
         text remarks
         timestamptz transitioned_at
+    }
+
+    WORKFLOW_ATTACHMENTS {
+        uuid id PK
+        uuid workflow_instance_id FK
+        string original_name
+        string sha256_hash
+    }
+
+    WORKFLOW_NOTIFICATIONS {
+        uuid id PK
+        uuid workflow_instance_id FK
+        string notification_type
+        uuid recipient_user_id FK
+        string delivery_status
     }
 
     NOTIFICATION_TEMPLATES {

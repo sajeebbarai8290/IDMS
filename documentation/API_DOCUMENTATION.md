@@ -467,5 +467,27 @@ interface NidVerificationServiceInterface
 - `GET /api/v1/volunteer/attendances`, `POST /api/v1/volunteer/deployments/{deployment}/check-in`, `POST /api/v1/volunteer/attendances/{attendance}/check-out`, `POST /api/v1/volunteer/attendances/{attendance}/confirm`, `POST/GET /api/v1/volunteer/attendances/{attendance}/evidence` — Explicit GPS-consent-gated check-in/out, activity reports, duration calculation, private evidence files, and 4-eye supervisor confirmation.
 - `GET/POST/PUT /api/v1/volunteer/training-programs`, `GET/POST/PUT /api/v1/volunteer/training-sessions`, `POST /api/v1/volunteer/training-sessions/{session}/enroll`, `PUT /api/v1/volunteer/training-enrollments/{enrollment}`, `POST/GET /api/v1/volunteer/training-enrollments/{enrollment}/certificate` — Training curricula, schedules, attendance, assessment pass/fail, and certificate issuance/download.
 
+---
+
+## 14. Module 11: Workflow Management Implemented Endpoints (`/api/v1/workflow/*`)
+
+### 14.1 Dashboard, Lookups, Target Entity Integration, Notifications & SLA Escalations
+- `GET /api/v1/workflow/dashboard` — Scoped workflow KPIs (Redis cached with version invalidation): `my_pending_approvals`, `submitted_requests`, `approved_requests`, `rejected_requests`, `returned_requests`, `info_requested`, `overdue_workflows`, `escalated_workflows`, `avg_turnaround_hours`, `sla_compliance_rate_pct`, plus module, state, and approval-level performance breakdowns.
+- `GET /api/v1/workflow/lookups` — Active workflow definitions, supported modules, entity types, approval levels, execution modes, assignee/authority types, workflow states, priorities, actions, system roles, scoped administrative units, and scoped active users.
+- `GET /api/v1/workflow/target-entities?entity_type=...&search=...` — Scoped live lookup across integrated IDMS modules (`HOUSEHOLD`, `RELIEF_REQUISITION`, `RELIEF_ALLOCATION`, `DAMAGE_ASSESSMENT`, `PROJECT`, `PROJECT_DISBURSEMENT`, `RESOURCE_ALLOCATION`, `WAREHOUSE_TRANSFER`, `VOLUNTEER`).
+- `GET /api/v1/workflow/notifications`, `POST /api/v1/workflow/notifications/{notification}/read`, `POST /api/v1/workflow/notifications/read-all` — Scoped workflow assignment, status-change, reminder, and escalation notifications.
+- `POST /api/v1/workflow/escalations/run` — Trigger SLA overdue reminder & escalation sweep (also scheduled via `ProcessWorkflowEscalationsJob` / `php artisan workflow:escalate-overdue`).
+
+### 14.2 Configurable Workflow Definitions & Delegations
+- `GET/POST /api/v1/workflow/definitions`, `GET/PUT/DELETE /api/v1/workflow/definitions/{definition}`, `POST /api/v1/workflow/definitions/{definition}/toggle-status` — Configure module workflows, sequential or parallel (`SEQUENTIAL`, `PARALLEL_ALL`, `PARALLEL_ANY`) stages across approval levels (`SUBMITTED`, `INITIAL_REVIEW`, `SUPERVISOR_APPROVAL`, `DISTRICT_APPROVAL`, `DIRECTORATE_APPROVAL`, `MINISTRY_APPROVAL`, `FINAL_APPROVAL`), SLA hours, escalation fallback roles, and user/role/administrative-unit stage assignments (`workflow.configuration.manage`, audited).
+- `GET/POST /api/v1/workflow/delegations`, `POST /api/v1/workflow/delegations/{delegation}/revoke` — Manage authorized time-bound delegations enforcing self-delegation blocks, role restrictions, and administrative jurisdiction boundaries (audited).
+
+### 14.3 Workflow Instances, Actions, Attachments & Immutable History
+- `GET/POST /api/v1/workflow/instances`, `GET /api/v1/workflow/instances/{instance}` — Scoped, paginated, searchable, and filterable approval queues (`my_pending`, `submitted_by_me`, `approved`, `rejected`, `overdue`, `all`) and full instance detail with stage tasks, immutable decision history, live entity summary, and computed `available_actions`.
+- `GET /api/v1/workflow/entities/{entityType}/{entityId}/history` — Retrieve workflow instances and complete transition history for any integrated module entity.
+- `POST /api/v1/workflow/instances/{instance}/approve`, `POST /reject`, `POST /return-correction`, `POST /request-info`, `POST /provide-info`, `POST /resubmit`, `POST /forward`, `POST /cancel`, `POST /remind` — Transaction-safe (`lockForUpdate()`) state transitions enforcing 4-eye SoD, `ROLE_SUPER_ADMIN` operational blackout, delegation tracking (`acted_on_behalf_of_user_id`), and `AuditLog` entries.
+- `POST/GET /api/v1/workflow/instances/{instance}/attachments` & `/attachments/{attachment}` — Private supporting file uploads with MIME verification, SHA-256 checksums, and authorized streamed download.
+
+
 
 

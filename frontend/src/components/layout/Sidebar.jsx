@@ -15,6 +15,12 @@ import { canWriteResourceAssets } from '../../modules/resource/utils/resourcePer
 import { canManageFacilities } from '../../modules/warehouse/utils/warehousePermissions';
 import { canCreateDamage } from '../../modules/damage/utils/damagePermissions';
 import { canWriteVolunteers } from '../../modules/volunteer/utils/volunteerPermissions';
+import {
+  canManageDelegations,
+  canManageWorkflowConfig,
+  canSubmitWorkflow,
+  canViewWorkflow,
+} from '../../modules/workflow/utils/workflowPermissions';
 
 export const Sidebar = ({ isOpen }) => {
   const { user } = useAuth();
@@ -32,6 +38,10 @@ export const Sidebar = ({ isOpen }) => {
   const showWarehouseManage = canManageFacilities(user);
   const showDamageCreate = canCreateDamage(user);
   const showVolunteerCreate = canWriteVolunteers(user);
+  const showWorkflowView = canViewWorkflow(user);
+  const showWorkflowSubmit = canSubmitWorkflow(user);
+  const showWorkflowConfig = canManageWorkflowConfig(user);
+  const showWorkflowDelegations = canManageDelegations(user);
 
   return (
     <aside className={`idms-sidebar ${isOpen ? 'show' : ''}`}>
@@ -327,6 +337,40 @@ export const Sidebar = ({ isOpen }) => {
           <i className="bi bi-file-earmark-spreadsheet me-2 text-success"></i>
           <span>{t('স্বেচ্ছাসেবক প্রতিবেদন', 'Volunteer Reports')}</span>
         </NavLink>
+
+        {showWorkflowView && (
+          <>
+            <div className="idms-sidebar-section-title">
+              {t('কর্মপ্রবাহ ব্যবস্থাপনা (M11)', 'Workflow Management (M11)')}
+            </div>
+            <NavLink to="/workflow/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              <i className="bi bi-diagram-3-fill me-2 text-primary"></i>
+              <span>{t('কর্মপ্রবাহ ড্যাশবোর্ড', 'Workflow Dashboard')}</span>
+            </NavLink>
+            <NavLink to="/workflow/instances" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              <i className="bi bi-list-check me-2 text-info"></i>
+              <span>{t('অনুমোদন ও কর্মপ্রবাহ সারি', 'Approval Queues')}</span>
+            </NavLink>
+            {showWorkflowSubmit && (
+              <NavLink to="/workflow/submit" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                <i className="bi bi-send-plus-fill me-2 text-success"></i>
+                <span>{t('নতুন অনুমোদন আবেদন', 'Submit Request')}</span>
+              </NavLink>
+            )}
+            {showWorkflowDelegations && (
+              <NavLink to="/workflow/delegations" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                <i className="bi bi-person-check-fill me-2 text-warning"></i>
+                <span>{t('প্রতিনিধিত্ব নিয়মাবলী', 'Delegations')}</span>
+              </NavLink>
+            )}
+            {showWorkflowConfig && (
+              <NavLink to="/workflow/configurations" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                <i className="bi bi-sliders me-2 text-dark"></i>
+                <span>{t('কর্মপ্রবাহ কনফিগারেশন', 'Workflow Configs')}</span>
+              </NavLink>
+            )}
+          </>
+        )}
 
         <div className="idms-sidebar-section-title">অন্যান্য মডিউল (Planned)</div>
         <div className="nav-link text-muted opacity-75 d-flex justify-content-between align-items-center">

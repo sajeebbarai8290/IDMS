@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             ProjectSeeder::class,
             DamageAssessmentSeeder::class,
             VolunteerSeeder::class,
+            WorkflowSeeder::class,
         ]);
     }
 }

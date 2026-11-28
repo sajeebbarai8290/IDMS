@@ -51,6 +51,10 @@ use App\Modules\Warehouse\Controllers\Api\V1\WarehouseFacilityController;
 use App\Modules\Warehouse\Controllers\Api\V1\WarehouseItemController;
 use App\Modules\Warehouse\Controllers\Api\V1\WarehouseReliefIntegrationController;
 use App\Modules\Warehouse\Controllers\Api\V1\WarehouseTransferController;
+use App\Modules\Workflow\Controllers\Api\V1\WorkflowConfigurationController;
+use App\Modules\Workflow\Controllers\Api\V1\WorkflowDashboardController;
+use App\Modules\Workflow\Controllers\Api\V1\WorkflowDelegationController;
+use App\Modules\Workflow\Controllers\Api\V1\WorkflowInstanceController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -424,6 +428,48 @@ Route::prefix('v1')->group(function () {
             Route::put('/training-enrollments/{enrollment}', [VolunteerTrainingController::class, 'updateEnrollment'])->name('api.v1.volunteer.training.enrollments.update');
             Route::post('/training-enrollments/{enrollment}/certificate', [VolunteerTrainingController::class, 'uploadCertificate'])->name('api.v1.volunteer.training.enrollments.certificate.upload');
             Route::get('/training-enrollments/{enrollment}/certificate', [VolunteerTrainingController::class, 'downloadCertificate'])->name('api.v1.volunteer.training.enrollments.certificate.download');
+        });
+
+        // 13. Module 11: Workflow Management (workflow.*)
+        Route::prefix('workflow')->group(function () {
+            Route::get('/dashboard', [WorkflowDashboardController::class, 'summary'])->name('api.v1.workflow.dashboard');
+            Route::get('/lookups', [WorkflowDashboardController::class, 'lookups'])->name('api.v1.workflow.lookups');
+            Route::get('/target-entities', [WorkflowDashboardController::class, 'targetEntities'])->name('api.v1.workflow.target_entities');
+
+            Route::get('/notifications', [WorkflowDashboardController::class, 'notifications'])->name('api.v1.workflow.notifications.index');
+            Route::post('/notifications/{notification}/read', [WorkflowDashboardController::class, 'markNotificationRead'])->name('api.v1.workflow.notifications.read');
+            Route::post('/notifications/read-all', [WorkflowDashboardController::class, 'markAllNotificationsRead'])->name('api.v1.workflow.notifications.read_all');
+            Route::post('/escalations/run', [WorkflowDashboardController::class, 'runEscalations'])->name('api.v1.workflow.escalations.run');
+
+            Route::get('/definitions', [WorkflowConfigurationController::class, 'index'])->name('api.v1.workflow.definitions.index');
+            Route::post('/definitions', [WorkflowConfigurationController::class, 'store'])->name('api.v1.workflow.definitions.store');
+            Route::get('/definitions/{definition}', [WorkflowConfigurationController::class, 'show'])->name('api.v1.workflow.definitions.show');
+            Route::put('/definitions/{definition}', [WorkflowConfigurationController::class, 'update'])->name('api.v1.workflow.definitions.update');
+            Route::post('/definitions/{definition}/toggle-status', [WorkflowConfigurationController::class, 'toggleStatus'])->name('api.v1.workflow.definitions.toggle_status');
+            Route::delete('/definitions/{definition}', [WorkflowConfigurationController::class, 'destroy'])->name('api.v1.workflow.definitions.destroy');
+
+            Route::get('/delegations', [WorkflowDelegationController::class, 'index'])->name('api.v1.workflow.delegations.index');
+            Route::post('/delegations', [WorkflowDelegationController::class, 'store'])->name('api.v1.workflow.delegations.store');
+            Route::post('/delegations/{delegation}/revoke', [WorkflowDelegationController::class, 'revoke'])->name('api.v1.workflow.delegations.revoke');
+
+            Route::get('/entities/{entityType}/{entityId}/history', [WorkflowInstanceController::class, 'entityHistory'])
+                ->whereUuid('entityId')
+                ->name('api.v1.workflow.entities.history');
+
+            Route::get('/instances', [WorkflowInstanceController::class, 'index'])->name('api.v1.workflow.instances.index');
+            Route::post('/instances', [WorkflowInstanceController::class, 'store'])->name('api.v1.workflow.instances.store');
+            Route::get('/instances/{instance}', [WorkflowInstanceController::class, 'show'])->name('api.v1.workflow.instances.show');
+            Route::post('/instances/{instance}/approve', [WorkflowInstanceController::class, 'approve'])->name('api.v1.workflow.instances.approve');
+            Route::post('/instances/{instance}/reject', [WorkflowInstanceController::class, 'reject'])->name('api.v1.workflow.instances.reject');
+            Route::post('/instances/{instance}/return-correction', [WorkflowInstanceController::class, 'returnCorrection'])->name('api.v1.workflow.instances.return_correction');
+            Route::post('/instances/{instance}/request-info', [WorkflowInstanceController::class, 'requestInfo'])->name('api.v1.workflow.instances.request_info');
+            Route::post('/instances/{instance}/provide-info', [WorkflowInstanceController::class, 'provideInfo'])->name('api.v1.workflow.instances.provide_info');
+            Route::post('/instances/{instance}/resubmit', [WorkflowInstanceController::class, 'resubmit'])->name('api.v1.workflow.instances.resubmit');
+            Route::post('/instances/{instance}/forward', [WorkflowInstanceController::class, 'forward'])->name('api.v1.workflow.instances.forward');
+            Route::post('/instances/{instance}/cancel', [WorkflowInstanceController::class, 'cancel'])->name('api.v1.workflow.instances.cancel');
+            Route::post('/instances/{instance}/remind', [WorkflowInstanceController::class, 'remind'])->name('api.v1.workflow.instances.remind');
+            Route::post('/instances/{instance}/attachments', [WorkflowInstanceController::class, 'uploadAttachment'])->name('api.v1.workflow.instances.attachments.store');
+            Route::get('/instances/{instance}/attachments/{attachment}', [WorkflowInstanceController::class, 'downloadAttachment'])->name('api.v1.workflow.instances.attachments.download');
         });
 
         // Administrative Overview Scenarios
