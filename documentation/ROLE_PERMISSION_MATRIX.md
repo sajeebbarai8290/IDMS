@@ -335,8 +335,10 @@ Module 13: Notification & Alert Management (notification.*)
 Module 14: Document Management (document.*)
   ├── document.file.view                   # View document metadata & request signed streaming URL
   ├── document.file.upload                 # Upload muster rolls, photos, engineering blueprints
+  ├── document.file.approve                # Approve or reject submitted documents (4-eye SoD)
   ├── document.file.delete                 # Soft-delete uploaded document
-  └── document.file.verify_integrity       # Inspect SHA-256 hash & antivirus scan status
+  ├── document.file.verify_integrity       # Inspect SHA-256 hash & antivirus scan status
+  └── document.category.manage             # Configure document categories, allowed formats & retention
 
 Module 15: Reporting & Analytics (report.*)
   ├── report.sitrep.view                   # View daily National / District Situation Reports
@@ -490,8 +492,10 @@ The following matrix maps every system role across all 17 functional modules.
 | **M14: DOCUMENTS** | | | | | | | | | | | | | | | | | | | | | |
 | `document.file.view` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | [A] |
 | `document.file.upload` | ✔ | ✔ | ✔ | -- | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- |
+| `document.file.approve` | -- | ✔[D] | ✔[D] | -- | ✔[D] | ✔[D] | ✔[D] | [S][D] | [S][D] | [S][D] | [S][D] | [S][D] | -- | -- | -- | -- | -- | -- | -- | -- | -- |
 | `document.file.delete` | ✔ | -- | -- | -- | -- | -- | -- | -- | -- | [S] | -- | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- |
 | `document.file.verify_integrity`| ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | [S] | [S] | -- | -- | -- | -- |
+| `document.category.manage` | ✔ | ✔ | ✔ | -- | ✔ | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
 | **M15: REPORTING & ANALYTICS**| | | | | | | | | | | | | | | | | | | | | |
 | `report.sitrep.view` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ |
 | `report.sitrep.generate` | ✔ | ✔ | ✔ | -- | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- |

@@ -1042,22 +1042,47 @@ Per-recipient, per-channel outbound delivery queue, retry state, provider receip
 
 ---
 
-### 10.2 `document.documents`
-Secure electronic document metadata (e-Docs).
+### 10.2 `document.document_categories` (Module 14: Document Management)
+Configurable bilingual document categories (`GOVERNMENT_ORDER`, `DISASTER_REPORT`, `ASSESSMENT_REPORT`, `APPROVAL_DOCUMENT`, `PROJECT_DOCUMENT`, `RELIEF_DISTRIBUTION_DOCUMENT`, `AGREEMENT`, `PHOTOGRAPH`, `OTHER`, and custom categories) with `default_classification`, `allowed_formats` (JSON), `retention_days`, `requires_approval`, `is_system`, `is_active`, `sort_order`, and soft deletes.
+
+### 10.3 `document.documents`
+Centralized electronic document metadata (e-Docs) with version pointers, classification, expiry, approval workflow, and cross-module entity integration.
 
 | Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
 | :--- | :--- | :---: | :--- | :--- | :--- |
 | `id` | `uuid` | NO | PK | B-Tree (PK) | Document ID |
-| `entity_type` | `varchar(100)`| NO | | B-Tree | Related model (e.g. `DamageAssessment`) |
-| `entity_id` | `uuid` | NO | | B-Tree | Related entity UUID |
-| `original_filename`| `varchar(255)`| NO | | | Original uploaded filename |
-| `file_hash_sha256`| `char(64)` | NO | | B-Tree | File integrity checksum |
-| `mime_type` | `varchar(100)`| NO | | | Validated MIME type |
-| `file_size_bytes` | `bigint` | NO | CHECK (file_size_bytes > 0) | | Size in bytes |
-| `storage_path` | `varchar(500)`| NO | | | Obfuscated private storage key |
-| `scan_status` | `varchar(30)` | NO | CHECK in ('PENDING', 'CLEAN', 'INFECTED') | B-Tree | Antivirus scan outcome |
-| `uploaded_by` | `uuid` | NO | FK &rarr; `core.users(id)` | B-Tree | Uploader officer |
-| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Upload timestamp |
+| `document_no` | `varchar(60)` | NO | UNIQUE | B-Tree (UK) | System document identifier (`DOC-YYYYMMDD-XXXXXX`) |
+| `reference_no` | `varchar(120)` | YES | | B-Tree | Official memo / GO / circular reference number |
+| `category_id` | `uuid` | NO | FK &rarr; `document.document_categories(id)` | B-Tree | Configurable document category |
+| `document_type` | `varchar(60)` | NO | DEFAULT `'OTHER'` | B-Tree | `GOVERNMENT_ORDER`, `CIRCULAR`, `SITREP`, `SURVEY_REPORT`, `APPROVAL_LETTER`, `MUSTER_ROLL`, `VOUCHER`, `AGREEMENT`, `BLUEPRINT`, `PHOTOGRAPH`, `CERTIFICATE`, `OTHER` |
+| `title_bn` / `title_en` | `varchar(300)` | NO | | | Bilingual document title |
+| `description_bn` / `description_en` | `text` | YES | | | Bilingual summary / description |
+| `issuing_organization` | `varchar(200)` | YES | | B-Tree | Issuing ministry/office/agency |
+| `organization_id` | `uuid` | YES | FK &rarr; `core.organizations(id)` | B-Tree | Linked sovereign organization |
+| `administrative_unit_id` | `uuid` | YES | FK &rarr; `core.administrative_units(id)` | B-Tree | 7-tier jurisdiction unit |
+| `owner_user_id` | `uuid` | YES | FK &rarr; `core.users(id)` | B-Tree | Custodian / document owner |
+| `uploaded_by` | `uuid` | YES | FK &rarr; `core.users(id)` | B-Tree | Uploader officer |
+| `uploaded_at` | `timestamptz` | YES | | B-Tree | Upload timestamp |
+| `effective_date` / `expires_at` | `date` / `timestamptz` | YES | | B-Tree (`expires_at`) | Validity window & expiry tracking |
+| `module_code` | `varchar(40)` | NO | DEFAULT `'GENERAL'` | Composite | Integrated IDMS module (`GENERAL`, `BENEFICIARY`, `DISASTER`, `DAMAGE`, `RELIEF`, `PROJECT`, `WORKFLOW`, etc.) |
+| `entity_type` / `entity_id` | `varchar(80)` / `uuid` | YES | | Composite `(entity_type, entity_id)` | Polymorphic target record (`HOUSEHOLD`, `DISASTER_EVENT`, `DAMAGE_ASSESSMENT`, `RELIEF_REQUISITION`, `RELIEF_ALLOCATION`, `DISTRIBUTION_VOUCHER`, `PROJECT`, `PROJECT_DISBURSEMENT`, `WORKFLOW_INSTANCE`) |
+| `entity_reference` | `varchar(120)` | YES | | B-Tree | Cached target code (e.g. `HH-DAC-001`) |
+| `classification` | `varchar(30)` | NO | DEFAULT `'INTERNAL'` | B-Tree | `PUBLIC`, `INTERNAL`, `CONFIDENTIAL`, `RESTRICTED` |
+| `tags` | `jsonb` | YES | | | Searchable keyword tags |
+| `approval_status` | `varchar(30)` | NO | DEFAULT `'DRAFT'` | Composite | `DRAFT`, `PENDING_APPROVAL`, `APPROVED`, `REJECTED`, `ARCHIVED` |
+| `submitted_by`, `approved_by`, `rejected_by` | `uuid` | YES | FK &rarr; `core.users(id)` | | 4-eye SoD approval/rejection actor tracking |
+| `current_version_number` / `current_version_id` | `integer` / `uuid` | NO/YES | DEFAULT 1 | B-Tree | Active version pointer |
+| `original_filename` | `varchar(255)` | NO | | | Sanitized original uploaded filename |
+| `storage_disk` / `storage_path` | `varchar(40)` / `varchar(500)` | NO | | | Private storage disk & UUID-obfuscated object key (hidden from API JSON) |
+| `mime_type` / `file_extension` | `varchar(120)` / `varchar(20)` | NO | | B-Tree | Verified magic-byte MIME & extension |
+| `file_size_bytes` | `bigint` | NO | CHECK (`file_size_bytes > 0`) | | Size in bytes |
+| `file_hash_sha256` | `char(64)` | NO | | B-Tree | Cryptographic SHA-256 integrity checksum |
+| `scan_status` | `varchar(30)` | NO | DEFAULT `'PENDING'` | B-Tree | `PENDING`, `CLEAN`, `INFECTED`, `FAILED` |
+| `is_confidential` | `boolean` | NO | DEFAULT FALSE | B-Tree | Confidential/restricted access flag |
+
+### 10.4 `document.document_versions` & `document.document_access_logs`
+- `document.document_versions`: Immutable file version history (`document_id`, `version_number` unique per document, `version_label`, `change_notes`, `original_filename`, `storage_disk`, `storage_path`, `mime_type`, `file_extension`, `file_size_bytes`, `file_hash_sha256`, `scan_status`, `scanned_at`, `scan_engine`, `is_current`, `uploaded_by`).
+- `document.document_access_logs`: Complete document access & modification trail (`document_id`, `document_version_id`, `user_id`, `administrative_unit_id`, `action` — `UPLOADED`, `VIEWED_METADATA`, `PREVIEWED`, `DOWNLOADED`, `SIGNED_URL_ISSUED`, `VERSION_UPLOADED`, `VERSION_RESTORED`, `UPDATED`, `SUBMITTED_FOR_APPROVAL`, `APPROVED`, `REJECTED`, `ARCHIVED`, `INTEGRITY_VERIFIED`, `DELETED`, `ip_address`, `user_agent`, `details`, `created_at`).
 
 ---
 

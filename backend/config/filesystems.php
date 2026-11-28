@@ -36,6 +36,25 @@ return [
             'throw' => false,
         ],
 
+        'documents_private' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/documents'),
+            'visibility' => 'private',
+            'throw' => false,
+        ],
+
+        'gov_object_store' => [
+            'driver' => env('GOV_DOCUMENT_DISK_DRIVER', 's3'),
+            'key' => env('GOV_OBJECT_STORE_KEY', env('AWS_ACCESS_KEY_ID')),
+            'secret' => env('GOV_OBJECT_STORE_SECRET', env('AWS_SECRET_ACCESS_KEY')),
+            'region' => env('GOV_OBJECT_STORE_REGION', env('AWS_DEFAULT_REGION', 'ap-south-1')),
+            'bucket' => env('GOV_OBJECT_STORE_BUCKET', env('AWS_BUCKET')),
+            'endpoint' => env('GOV_OBJECT_STORE_ENDPOINT', env('AWS_ENDPOINT')),
+            'use_path_style_endpoint' => env('GOV_OBJECT_STORE_PATH_STYLE', true),
+            'visibility' => 'private',
+            'throw' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

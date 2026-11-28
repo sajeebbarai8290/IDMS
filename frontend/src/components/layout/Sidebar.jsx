@@ -32,6 +32,11 @@ import {
   canSendNotificationBroadcast,
   canViewNotificationLogs,
 } from '../../modules/notification/utils/notificationPermissions';
+import {
+  canManageDocumentCategories,
+  canUploadDocuments,
+  canViewDocuments,
+} from '../../modules/document/utils/documentPermissions';
 
 export const Sidebar = ({ isOpen }) => {
   const { user } = useAuth();
@@ -60,6 +65,9 @@ export const Sidebar = ({ isOpen }) => {
   const showNotifLogs = canViewNotificationLogs(user);
   const showNotifSend = canSendNotificationBroadcast(user);
   const showNotifTemplates = canManageNotificationTemplates(user);
+  const showDocView = canViewDocuments(user);
+  const showDocUpload = canUploadDocuments(user);
+  const showDocCategories = canManageDocumentCategories(user);
 
   return (
     <aside className={`idms-sidebar ${isOpen ? 'show' : ''}`}>
@@ -469,6 +477,38 @@ export const Sidebar = ({ isOpen }) => {
           <i className="bi bi-sliders me-2 text-success"></i>
           <span>{t('পছন্দ ও ডিভাইস', 'Preferences & Devices')}</span>
         </NavLink>
+
+        {(showDocView || showDocUpload) && (
+          <>
+            <div className="idms-sidebar-section-title">
+              {t('নথিপত্র ব্যবস্থাপনা (M14)', 'Document Management (M14)')}
+            </div>
+            {showDocView && (
+              <>
+                <NavLink to="/documents/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                  <i className="bi bi-folder2-open me-2 text-primary"></i>
+                  <span>{t('নথি ড্যাশবোর্ড', 'Document Dashboard')}</span>
+                </NavLink>
+                <NavLink to="/documents" end className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                  <i className="bi bi-files me-2 text-info"></i>
+                  <span>{t('কেন্দ্রীয় নথিপত্র', 'Document Registry')}</span>
+                </NavLink>
+              </>
+            )}
+            {showDocUpload && (
+              <NavLink to="/documents/upload" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                <i className="bi bi-cloud-upload-fill me-2 text-success"></i>
+                <span>{t('নতুন নথি আপলোড', 'Upload Document')}</span>
+              </NavLink>
+            )}
+            {showDocCategories && (
+              <NavLink to="/documents/categories" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                <i className="bi bi-tags-fill me-2 text-warning"></i>
+                <span>{t('নথি ক্যাটাগরি', 'Document Categories')}</span>
+              </NavLink>
+            )}
+          </>
+        )}
 
         <div className="idms-sidebar-section-title">অন্যান্য মডিউল (Planned)</div>
         <div className="nav-link text-muted opacity-75 d-flex justify-content-between align-items-center">

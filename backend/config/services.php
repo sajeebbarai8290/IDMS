@@ -76,4 +76,16 @@ return [
         'timeout_seconds' => (int) env('PUSH_API_TIMEOUT_SECONDS', 5),
     ],
 
+    'document' => [
+        'storage_driver' => env('DOCUMENT_STORAGE_DRIVER', 'laravel_private'), // 'laravel_private' | 'gov_object_store'
+        'storage_disk' => env('DOCUMENT_STORAGE_DISK', 'documents_private'),
+        'max_file_size_kb' => (int) env('DOCUMENT_MAX_FILE_SIZE_KB', 20480),
+        'signed_url_ttl_minutes' => (int) env('DOCUMENT_SIGNED_URL_TTL_MINUTES', 15),
+        'virus_scanner_driver' => env('DOCUMENT_VIRUS_SCANNER_DRIVER', 'mock'), // 'mock' (dev/test) | 'clamav'
+        'clamav_host' => env('CLAMAV_HOST', '127.0.0.1'),
+        'clamav_port' => (int) env('CLAMAV_PORT', 3310),
+        'clamav_socket' => env('CLAMAV_SOCKET'),
+        'clamav_timeout_seconds' => (int) env('CLAMAV_TIMEOUT_SECONDS', 5),
+    ],
+
 ];

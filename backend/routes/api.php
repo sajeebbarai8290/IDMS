@@ -16,6 +16,9 @@ use App\Modules\DamageAssessment\Controllers\Api\V1\DamageDashboardController;
 use App\Modules\DamageAssessment\Controllers\Api\V1\DamageVerificationController;
 use App\Modules\Disaster\Controllers\Api\V1\DisasterCategoryController;
 use App\Modules\Disaster\Controllers\Api\V1\DisasterController;
+use App\Modules\Document\Controllers\Api\V1\DocumentCategoryController;
+use App\Modules\Document\Controllers\Api\V1\DocumentController;
+use App\Modules\Document\Controllers\Api\V1\DocumentDashboardController;
 use App\Modules\NidVerification\Controllers\Api\V1\NidVerificationController as ModuleNidVerificationController;
 use App\Modules\Notification\Controllers\Api\V1\AlertController;
 use App\Modules\Notification\Controllers\Api\V1\NotificationDashboardController;
@@ -561,6 +564,44 @@ Route::prefix('v1')->group(function () {
             Route::get('/', [NotificationDispatchController::class, 'index'])->name('api.v1.notifications.index');
             Route::post('/', [NotificationDispatchController::class, 'store'])->name('api.v1.notifications.store');
             Route::get('/{notification}', [NotificationDispatchController::class, 'show'])->whereUuid('notification')->name('api.v1.notifications.show');
+        });
+
+        // 16. Module 14: Document Management (document.*)
+        Route::prefix('documents')->group(function () {
+            Route::get('/dashboard', [DocumentDashboardController::class, 'summary'])->name('api.v1.documents.dashboard');
+            Route::get('/lookups', [DocumentDashboardController::class, 'lookups'])->name('api.v1.documents.lookups');
+            Route::get('/target-entities', [DocumentDashboardController::class, 'targetEntities'])->name('api.v1.documents.target_entities');
+
+            Route::get('/categories', [DocumentCategoryController::class, 'index'])->name('api.v1.documents.categories.index');
+            Route::post('/categories', [DocumentCategoryController::class, 'store'])->name('api.v1.documents.categories.store');
+            Route::put('/categories/{category}', [DocumentCategoryController::class, 'update'])->whereUuid('category')->name('api.v1.documents.categories.update');
+            Route::delete('/categories/{category}', [DocumentCategoryController::class, 'destroy'])->whereUuid('category')->name('api.v1.documents.categories.destroy');
+
+            Route::get('/entity/{entityType}/{entityId}', [DocumentController::class, 'entityDocuments'])
+                ->whereUuid('entityId')
+                ->name('api.v1.documents.entity');
+
+            Route::get('/', [DocumentController::class, 'index'])->name('api.v1.documents.index');
+            Route::post('/', [DocumentController::class, 'store'])->name('api.v1.documents.store');
+            Route::get('/{document}', [DocumentController::class, 'show'])->whereUuid('document')->name('api.v1.documents.show');
+            Route::put('/{document}', [DocumentController::class, 'update'])->whereUuid('document')->name('api.v1.documents.update');
+            Route::delete('/{document}', [DocumentController::class, 'destroy'])->whereUuid('document')->name('api.v1.documents.destroy');
+
+            Route::post('/{document}/versions', [DocumentController::class, 'uploadVersion'])->whereUuid('document')->name('api.v1.documents.versions.store');
+            Route::post('/{document}/versions/{version}/restore', [DocumentController::class, 'restoreVersion'])->whereUuid(['document', 'version'])->name('api.v1.documents.versions.restore');
+            Route::get('/{document}/versions/{version}/download', [DocumentController::class, 'downloadVersion'])->whereUuid(['document', 'version'])->name('api.v1.documents.versions.download');
+
+            Route::get('/{document}/download', [DocumentController::class, 'download'])->whereUuid('document')->name('api.v1.documents.download');
+            Route::get('/{document}/preview', [DocumentController::class, 'preview'])->whereUuid('document')->name('api.v1.documents.preview');
+            Route::post('/{document}/signed-url', [DocumentController::class, 'signedUrl'])->whereUuid('document')->name('api.v1.documents.signed_url');
+            Route::get('/{document}/stream', [DocumentController::class, 'stream'])->whereUuid('document')->name('api.v1.documents.stream');
+
+            Route::post('/{document}/submit-approval', [DocumentController::class, 'submitApproval'])->whereUuid('document')->name('api.v1.documents.submit_approval');
+            Route::post('/{document}/approve', [DocumentController::class, 'approve'])->whereUuid('document')->name('api.v1.documents.approve');
+            Route::post('/{document}/reject', [DocumentController::class, 'reject'])->whereUuid('document')->name('api.v1.documents.reject');
+            Route::post('/{document}/archive', [DocumentController::class, 'archive'])->whereUuid('document')->name('api.v1.documents.archive');
+            Route::post('/{document}/verify-integrity', [DocumentController::class, 'verifyIntegrity'])->whereUuid('document')->name('api.v1.documents.verify_integrity');
+            Route::get('/{document}/history', [DocumentController::class, 'history'])->whereUuid('document')->name('api.v1.documents.history');
         });
 
         // Administrative Overview Scenarios

@@ -121,6 +121,13 @@ import NotificationTemplatePage from '../modules/notification/pages/Notification
 import AlertManagementPage from '../modules/notification/pages/AlertManagementPage';
 import NotificationPreferencesPage from '../modules/notification/pages/NotificationPreferencesPage';
 
+// Module 14: Document Management (e-Docs) Pages
+import DocumentDashboardPage from '../modules/document/pages/DocumentDashboardPage';
+import DocumentListPage from '../modules/document/pages/DocumentListPage';
+import DocumentUploadPage from '../modules/document/pages/DocumentUploadPage';
+import DocumentDetailPage from '../modules/document/pages/DocumentDetailPage';
+import DocumentCategoryPage from '../modules/document/pages/DocumentCategoryPage';
+
 export const AppRoutes = () => {
   return (
     <Routes>
@@ -853,6 +860,14 @@ export const AppRoutes = () => {
       <Route path="/notifications/templates" element={<ProtectedRoute><MainLayout><NotificationTemplatePage /></MainLayout></ProtectedRoute>} />
       <Route path="/notifications/alerts" element={<ProtectedRoute><MainLayout><AlertManagementPage /></MainLayout></ProtectedRoute>} />
       <Route path="/notifications/preferences" element={<ProtectedRoute><MainLayout><NotificationPreferencesPage /></MainLayout></ProtectedRoute>} />
+
+      {/* Module 14: Document Management Routes */}
+      <Route path="/documents/dashboard" element={<ProtectedRoute><MainLayout><DocumentDashboardPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/documents" element={<ProtectedRoute><MainLayout><DocumentListPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/documents/upload" element={<ProtectedRoute><MainLayout><DocumentUploadPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/documents/categories" element={<ProtectedRoute><MainLayout><DocumentCategoryPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/documents/:id" element={<ProtectedRoute><MainLayout><DocumentDetailPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/documents/:id/edit" element={<ProtectedRoute><MainLayout><DocumentUploadPage /></MainLayout></ProtectedRoute>} />
 
       {/* Root Redirection */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />

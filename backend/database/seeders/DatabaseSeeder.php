@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             VolunteerSeeder::class,
             WorkflowSeeder::class,
             NotificationSeeder::class,
+            DocumentSeeder::class,
         ]);
     }
 }

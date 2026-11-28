@@ -16,6 +16,15 @@ use App\Modules\Beneficiary\Policies\HouseholdPolicy;
 use App\Modules\DamageAssessment\Models\DamageAssessment;
 use App\Modules\DamageAssessment\Models\DamageCategory;
 use App\Modules\DamageAssessment\Policies\DamageAssessmentPolicy;
+use App\Modules\Document\Adapters\ClamAvScannerAdapter;
+use App\Modules\Document\Adapters\GovObjectStoreAdapter;
+use App\Modules\Document\Adapters\LaravelPrivateStorageAdapter;
+use App\Modules\Document\Adapters\MockVirusScannerAdapter;
+use App\Modules\Document\Contracts\DocumentStorageInterface;
+use App\Modules\Document\Contracts\VirusScannerInterface;
+use App\Modules\Document\Models\Document;
+use App\Modules\Document\Models\DocumentCategory;
+use App\Modules\Document\Policies\DocumentPolicy;
 use App\Modules\Volunteer\Models\Volunteer;
 use App\Modules\Volunteer\Models\VolunteerAttendance;
 use App\Modules\Volunteer\Models\VolunteerCategory;
@@ -142,6 +151,26 @@ class AppServiceProvider extends ServiceProvider
 
             return $app->make(MockPushNotificationAdapter::class);
         });
+
+        $this->app->bind(DocumentStorageInterface::class, function ($app) {
+            $driver = config('services.document.storage_driver', 'laravel_private');
+
+            if ($driver === 'gov_object_store') {
+                return $app->make(GovObjectStoreAdapter::class);
+            }
+
+            return $app->make(LaravelPrivateStorageAdapter::class);
+        });
+
+        $this->app->bind(VirusScannerInterface::class, function ($app) {
+            $driver = config('services.document.virus_scanner_driver', 'mock');
+
+            if ($app->environment('production') || $driver === 'clamav') {
+                return $app->make(ClamAvScannerAdapter::class);
+            }
+
+            return $app->make(MockVirusScannerAdapter::class);
+        });
     }
 
     /**
@@ -197,5 +226,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(NotificationDispatch::class, NotificationPolicy::class);
         Gate::policy(AlertRule::class, NotificationPolicy::class);
         Gate::policy(Alert::class, NotificationPolicy::class);
+        Gate::policy(Document::class, DocumentPolicy::class);
+        Gate::policy(DocumentCategory::class, DocumentPolicy::class);
     }
 }

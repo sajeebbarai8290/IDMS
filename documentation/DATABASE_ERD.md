@@ -168,7 +168,16 @@ erDiagram
     USERS ||--o{ ALERTS : "acknowledges_resolves"
     USERS ||--o{ NOTIFICATION_PREFERENCES : "configures_channels"
     USERS ||--o{ NOTIFICATION_DEVICES : "registers_push_device"
+    USERS ||--o{ DOCUMENT_CATEGORIES : "manages_category"
+    DOCUMENT_CATEGORIES ||--o{ DOCUMENTS : "classifies"
+    ORGANIZATIONS ||--o{ DOCUMENTS : "issues"
+    ADMINISTRATIVE_UNITS ||--o{ DOCUMENTS : "scopes_document"
     USERS ||--o{ DOCUMENTS : "uploaded_by"
+    USERS ||--o{ DOCUMENTS : "owns_document"
+    DOCUMENTS ||--|{ DOCUMENT_VERSIONS : "versioned_by"
+    DOCUMENTS ||--o{ DOCUMENT_ACCESS_LOGS : "tracks_access"
+    DOCUMENT_VERSIONS ||--o{ DOCUMENT_ACCESS_LOGS : "accessed_version"
+    USERS ||--o{ DOCUMENT_ACCESS_LOGS : "acted_by"
     USERS ||--o{ AUDIT_LOGS : "performed_by"
 
     %% ENTITY ATTRIBUTE DEFINITIONS
@@ -1189,16 +1198,82 @@ erDiagram
         timestamptz last_seen_at
     }
 
+    DOCUMENT_CATEGORIES {
+        uuid id PK
+        string code UK
+        string name_en
+        string name_bn
+        string default_classification
+        jsonb allowed_formats
+        integer retention_days
+        boolean requires_approval
+        boolean is_system
+        boolean is_active
+    }
+
     DOCUMENTS {
         uuid id PK
+        string document_no UK
+        string reference_no
+        uuid category_id FK
+        string document_type
+        string title_bn
+        string title_en
+        string issuing_organization
+        uuid organization_id FK
+        uuid administrative_unit_id FK
+        uuid owner_user_id FK
+        uuid uploaded_by FK
+        timestamptz uploaded_at
+        date effective_date
+        timestamptz expires_at
+        string module_code
         string entity_type
         uuid entity_id
+        string entity_reference
+        string classification
+        jsonb tags
+        string approval_status
+        integer current_version_number
+        uuid current_version_id
         string original_filename
+        string storage_disk
+        string storage_path
+        string mime_type
+        string file_extension
+        bigint file_size_bytes
         string file_hash_sha256
+        string scan_status
+        boolean is_confidential
+    }
+
+    DOCUMENT_VERSIONS {
+        uuid id PK
+        uuid document_id FK
+        integer version_number
+        string version_label
+        text change_notes
+        string original_filename
+        string storage_disk
+        string storage_path
         string mime_type
         bigint file_size_bytes
-        string storage_path
+        string file_hash_sha256
         string scan_status
+        boolean is_current
+        uuid uploaded_by FK
+    }
+
+    DOCUMENT_ACCESS_LOGS {
+        uuid id PK
+        uuid document_id FK
+        uuid document_version_id FK
+        uuid user_id FK
+        uuid administrative_unit_id FK
+        string action
+        string ip_address
+        jsonb details
+        timestamptz created_at
     }
 
     AUDIT_LOGS {

@@ -532,6 +532,25 @@ interface NidVerificationServiceInterface
 - `GET /api/v1/notifications/alerts`, `GET /api/v1/notifications/alerts/{alert}`, `POST /api/v1/notifications/alerts/trigger` — Scoped alert workbench and event/threshold evaluation trigger with cooldown & `idempotency_key` deduplication.
 - `POST /api/v1/notifications/alerts/{alert}/acknowledge`, `POST /api/v1/notifications/alerts/{alert}/resolve`, `POST /api/v1/notifications/alerts/escalate` — Audited alert acknowledgement & resolution (enforcing `ROLE_SUPER_ADMIN` operational blackout & jurisdiction scoping) and SLA escalation sweep (`ProcessAlertEscalationsJob` / `php artisan notifications:escalate-alerts`).
 
+---
+
+## 17. Module 14: Document Management Implemented Endpoints (`/api/v1/documents/*`)
+
+### 17.1 Dashboard, Lookups, Cross-Module Entities & Categories
+- `GET /api/v1/documents/dashboard` — Scoped e-Docs KPIs (Redis cached with version invalidation): `total_documents`, `approved_documents`, `pending_approvals`, `draft_documents`, `rejected_documents`, `expiring_soon_count`, `expired_count`, `confidential_count`, `total_storage_bytes`, `by_category`, `by_classification`, `by_approval_status`, `recent_documents`, `pending_approval_documents`, `expiring_documents`, `storage_health`, and `scanner_health`.
+- `GET /api/v1/documents/lookups` — Active configurable categories, document types, classifications (`PUBLIC`, `INTERNAL`, `CONFIDENTIAL`, `RESTRICTED`), approval statuses, supported modules/entity types, allowed extensions, previewable MIME types, max file size, signed URL TTL, scoped administrative units, organizations, and scoped users.
+- `GET /api/v1/documents/target-entities?entity_type=...&search=...` — Scoped live lookup across integrated modules (`HOUSEHOLD`, `DISASTER_EVENT`, `DAMAGE_ASSESSMENT`, `RELIEF_REQUISITION`, `RELIEF_ALLOCATION`, `DISTRIBUTION_VOUCHER`, `PROJECT`, `PROJECT_DISBURSEMENT`, `WORKFLOW_INSTANCE`).
+- `GET/POST/PUT/DELETE /api/v1/documents/categories` — Manage 9 built-in document categories (`GOVERNMENT_ORDER`, `DISASTER_REPORT`, `ASSESSMENT_REPORT`, `APPROVAL_DOCUMENT`, `PROJECT_DOCUMENT`, `RELIEF_DISTRIBUTION_DOCUMENT`, `AGREEMENT`, `PHOTOGRAPH`, `OTHER`) and custom categories (`document.category.manage`; system categories protected from deletion).
+
+### 17.2 Document Registration, Private Storage, Versioning, Preview & Governance
+- `GET /api/v1/documents` & `GET /api/v1/documents/entity/{entityType}/{entityId}` — Scoped, paginated, searchable, filterable, and sortable document registry (`ROLE_EXTERNAL_PARTNER` strictly restricted to `PUBLIC` + `APPROVED` non-confidential documents).
+- `POST /api/v1/documents` — Multipart upload & bilingual metadata registration (`title_bn`, `title_en`, `reference_no`, `category_id`, `document_type`, `issuing_organization`, `owner_user_id`, `effective_date`, `expires_at`, `classification`, `tags`, optional entity link) with `FileSecurityValidator` (extension allowlist, magic-byte MIME verification, executable payload block, `VirusScannerInterface` scan hook, SHA-256 hash, UUID storage key on private disk `documents_private` / `gov_object_store`), duplicate reference/hash protection, and initial `v1.0` version creation.
+- `GET/PUT/DELETE /api/v1/documents/{document}` — Full document detail (never exposing raw `storage_path` / `storage_disk`), metadata update, and soft delete (`document.file.delete`).
+- `POST /api/v1/documents/{document}/versions`, `POST /versions/{version}/restore`, `GET /versions/{version}/download` — Upload new versions, download historical versions, and restore previous clean versions.
+- `GET /api/v1/documents/{document}/download`, `GET /preview`, `POST /signed-url`, `GET /stream` — Authorized private download, inline browser preview (`PDF`, `JPEG`, `PNG`, `WEBP`, `CSV`, `TXT`), and short-lived (15-min max TTL) HMAC-signed authorized streaming URLs.
+- `POST /api/v1/documents/{document}/submit-approval`, `POST /approve`, `POST /reject`, `POST /archive` — Document approval workflow enforcing 4-eye SoD (`actor !== uploaded_by && actor !== submitted_by`) and `ROLE_SUPER_ADMIN` operational blackout.
+- `POST /api/v1/documents/{document}/verify-integrity` & `GET /history` — Recompute live SHA-256 checksum from private storage (`document.file.verify_integrity`) and inspect combined `document_access_logs` + `audit.audit_logs` history.
+
 
 
 
