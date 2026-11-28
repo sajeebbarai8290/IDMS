@@ -85,6 +85,16 @@ import DamageAssessmentDetailPage from '../modules/damage/pages/DamageAssessment
 import DamageMapPage from '../modules/damage/pages/DamageMapPage';
 import DamageReportsPage from '../modules/damage/pages/DamageReportsPage';
 
+// Module 10: Volunteer Management Pages
+import VolunteerDashboardPage from '../modules/volunteer/pages/VolunteerDashboardPage';
+import VolunteerListPage from '../modules/volunteer/pages/VolunteerListPage';
+import VolunteerFormPage from '../modules/volunteer/pages/VolunteerFormPage';
+import VolunteerDetailPage from '../modules/volunteer/pages/VolunteerDetailPage';
+import VolunteerOrganizationPage from '../modules/volunteer/pages/VolunteerOrganizationPage';
+import VolunteerDeploymentPage from '../modules/volunteer/pages/VolunteerDeploymentPage';
+import VolunteerTrainingPage from '../modules/volunteer/pages/VolunteerTrainingPage';
+import VolunteerReportsPage from '../modules/volunteer/pages/VolunteerReportsPage';
+
 export const AppRoutes = () => {
   return (
     <Routes>
@@ -778,6 +788,17 @@ export const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+
+      {/* Module 10: Volunteer Management Routes */}
+      <Route path="/volunteer/dashboard" element={<ProtectedRoute><MainLayout><VolunteerDashboardPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/volunteer/volunteers" element={<ProtectedRoute><MainLayout><VolunteerListPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/volunteer/volunteers/new" element={<ProtectedRoute><MainLayout><VolunteerFormPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/volunteer/volunteers/:id" element={<ProtectedRoute><MainLayout><VolunteerDetailPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/volunteer/volunteers/:id/edit" element={<ProtectedRoute><MainLayout><VolunteerFormPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/volunteer/organizations" element={<ProtectedRoute><MainLayout><VolunteerOrganizationPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/volunteer/deployments" element={<ProtectedRoute><MainLayout><VolunteerDeploymentPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/volunteer/training" element={<ProtectedRoute><MainLayout><VolunteerTrainingPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/volunteer/reports" element={<ProtectedRoute><MainLayout><VolunteerReportsPage /></MainLayout></ProtectedRoute>} />
 
       {/* Root Redirection */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />

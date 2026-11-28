@@ -37,6 +37,13 @@ use App\Modules\Response\Controllers\Api\V1\ResponseDashboardController;
 use App\Modules\Response\Controllers\Api\V1\ResponseOperationController;
 use App\Modules\Response\Controllers\Api\V1\ResponseSituationReportController;
 use App\Modules\Response\Controllers\Api\V1\ResponseTaskController;
+use App\Modules\Volunteer\Controllers\Api\V1\VolunteerAttendanceController;
+use App\Modules\Volunteer\Controllers\Api\V1\VolunteerCategoryController;
+use App\Modules\Volunteer\Controllers\Api\V1\VolunteerController;
+use App\Modules\Volunteer\Controllers\Api\V1\VolunteerDashboardController;
+use App\Modules\Volunteer\Controllers\Api\V1\VolunteerDeploymentController;
+use App\Modules\Volunteer\Controllers\Api\V1\VolunteerOrganizationController;
+use App\Modules\Volunteer\Controllers\Api\V1\VolunteerTrainingController;
 use App\Modules\Warehouse\Controllers\Api\V1\StockReceiptController;
 use App\Modules\Warehouse\Controllers\Api\V1\StockTransactionController;
 use App\Modules\Warehouse\Controllers\Api\V1\WarehouseDashboardController;
@@ -354,6 +361,69 @@ Route::prefix('v1')->group(function () {
             Route::post('/assessments/{assessment}/verify', [DamageVerificationController::class, 'verify'])->name('api.v1.damage.assessments.verify');
             Route::post('/assessments/{assessment}/reject', [DamageVerificationController::class, 'reject'])->name('api.v1.damage.assessments.reject');
             Route::post('/assessments/{assessment}/approve', [DamageVerificationController::class, 'approve'])->name('api.v1.damage.assessments.approve');
+        });
+
+        // 12. Module 10: Volunteer Management (volunteer.*)
+        Route::prefix('volunteer')->group(function () {
+            Route::get('/dashboard', [VolunteerDashboardController::class, 'summary'])->name('api.v1.volunteer.dashboard');
+            Route::get('/lookups', [VolunteerDashboardController::class, 'lookups'])->name('api.v1.volunteer.lookups');
+            Route::get('/gis/geojson', [VolunteerDashboardController::class, 'geojson'])->name('api.v1.volunteer.gis.geojson');
+            Route::get('/reports', [VolunteerDashboardController::class, 'reports'])->name('api.v1.volunteer.reports');
+            Route::get('/export', [VolunteerDashboardController::class, 'export'])->name('api.v1.volunteer.export');
+
+            Route::get('/categories', [VolunteerCategoryController::class, 'categories'])->name('api.v1.volunteer.categories.index');
+            Route::post('/categories', [VolunteerCategoryController::class, 'storeCategory'])->name('api.v1.volunteer.categories.store');
+            Route::put('/categories/{category}', [VolunteerCategoryController::class, 'updateCategory'])->name('api.v1.volunteer.categories.update');
+            Route::get('/skills', [VolunteerCategoryController::class, 'skills'])->name('api.v1.volunteer.skills.index');
+            Route::post('/skills', [VolunteerCategoryController::class, 'storeSkill'])->name('api.v1.volunteer.skills.store');
+            Route::put('/skills/{skill}', [VolunteerCategoryController::class, 'updateSkill'])->name('api.v1.volunteer.skills.update');
+
+            Route::get('/organizations', [VolunteerOrganizationController::class, 'index'])->name('api.v1.volunteer.organizations.index');
+            Route::post('/organizations', [VolunteerOrganizationController::class, 'store'])->name('api.v1.volunteer.organizations.store');
+            Route::get('/organizations/{organization}', [VolunteerOrganizationController::class, 'show'])->name('api.v1.volunteer.organizations.show');
+            Route::put('/organizations/{organization}', [VolunteerOrganizationController::class, 'update'])->name('api.v1.volunteer.organizations.update');
+            Route::delete('/organizations/{organization}', [VolunteerOrganizationController::class, 'destroy'])->name('api.v1.volunteer.organizations.destroy');
+            Route::post('/organizations/{organization}/verify', [VolunteerOrganizationController::class, 'verify'])->name('api.v1.volunteer.organizations.verify');
+
+            Route::get('/volunteers', [VolunteerController::class, 'index'])->name('api.v1.volunteer.volunteers.index');
+            Route::post('/volunteers', [VolunteerController::class, 'store'])->name('api.v1.volunteer.volunteers.store');
+            Route::get('/volunteers/{volunteer}', [VolunteerController::class, 'show'])->name('api.v1.volunteer.volunteers.show');
+            Route::put('/volunteers/{volunteer}', [VolunteerController::class, 'update'])->name('api.v1.volunteer.volunteers.update');
+            Route::delete('/volunteers/{volunteer}', [VolunteerController::class, 'destroy'])->name('api.v1.volunteer.volunteers.destroy');
+            Route::post('/volunteers/{volunteer}/photo', [VolunteerController::class, 'uploadPhoto'])->name('api.v1.volunteer.volunteers.photo.upload');
+            Route::get('/volunteers/{volunteer}/photo', [VolunteerController::class, 'downloadPhoto'])->name('api.v1.volunteer.volunteers.photo.download');
+            Route::post('/volunteers/{volunteer}/reveal-pii', [VolunteerController::class, 'revealPii'])->name('api.v1.volunteer.volunteers.reveal_pii');
+            Route::post('/volunteers/{volunteer}/skills', [VolunteerController::class, 'syncSkills'])->name('api.v1.volunteer.volunteers.skills');
+            Route::post('/volunteers/{volunteer}/submit', [VolunteerController::class, 'submit'])->name('api.v1.volunteer.volunteers.submit');
+            Route::post('/volunteers/{volunteer}/verify-pillar', [VolunteerController::class, 'verifyPillar'])->name('api.v1.volunteer.volunteers.verify_pillar');
+            Route::post('/volunteers/{volunteer}/approve', [VolunteerController::class, 'approve'])->name('api.v1.volunteer.volunteers.approve');
+            Route::post('/volunteers/{volunteer}/reject', [VolunteerController::class, 'reject'])->name('api.v1.volunteer.volunteers.reject');
+
+            Route::get('/deployments', [VolunteerDeploymentController::class, 'index'])->name('api.v1.volunteer.deployments.index');
+            Route::post('/deployments', [VolunteerDeploymentController::class, 'store'])->name('api.v1.volunteer.deployments.store');
+            Route::get('/deployments/{deployment}', [VolunteerDeploymentController::class, 'show'])->name('api.v1.volunteer.deployments.show');
+            Route::post('/deployments/{deployment}/activate', [VolunteerDeploymentController::class, 'activate'])->name('api.v1.volunteer.deployments.activate');
+            Route::post('/deployments/{deployment}/complete', [VolunteerDeploymentController::class, 'complete'])->name('api.v1.volunteer.deployments.complete');
+            Route::post('/deployments/{deployment}/cancel', [VolunteerDeploymentController::class, 'cancel'])->name('api.v1.volunteer.deployments.cancel');
+
+            Route::get('/attendances', [VolunteerAttendanceController::class, 'index'])->name('api.v1.volunteer.attendances.index');
+            Route::post('/deployments/{deployment}/check-in', [VolunteerAttendanceController::class, 'checkIn'])->name('api.v1.volunteer.attendances.check_in');
+            Route::post('/attendances/{attendance}/check-out', [VolunteerAttendanceController::class, 'checkOut'])->name('api.v1.volunteer.attendances.check_out');
+            Route::post('/attendances/{attendance}/confirm', [VolunteerAttendanceController::class, 'confirm'])->name('api.v1.volunteer.attendances.confirm');
+            Route::post('/attendances/{attendance}/evidence', [VolunteerAttendanceController::class, 'uploadEvidence'])->name('api.v1.volunteer.attendances.evidence.upload');
+            Route::get('/attendances/{attendance}/evidence', [VolunteerAttendanceController::class, 'downloadEvidence'])->name('api.v1.volunteer.attendances.evidence.download');
+
+            Route::get('/training-programs', [VolunteerTrainingController::class, 'programs'])->name('api.v1.volunteer.training.programs.index');
+            Route::post('/training-programs', [VolunteerTrainingController::class, 'storeProgram'])->name('api.v1.volunteer.training.programs.store');
+            Route::put('/training-programs/{program}', [VolunteerTrainingController::class, 'updateProgram'])->name('api.v1.volunteer.training.programs.update');
+            Route::get('/training-sessions', [VolunteerTrainingController::class, 'sessions'])->name('api.v1.volunteer.training.sessions.index');
+            Route::post('/training-sessions', [VolunteerTrainingController::class, 'storeSession'])->name('api.v1.volunteer.training.sessions.store');
+            Route::get('/training-sessions/{session}', [VolunteerTrainingController::class, 'showSession'])->name('api.v1.volunteer.training.sessions.show');
+            Route::put('/training-sessions/{session}', [VolunteerTrainingController::class, 'updateSession'])->name('api.v1.volunteer.training.sessions.update');
+            Route::post('/training-sessions/{session}/enroll', [VolunteerTrainingController::class, 'enroll'])->name('api.v1.volunteer.training.sessions.enroll');
+            Route::put('/training-enrollments/{enrollment}', [VolunteerTrainingController::class, 'updateEnrollment'])->name('api.v1.volunteer.training.enrollments.update');
+            Route::post('/training-enrollments/{enrollment}/certificate', [VolunteerTrainingController::class, 'uploadCertificate'])->name('api.v1.volunteer.training.enrollments.certificate.upload');
+            Route::get('/training-enrollments/{enrollment}/certificate', [VolunteerTrainingController::class, 'downloadCertificate'])->name('api.v1.volunteer.training.enrollments.certificate.download');
         });
 
         // Administrative Overview Scenarios

@@ -295,10 +295,19 @@ Module 09: Damage Assessment - D-Form (damage.*)
 
 Module 10: Volunteer Management (volunteer.*)
   ├── volunteer.roster.view
-  ├── volunteer.roster.register            # Enroll CPP or Red Crescent volunteer
+  ├── volunteer.roster.register            # Enroll CPP, Red Crescent or community volunteer
   ├── volunteer.roster.update
+  ├── volunteer.roster.verify              # 3-pillar & overall volunteer approval (4-eye SoD)
+  ├── volunteer.pii.decrypt                # Audited unmasking of volunteer NID/mobile/emergency contact
+  ├── volunteer.category.manage            # Configure volunteer categories
   ├── volunteer.skill.manage               # Catalog specialized certifications (First Aid, Diving)
-  ├── volunteer.deployment.dispatch        # Assign volunteers to shelters or relief centers
+  ├── volunteer.organization.manage        # Register volunteer organizations & coverages
+  ├── volunteer.organization.verify        # Verify volunteer organizations
+  ├── volunteer.deployment.dispatch        # Assign volunteers to disasters, operations & shelters
+  ├── volunteer.attendance.record          # Check-in/check-out & activity reports (GPS consent-gated)
+  ├── volunteer.attendance.confirm         # Supervisor confirmation of attendance (4-eye SoD)
+  ├── volunteer.training.manage            # Manage training programs, schedules & certificates
+  ├── volunteer.location.view_exact        # View exact volunteer/deployment coordinates
   └── volunteer.roster.export
 
 Module 11: Workflow Management (workflow.*)
@@ -442,10 +451,19 @@ The following matrix maps every system role across all 17 functional modules.
 | `damage.assessment.export` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | -- | -- | -- | [A] |
 | **M10: VOLUNTEER (CPP)** | | | | | | | | | | | | | | | | | | | | | |
 | `volunteer.roster.view` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | [S] | [S] | [S] | [A] |
-| `volunteer.roster.register` | ✔ | -- | ✔ | -- | ✔ | -- | -- | -- | -- | [S] | -- | [S] | [S] | [S] | -- | -- | -- | -- | [S] | -- | -- |
-| `volunteer.roster.update` | ✔ | -- | ✔ | -- | ✔ | -- | -- | -- | -- | [S] | -- | [S] | [S] | [S] | -- | -- | -- | -- | [S] | [S] | -- |
-| `volunteer.skill.manage` | ✔ | -- | ✔ | -- | ✔ | -- | -- | -- | -- | [S] | -- | [S] | -- | -- | -- | -- | -- | -- | [S] | -- | -- |
-| `volunteer.deployment.dispatch`| -- | -- | ✔ | -- | ✔ | -- | -- | [S] | [S] | [S] | [S] | [S] | [S] | -- | -- | -- | -- | [S] | [S] | -- | -- |
+| `volunteer.roster.register` | -- | ✔ | ✔ | -- | ✔ | -- | -- | -- | -- | [S] | [S] | [S] | [S] | [S] | -- | -- | -- | -- | [S] | -- | -- |
+| `volunteer.roster.update` | -- | ✔ | ✔ | -- | ✔ | -- | -- | -- | -- | [S] | [S] | [S] | [S] | [S] | -- | -- | -- | -- | [S] | [S] | -- |
+| `volunteer.roster.verify` | -- | ✔[D] | ✔[D] | -- | ✔[D] | -- | -- | [S][D] | [S][D] | [S][D] | [S][D] | [S][D] | -- | -- | -- | [S][D] | -- | -- | -- | -- | -- |
+| `volunteer.pii.decrypt` | -- | ✔ | ✔ | ✔ | ✔ | -- | -- | -- | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `volunteer.category.manage` | ✔ | ✔ | ✔ | -- | ✔ | ✔ | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `volunteer.skill.manage` | ✔ | ✔ | ✔ | -- | ✔ | ✔ | -- | -- | -- | [S] | -- | [S] | -- | -- | -- | -- | -- | -- | [S] | -- | -- |
+| `volunteer.organization.manage`| ✔ | ✔ | ✔ | -- | ✔ | -- | -- | -- | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `volunteer.organization.verify`| -- | ✔ | ✔ | -- | ✔ | -- | -- | -- | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `volunteer.deployment.dispatch`| -- | ✔ | ✔ | -- | ✔ | -- | -- | [S] | [S] | [S] | [S] | [S] | [S] | -- | -- | -- | -- | [S] | [S] | -- | -- |
+| `volunteer.attendance.record` | -- | ✔ | ✔ | -- | ✔ | -- | -- | -- | [S] | [S] | [S] | [S] | [S] | [S] | -- | -- | -- | [S] | [S] | [S] | -- |
+| `volunteer.attendance.confirm`| -- | ✔[D] | ✔[D] | -- | ✔[D] | -- | -- | [S][D] | [S][D] | [S][D] | [S][D] | [S][D] | [S][D] | -- | -- | -- | -- | [S][D] | [S][D] | -- | -- |
+| `volunteer.training.manage` | ✔* | ✔ | ✔ | -- | ✔ | -- | -- | -- | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | [S] | -- | -- |
+| `volunteer.location.view_exact`| ✔ | ✔ | ✔ | ✔ | ✔ | -- | -- | [S] | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- | [S] | [S] | -- | -- |
 | `volunteer.roster.export` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | -- | -- | -- | [S] | -- | [A] |
 | **M11: WORKFLOW ENGINE** | | | | | | | | | | | | | | | | | | | | | |
 | `workflow.instance.view` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | -- | -- |

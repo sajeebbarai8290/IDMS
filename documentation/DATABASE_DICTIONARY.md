@@ -941,38 +941,33 @@ Financial tracking ledger (budget revisions, fund releases, and recorded expendi
 
 ---
 
-## 8. Schema: `volunteer` (Volunteer Rosters & Mobilization)
+## 8. Schema: `volunteer` (Volunteer Rosters, Organizations, Deployments, Attendance & Training)
 
-### 8.1 `volunteer.volunteers`
-Cyclone Preparedness Programme (CPP) and Red Crescent volunteer registry.
+### 8.1 `volunteer.volunteer_categories` & `volunteer.skill_catalog`
+- `volunteer.volunteer_categories`: Configurable volunteer categories (`SEARCH_AND_RESCUE`, `FIRST_AID`, `MEDICAL_SUPPORT`, `EVACUATION_SUPPORT`, `RELIEF_DISTRIBUTION`, `COMMUNICATION`, `COMMUNITY_AWARENESS`, and custom categories).
+- `volunteer.skill_catalog`: Bilingual skills & qualifications (`skill_code`, `category_id`, `name_en`, `name_bn`, `requires_certification`, `is_system`, `is_active`).
 
-| Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
-| :--- | :--- | :---: | :--- | :--- | :--- |
-| `id` | `uuid` | NO | PK | B-Tree (PK) | Volunteer ID |
-| `administrative_unit_id`| `uuid`| NO | FK &rarr; `core.administrative_units(id)` ON DELETE RESTRICT | B-Tree | Base union / unit |
-| `volunteer_code`| `varchar(30)` | NO | UNIQUE | B-Tree (UQ) | e.g. `CPP-VOL-4047-01` |
-| `nid_hash` | `char(64)` | NO | UNIQUE | B-Tree (UQ) | HMAC-SHA256 NID hash |
-| `full_name_en` | `varchar(150)`| NO | | B-Tree | Volunteer name |
-| `organization` | `varchar(50)` | NO | CHECK in ('CPP', 'BDRCS', 'SCOUT', 'COMMUNITY') | B-Tree | Sponsoring body |
-| `mobile_encrypted`| `text` | NO | | | AES-256-GCM contact mobile (PII) |
-| `status` | `varchar(30)` | NO | CHECK in ('ACTIVE', 'STANDBY', 'DEPLOYED', 'INACTIVE') | B-Tree | Mobilization status |
-| `created_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
-| `updated_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | | Audit timestamp |
+### 8.2 `volunteer.volunteer_organizations` & `volunteer.volunteer_organization_coverages`
+- `volunteer.volunteer_organizations`: Sponsoring organization profiles (`org_code`, `name_en`, `name_bn`, `org_type` in `CPP`/`BDRCS`/`SCOUT`/`BNCC`/`NGO`/`INGO`/`COMMUNITY`/`GOVERNMENT`/`OTHER`, `registration_no`, `administrative_unit_id`, contact person details, `verification_status` in `PENDING`/`VERIFIED`/`REJECTED`, `is_active`).
+- `volunteer.volunteer_organization_coverages`: Multi-unit geographic coverage mapping (`organization_id`, `administrative_unit_id`).
 
----
+### 8.3 `volunteer.volunteers`
+Cyclone Preparedness Programme (CPP), Red Crescent, and community volunteer registry with AES-256 encrypted PII (`nid_encrypted`, `mobile_encrypted`, `email_encrypted`, `emergency_contact_encrypted`), HMAC-SHA256 deduplication hashes (`nid_hash`, `mobile_hash`), masked display columns, private SHA-256 photograph metadata, 3-pillar verification statuses (`identity_verification_status`, `organization_verification_status`, `training_verification_status`, `overall_verification_status`), `nid_verification_id` (nullable FK to `beneficiary.nid_verifications`), `availability_status` (`AVAILABLE`, `STANDBY`, `DEPLOYED`, `ON_LEAVE`, `UNAVAILABLE`, `INACTIVE`), consent-gated `latitude`/`longitude`, and PostGIS `location_geom`.
 
-### 8.2 `volunteer.volunteer_deployments`
-Emergency assignments during crisis response.
+### 8.4 `volunteer.volunteer_skill_assignments` & `volunteer.volunteer_verification_logs`
+- `volunteer.volunteer_skill_assignments`: Volunteer skill mappings (`volunteer_id`, `skill_id`, `proficiency_level`, `certification_level`, `certified_by`, `issued_at`, `expires_at`, `verification_status`).
+- `volunteer.volunteer_verification_logs`: Immutable verification & approval audit trail (`volunteer_id`, `pillar`, `action`, `from_status`, `to_status`, `remarks`, `actor_user_id`, `created_at`).
 
-| Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
-| :--- | :--- | :---: | :--- | :--- | :--- |
-| `id` | `uuid` | NO | PK | B-Tree (PK) | Deployment ID |
-| `volunteer_id` | `uuid` | NO | FK &rarr; `volunteer.volunteers(id)` ON DELETE CASCADE | B-Tree | Mobilized volunteer |
-| `disaster_event_id`| `uuid` | NO | FK &rarr; `disaster.disaster_events(id)` ON DELETE RESTRICT | B-Tree | Disaster operation |
-| `administrative_unit_id`| `uuid`| NO | FK &rarr; `core.administrative_units(id)` ON DELETE RESTRICT | B-Tree | Deployment zone |
-| `assignment_role`| `varchar(100)`| NO | e.g. `SHELTER_MANAGER`, `SEARCH_AND_RESCUE` | | Assigned role |
-| `start_date` | `date` | NO | | B-Tree | Mobilization start date |
-| `end_date` | `date` | YES | | | Demobilization date |
+### 8.5 `volunteer.volunteer_deployments`
+Emergency assignments linked to `disaster.disaster_events`, `response.response_operations`, `response.response_teams`, and `core.administrative_units` (`deployment_no`, `deployment_location`, PostGIS `location_geom`, `assigned_role`, `assigned_duties`, `start_date`, `end_date`, `actual_end_date`, supervisor details, `deployment_status` in `ASSIGNED`/`ACTIVE`/`COMPLETED`/`CANCELLED`).
+
+### 8.6 `volunteer.volunteer_attendances`
+Check-in/check-out records (`check_in_at`, `check_out_at`, `duration_minutes`), explicit `gps_consent_given` coordinates (`check_in_lat`/`lng`, `check_out_lat`/`lng`), activity reports (`activity_summary`, `tasks_completed`, `beneficiaries_assisted`), SHA-256 private evidence attachment, and supervisor confirmation (`confirmation_status` in `PENDING`/`CONFIRMED`/`DISPUTED`, `supervisor_confirmed_by`, `supervisor_confirmed_at`).
+
+### 8.7 `volunteer.volunteer_training_programs`, `volunteer.volunteer_training_sessions` & `volunteer.volunteer_training_enrollments`
+- `volunteer.volunteer_training_programs`: Training curriculum definitions (`program_code`, `title_en`, `title_bn`, `category_id`, `skill_id`, `provider_name`, `duration_hours`, `validity_months`).
+- `volunteer.volunteer_training_sessions`: Scheduled sessions (`session_code`, `program_id`, `administrative_unit_id`, `venue`, `start_date`, `end_date`, `trainer_name`, `max_participants`, `status`).
+- `volunteer.volunteer_training_enrollments`: Attendance, assessment, and certification records (`enrollment_status`, `attendance_hours`, `assessment_score`, `passed`, `certificate_no`, `issued_at`, `expires_at`, private SHA-256 certificate file metadata).
 
 ---
 

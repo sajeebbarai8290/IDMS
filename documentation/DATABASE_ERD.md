@@ -127,10 +127,20 @@ erDiagram
     ADMINISTRATIVE_UNITS ||--o{ PROJECTS : "implemented_within"
 
     %% VOLUNTEER & FIELD OPERATIONS
-    VOLUNTEERS ||--|{ VOLUNTEER_SKILL_ASSIGNMENTS : "possesses_skills"
+    VOLUNTEER_CATEGORIES ||--o{ SKILL_CATALOG : "groups"
+    VOLUNTEER_CATEGORIES ||--o{ VOLUNTEERS : "primary_category"
+    VOLUNTEER_ORGANIZATIONS ||--o{ VOLUNTEER_ORGANIZATION_COVERAGES : "covers"
+    ADMINISTRATIVE_UNITS ||--o{ VOLUNTEER_ORGANIZATION_COVERAGES : "covered_by"
+    VOLUNTEER_ORGANIZATIONS ||--o{ VOLUNTEERS : "affiliated_with"
+    VOLUNTEERS ||--o{ VOLUNTEER_SKILL_ASSIGNMENTS : "possesses_skills"
     SKILL_CATALOG ||--o{ VOLUNTEER_SKILL_ASSIGNMENTS : "categorized_by"
+    VOLUNTEERS ||--o{ VOLUNTEER_VERIFICATION_LOGS : "verification_audit"
     VOLUNTEERS ||--o{ VOLUNTEER_DEPLOYMENTS : "mobilized_into"
     DISASTER_EVENTS ||--o{ VOLUNTEER_DEPLOYMENTS : "mobilized_for"
+    VOLUNTEER_DEPLOYMENTS ||--o{ VOLUNTEER_ATTENDANCES : "logs_attendance"
+    VOLUNTEER_TRAINING_PROGRAMS ||--o{ VOLUNTEER_TRAINING_SESSIONS : "scheduled_as"
+    VOLUNTEER_TRAINING_SESSIONS ||--o{ VOLUNTEER_TRAINING_ENROLLMENTS : "enrolls"
+    VOLUNTEERS ||--o{ VOLUNTEER_TRAINING_ENROLLMENTS : "attends_and_certified"
 
     %% WORKFLOW ENGINE
     WORKFLOW_INSTANCES ||--|{ WORKFLOW_TRANSITIONS : "progresses_via"
@@ -852,39 +862,119 @@ erDiagram
         timestamptz disbursed_at
     }
 
+    VOLUNTEER_CATEGORIES {
+        uuid id PK
+        string code UK
+        string name_en
+        string name_bn
+        boolean is_active
+    }
+
+    VOLUNTEER_ORGANIZATIONS {
+        uuid id PK
+        string org_code UK
+        string name_en
+        string org_type
+        uuid administrative_unit_id FK
+        string verification_status
+    }
+
+    VOLUNTEER_ORGANIZATION_COVERAGES {
+        uuid id PK
+        uuid organization_id FK
+        uuid administrative_unit_id FK
+    }
+
     VOLUNTEERS {
         uuid id PK
         uuid administrative_unit_id FK
+        uuid organization_id FK
+        uuid primary_category_id FK
         string volunteer_code UK
         string nid_hash UK
         string full_name_en
-        string organization
+        string full_name_bn
         string mobile_encrypted
-        string status
+        string overall_verification_status
+        string availability_status
     }
 
     SKILL_CATALOG {
         uuid id PK
+        uuid category_id FK
         string skill_code UK
-        string skill_name
-        string category
+        string name_en
+        string name_bn
     }
 
     VOLUNTEER_SKILL_ASSIGNMENTS {
         uuid id PK
         uuid volunteer_id FK
         uuid skill_id FK
+        string proficiency_level
         string certification_level
+        string verification_status
+    }
+
+    VOLUNTEER_VERIFICATION_LOGS {
+        uuid id PK
+        uuid volunteer_id FK
+        string pillar
+        string action
+        string to_status
+        uuid actor_user_id FK
     }
 
     VOLUNTEER_DEPLOYMENTS {
         uuid id PK
+        string deployment_no UK
         uuid volunteer_id FK
         uuid disaster_event_id FK
+        uuid response_operation_id FK
         uuid administrative_unit_id FK
-        string assignment_role
+        string assigned_role
+        string deployment_status
         date start_date
         date end_date
+    }
+
+    VOLUNTEER_ATTENDANCES {
+        uuid id PK
+        uuid deployment_id FK
+        uuid volunteer_id FK
+        date attendance_date
+        timestamptz check_in_at
+        timestamptz check_out_at
+        integer duration_minutes
+        boolean gps_consent_given
+        string confirmation_status
+    }
+
+    VOLUNTEER_TRAINING_PROGRAMS {
+        uuid id PK
+        string program_code UK
+        string title_en
+        string provider_name
+        integer duration_hours
+    }
+
+    VOLUNTEER_TRAINING_SESSIONS {
+        uuid id PK
+        string session_code UK
+        uuid program_id FK
+        uuid administrative_unit_id FK
+        date start_date
+        date end_date
+        string status
+    }
+
+    VOLUNTEER_TRAINING_ENROLLMENTS {
+        uuid id PK
+        uuid session_id FK
+        uuid volunteer_id FK
+        string enrollment_status
+        boolean passed
+        string certificate_no UK
     }
 
     WORKFLOW_INSTANCES {

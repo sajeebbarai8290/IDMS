@@ -444,4 +444,28 @@ interface NidVerificationServiceInterface
 - `POST /api/v1/damage/assessments/{assessment}/reject` — Supervisor rejects assessment with mandatory `reason` (`REJECTED`).
 - `POST /api/v1/damage/assessments/{assessment}/approve` — District/Directorate/Ministry authority grants final approval (`APPROVED`) enforcing 4-eye SoD and `ROLE_SUPER_ADMIN` operational blackout.
 
+---
+
+## 13. Module 10: Volunteer Management Implemented Endpoints (`/api/v1/volunteer/*`)
+
+### 13.1 Dashboard, Lookups, Categories, Skills, GIS & Reports
+- `GET /api/v1/volunteer/dashboard` — Scoped volunteer KPIs (Redis cached with version invalidation): total registered, verified, pending verification, available, deployed, active/completed deployments, organizations, training sessions, certificates issued, geographical area breakdown, category distribution, and skills distribution.
+- `GET /api/v1/volunteer/lookups` — Active categories, skills catalog, scoped organizations, disasters, response operations, scoped administrative units, and status constants.
+- `GET/POST/PUT /api/v1/volunteer/categories` & `GET/POST/PUT /api/v1/volunteer/skills` — Manage configurable volunteer categories (`SEARCH_AND_RESCUE`, `FIRST_AID`, `MEDICAL_SUPPORT`, `EVACUATION_SUPPORT`, `RELIEF_DISTRIBUTION`, `COMMUNICATION`, `COMMUNITY_AWARENESS`, plus custom) and skills catalog.
+- `GET /api/v1/volunteer/gis/geojson` — Scoped RFC 7946 `FeatureCollection` of consented volunteer base points and active deployments (anonymized and coarsened for `ROLE_EXTERNAL_PARTNER` / unauthorized viewers).
+- `GET /api/v1/volunteer/reports` & `GET /api/v1/volunteer/export?report_type={register|deployments|attendance|training}` — Scoped reports and UTF-8 BOM CSV downloads (PII redacted for `ROLE_EXTERNAL_PARTNER`).
+
+### 13.2 Volunteer Organizations, Registration, PII Protection & 3-Pillar Verification
+- `GET/POST /api/v1/volunteer/organizations`, `GET/PUT/DELETE /api/v1/volunteer/organizations/{organization}`, `POST /api/v1/volunteer/organizations/{organization}/verify` — Manage volunteer organization profiles, contact persons, org types, multi-unit geographic coverages, and verification status.
+- `GET/POST /api/v1/volunteer/volunteers`, `GET/PUT/DELETE /api/v1/volunteer/volunteers/{volunteer}` — Scoped, paginated, searchable, filterable volunteer roster (`nid_encrypted`, `mobile_encrypted`, `email_encrypted`, `emergency_contact_encrypted` encrypted at rest and masked by default; duplicate NID hash rejected).
+- `POST/GET /api/v1/volunteer/volunteers/{volunteer}/photo` — Private SHA-256 photograph upload and authorized streamed download (blocked for `ROLE_EXTERNAL_PARTNER`).
+- `POST /api/v1/volunteer/volunteers/{volunteer}/reveal-pii` — Audited cleartext PII unmasking gated by `VolunteerPolicy::decryptPii`.
+- `POST /api/v1/volunteer/volunteers/{volunteer}/skills`, `POST /submit`, `POST /verify-pillar`, `POST /approve`, `POST /reject` — Skill synchronization and 3-pillar (`IDENTITY`, `ORGANIZATION`, `TRAINING`) + overall 4-eye SoD verification/approval workflow (with optional Module 02 `NidVerificationService` integration and `ROLE_SUPER_ADMIN` operational blackout).
+
+### 13.3 Deployments, Check-In/Out Attendance & Training Management
+- `GET/POST /api/v1/volunteer/deployments`, `GET /api/v1/volunteer/deployments/{deployment}`, `POST /{deployment}/activate`, `POST /{deployment}/complete`, `POST /{deployment}/cancel` — Transaction-safe deployment (`lockForUpdate()`) to disasters and response operations, enforcing verified + available status, overlap prevention, and automatic availability release.
+- `GET /api/v1/volunteer/attendances`, `POST /api/v1/volunteer/deployments/{deployment}/check-in`, `POST /api/v1/volunteer/attendances/{attendance}/check-out`, `POST /api/v1/volunteer/attendances/{attendance}/confirm`, `POST/GET /api/v1/volunteer/attendances/{attendance}/evidence` — Explicit GPS-consent-gated check-in/out, activity reports, duration calculation, private evidence files, and 4-eye supervisor confirmation.
+- `GET/POST/PUT /api/v1/volunteer/training-programs`, `GET/POST/PUT /api/v1/volunteer/training-sessions`, `POST /api/v1/volunteer/training-sessions/{session}/enroll`, `PUT /api/v1/volunteer/training-enrollments/{enrollment}`, `POST/GET /api/v1/volunteer/training-enrollments/{enrollment}/certificate` — Training curricula, schedules, attendance, assessment pass/fail, and certificate issuance/download.
+
+
 

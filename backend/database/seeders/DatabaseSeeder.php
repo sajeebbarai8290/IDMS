@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             ResourceSeeder::class,
             ProjectSeeder::class,
             DamageAssessmentSeeder::class,
+            VolunteerSeeder::class,
         ]);
     }
 }

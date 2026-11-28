@@ -14,6 +14,7 @@ import { canCreateProject } from '../../modules/project/utils/projectPermissions
 import { canWriteResourceAssets } from '../../modules/resource/utils/resourcePermissions';
 import { canManageFacilities } from '../../modules/warehouse/utils/warehousePermissions';
 import { canCreateDamage } from '../../modules/damage/utils/damagePermissions';
+import { canWriteVolunteers } from '../../modules/volunteer/utils/volunteerPermissions';
 
 export const Sidebar = ({ isOpen }) => {
   const { user } = useAuth();
@@ -30,6 +31,7 @@ export const Sidebar = ({ isOpen }) => {
   const showResourceCreate = canWriteResourceAssets(user);
   const showWarehouseManage = canManageFacilities(user);
   const showDamageCreate = canCreateDamage(user);
+  const showVolunteerCreate = canWriteVolunteers(user);
 
   return (
     <aside className={`idms-sidebar ${isOpen ? 'show' : ''}`}>
@@ -290,6 +292,40 @@ export const Sidebar = ({ isOpen }) => {
         <NavLink to="/damage/reports" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
           <i className="bi bi-file-earmark-bar-graph-fill me-2 text-success"></i>
           <span>{t('ক্ষয়ক্ষতি প্রতিবেদন', 'Damage Reports')}</span>
+        </NavLink>
+
+        <div className="idms-sidebar-section-title">
+          {t('স্বেচ্ছাসেবক ব্যবস্থাপনা (M10)', 'Volunteer Management (M10)')}
+        </div>
+        <NavLink to="/volunteer/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-people-fill me-2 text-primary"></i>
+          <span>{t('স্বেচ্ছাসেবক ড্যাশবোর্ড', 'Volunteer Dashboard')}</span>
+        </NavLink>
+        <NavLink to="/volunteer/volunteers" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-person-lines-fill me-2 text-info"></i>
+          <span>{t('স্বেচ্ছাসেবক রোস্টার', 'Volunteer Roster')}</span>
+        </NavLink>
+        {showVolunteerCreate && (
+          <NavLink to="/volunteer/volunteers/new" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <i className="bi bi-person-plus-fill me-2 text-success"></i>
+            <span>{t('নতুন স্বেচ্ছাসেবক নিবন্ধন', 'Register Volunteer')}</span>
+          </NavLink>
+        )}
+        <NavLink to="/volunteer/organizations" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-building-check me-2 text-secondary"></i>
+          <span>{t('স্বেচ্ছাসেবক সংগঠন', 'Organizations')}</span>
+        </NavLink>
+        <NavLink to="/volunteer/deployments" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-send-check-fill me-2 text-danger"></i>
+          <span>{t('মোতায়েন ও উপস্থিতি', 'Deployments & Attendance')}</span>
+        </NavLink>
+        <NavLink to="/volunteer/training" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-mortarboard-fill me-2 text-warning"></i>
+          <span>{t('প্রশিক্ষণ ও সনদ', 'Training & Certificates')}</span>
+        </NavLink>
+        <NavLink to="/volunteer/reports" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-file-earmark-spreadsheet me-2 text-success"></i>
+          <span>{t('স্বেচ্ছাসেবক প্রতিবেদন', 'Volunteer Reports')}</span>
         </NavLink>
 
         <div className="idms-sidebar-section-title">অন্যান্য মডিউল (Planned)</div>

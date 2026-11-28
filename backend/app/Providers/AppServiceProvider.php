@@ -7,6 +7,14 @@ use App\Modules\Beneficiary\Policies\HouseholdPolicy;
 use App\Modules\DamageAssessment\Models\DamageAssessment;
 use App\Modules\DamageAssessment\Models\DamageCategory;
 use App\Modules\DamageAssessment\Policies\DamageAssessmentPolicy;
+use App\Modules\Volunteer\Models\Volunteer;
+use App\Modules\Volunteer\Models\VolunteerAttendance;
+use App\Modules\Volunteer\Models\VolunteerCategory;
+use App\Modules\Volunteer\Models\VolunteerDeployment;
+use App\Modules\Volunteer\Models\VolunteerOrganization;
+use App\Modules\Volunteer\Models\VolunteerTrainingProgram;
+use App\Modules\Volunteer\Models\VolunteerTrainingSession;
+use App\Modules\Volunteer\Policies\VolunteerPolicy;
 use App\Modules\Disaster\Adapters\MockDisasterNotificationAdapter;
 use App\Modules\Disaster\Contracts\DisasterNotificationInterface;
 use App\Modules\Disaster\Models\DisasterEvent;
@@ -102,5 +110,12 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(WarehouseTransfer::class, WarehousePolicy::class);
         Gate::policy(DamageCategory::class, DamageAssessmentPolicy::class);
         Gate::policy(DamageAssessment::class, DamageAssessmentPolicy::class);
+        Gate::policy(VolunteerCategory::class, VolunteerPolicy::class);
+        Gate::policy(VolunteerOrganization::class, VolunteerPolicy::class);
+        Gate::policy(Volunteer::class, VolunteerPolicy::class);
+        Gate::policy(VolunteerDeployment::class, VolunteerPolicy::class);
+        Gate::policy(VolunteerAttendance::class, VolunteerPolicy::class);
+        Gate::policy(VolunteerTrainingProgram::class, VolunteerPolicy::class);
+        Gate::policy(VolunteerTrainingSession::class, VolunteerPolicy::class);
     }
 }
