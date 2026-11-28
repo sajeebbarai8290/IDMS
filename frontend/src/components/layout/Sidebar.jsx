@@ -21,6 +21,17 @@ import {
   canSubmitWorkflow,
   canViewWorkflow,
 } from '../../modules/workflow/utils/workflowPermissions';
+import {
+  canCreateUsers,
+  canManageRoleConfig,
+  canViewRoles,
+  canViewUsers,
+} from '../../modules/user-management/utils/userPermissions';
+import {
+  canManageNotificationTemplates,
+  canSendNotificationBroadcast,
+  canViewNotificationLogs,
+} from '../../modules/notification/utils/notificationPermissions';
 
 export const Sidebar = ({ isOpen }) => {
   const { user } = useAuth();
@@ -42,6 +53,13 @@ export const Sidebar = ({ isOpen }) => {
   const showWorkflowSubmit = canSubmitWorkflow(user);
   const showWorkflowConfig = canManageWorkflowConfig(user);
   const showWorkflowDelegations = canManageDelegations(user);
+  const showUsersView = canViewUsers(user);
+  const showUsersCreate = canCreateUsers(user);
+  const showRolesView = canViewRoles(user);
+  const showRolesManage = canManageRoleConfig(user);
+  const showNotifLogs = canViewNotificationLogs(user);
+  const showNotifSend = canSendNotificationBroadcast(user);
+  const showNotifTemplates = canManageNotificationTemplates(user);
 
   return (
     <aside className={`idms-sidebar ${isOpen ? 'show' : ''}`}>
@@ -371,6 +389,86 @@ export const Sidebar = ({ isOpen }) => {
             )}
           </>
         )}
+
+        {(showUsersView || showRolesView) && (
+          <>
+            <div className="idms-sidebar-section-title">
+              {t('ব্যবহারকারী ও আরবিএসি (M12)', 'User & Access (M12)')}
+            </div>
+            {showUsersView && (
+              <>
+                <NavLink to="/user-management/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                  <i className="bi bi-person-gear me-2 text-primary"></i>
+                  <span>{t('ব্যবহারকারী ড্যাশবোর্ড', 'User Dashboard')}</span>
+                </NavLink>
+                <NavLink to="/user-management/users" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                  <i className="bi bi-people-fill me-2 text-info"></i>
+                  <span>{t('ব্যবহারকারী তালিকা', 'User Directory')}</span>
+                </NavLink>
+              </>
+            )}
+            {showUsersCreate && (
+              <NavLink to="/user-management/users/new" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                <i className="bi bi-person-plus-fill me-2 text-success"></i>
+                <span>{t('নতুন ব্যবহারকারী', 'Provision User')}</span>
+              </NavLink>
+            )}
+            {showRolesView && (
+              <NavLink to="/user-management/roles" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                <i className="bi bi-shield-lock-fill me-2 text-warning"></i>
+                <span>{showRolesManage ? t('ভূমিকা ও অনুমতি', 'Roles & Permissions') : t('ভূমিকা তালিকা', 'View Roles')}</span>
+              </NavLink>
+            )}
+            {showUsersView && (
+              <NavLink to="/user-management/organizations" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                <i className="bi bi-building-fill me-2 text-secondary"></i>
+                <span>{t('সংগঠন ব্যবস্থাপনা', 'Organizations')}</span>
+              </NavLink>
+            )}
+          </>
+        )}
+
+        <div className="idms-sidebar-section-title">
+          {t('বিজ্ঞপ্তি ও সতর্কতা (M13)', 'Notifications & Alerts (M13)')}
+        </div>
+        <NavLink to="/notifications/inbox" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-inbox-fill me-2 text-primary"></i>
+          <span>{t('আমার ইনবক্স', 'My Inbox')}</span>
+        </NavLink>
+        {showNotifLogs && (
+          <>
+            <NavLink to="/notifications/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              <i className="bi bi-bell-fill me-2 text-warning"></i>
+              <span>{t('বিজ্ঞপ্তি ড্যাশবোর্ড', 'Notification Dashboard')}</span>
+            </NavLink>
+            <NavLink to="/notifications/alerts" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              <i className="bi bi-exclamation-triangle-fill me-2 text-danger"></i>
+              <span>{t('সতর্কতা ও নিয়ম', 'Alerts & Rules')}</span>
+            </NavLink>
+          </>
+        )}
+        {showNotifSend && (
+          <NavLink to="/notifications/send" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <i className="bi bi-megaphone-fill me-2 text-danger"></i>
+            <span>{t('বিজ্ঞপ্তি প্রেরণ', 'Send Notification')}</span>
+          </NavLink>
+        )}
+        {showNotifTemplates && (
+          <NavLink to="/notifications/templates" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <i className="bi bi-file-earmark-richtext me-2 text-info"></i>
+            <span>{t('বিজ্ঞপ্তি টেমপ্লেট', 'Templates')}</span>
+          </NavLink>
+        )}
+        {showNotifLogs && (
+          <NavLink to="/notifications/logs" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <i className="bi bi-journal-text me-2 text-secondary"></i>
+            <span>{t('ডেলিভারি লগ', 'Delivery Logs')}</span>
+          </NavLink>
+        )}
+        <NavLink to="/notifications/preferences" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <i className="bi bi-sliders me-2 text-success"></i>
+          <span>{t('পছন্দ ও ডিভাইস', 'Preferences & Devices')}</span>
+        </NavLink>
 
         <div className="idms-sidebar-section-title">অন্যান্য মডিউল (Planned)</div>
         <div className="nav-link text-muted opacity-75 d-flex justify-content-between align-items-center">

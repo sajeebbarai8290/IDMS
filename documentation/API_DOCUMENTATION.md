@@ -488,6 +488,50 @@ interface NidVerificationServiceInterface
 - `POST /api/v1/workflow/instances/{instance}/approve`, `POST /reject`, `POST /return-correction`, `POST /request-info`, `POST /provide-info`, `POST /resubmit`, `POST /forward`, `POST /cancel`, `POST /remind` — Transaction-safe (`lockForUpdate()`) state transitions enforcing 4-eye SoD, `ROLE_SUPER_ADMIN` operational blackout, delegation tracking (`acted_on_behalf_of_user_id`), and `AuditLog` entries.
 - `POST/GET /api/v1/workflow/instances/{instance}/attachments` & `/attachments/{attachment}` — Private supporting file uploads with MIME verification, SHA-256 checksums, and authorized streamed download.
 
+---
+
+## 15. Module 12: User Management Implemented Endpoints (`/api/v1/user-management/*`)
+
+### 15.1 Dashboard, Lookups, Activity Logs & Keycloak Health
+- `GET /api/v1/user-management/dashboard` — Scoped user analytics (Redis cached with version invalidation): `total_users`, `active_users`, `inactive_users`, `pending_users`, `suspended_users`, `deactivated_users`, `locked_users`, `mfa_enforced_users`, `mfa_verified_users`, `idp_linked_users`, `idp_failed_users`, `by_organization`, `by_geographical_level`, `role_distribution`, `keycloak_health`, and `recent_activity`.
+- `GET /api/v1/user-management/lookups` — Active roles, scoped organizations, scoped administrative units, lifecycle/sync/scope/org constants.
+- `GET /api/v1/user-management/activity-logs` & `GET /api/v1/user-management/users/{user}/activity` — Scoped RBAC and user lifecycle audit logs from `audit.audit_logs`.
+- `GET /api/v1/user-management/keycloak-health` — Keycloak Admin adapter connectivity and configuration status.
+
+### 15.2 User Provisioning, Profile, Photo, Lifecycle, Roles, Scopes & Keycloak Sync
+- `GET/POST /api/v1/user-management/users`, `GET/PUT/DELETE /api/v1/user-management/users/{user}` — Scoped, paginated, searchable, filterable user directory & CRUD with Keycloak Admin provisioning/linking (`KeycloakAdminServiceInterface`), zero local password storage, and `AuditLog` tracking.
+- `POST/GET /api/v1/user-management/users/{user}/photo` — Private SHA-256 profile photograph upload and authorized streamed download.
+- `POST /api/v1/user-management/users/{user}/status` — Lifecycle transitions (`PENDING`, `ACTIVE`, `SUSPENDED`, `DEACTIVATED`, `LOCKED`) with self-lockout guard, Keycloak enable/disable sync, and `KeycloakAuthenticate` enforcement (`403 ACCOUNT_RESTRICTED`).
+- `POST /api/v1/user-management/users/{user}/roles` — Multi-role assignment enforcing hierarchy-rank privilege-escalation prevention and Super Admin self-demotion protection.
+- `POST /api/v1/user-management/users/{user}/scopes` & `POST /api/v1/user-management/users/{user}/scopes/{scope}/revoke` — Primary and time-bound temporary organizational/geographical scope assignments (`PRIMARY_POSTING`, `ADDITIONAL_CHARGE`, `EMERGENCY_DEPUTATION`, `INSPECTION_TAG`).
+- `POST /api/v1/user-management/users/{user}/sync-keycloak` — Synchronize profile, roles, status, or MFA enforcement (`CONFIGURE_TOTP`) with Keycloak and record `idp_sync_status` safely on IdP outage (`502` with `SYNC_FAILED`).
+
+### 15.3 Roles, Permissions Matrix & Organizations
+- `GET/POST /api/v1/user-management/roles`, `GET/PUT/DELETE /api/v1/user-management/roles/{role}` — Manage statutory and configurable custom roles (system roles protected from deletion).
+- `GET /api/v1/user-management/permissions` & `POST /api/v1/user-management/roles/{role}/permissions` — Module/action permission catalog and audited role-permission matrix sync with Redis cache invalidation (`rbac:role_permissions:{role_code}`).
+- `GET/POST /api/v1/user-management/organizations`, `GET/PUT/DELETE /api/v1/user-management/organizations/{organization}` — Scoped organization registry CRUD (blocks archiving organizations with assigned users).
+
+---
+
+## 16. Module 13: Notification & Alert Management Implemented Endpoints (`/api/v1/notifications/*`)
+
+### 16.1 Dashboard, Lookups, In-App Inbox, User Preferences & Flutter Push Devices
+- `GET /api/v1/notifications/dashboard` — Scoped notification & alert KPIs (Redis cached with version invalidation): `total_notifications`, `total_dispatches`, `delivered_notifications`, `failed_notifications`, `pending_notifications`, `active_alerts`, `unacknowledged_alerts`, `escalated_alerts`, `resolved_alerts`, `unread_in_app`, channel/category/severity breakdowns, recent items, and adapter readiness (`SmsGatewayInterface`, `PushNotificationInterface`, Email).
+- `GET /api/v1/notifications/lookups` — Categories, channels, severities, priorities, target types, statuses, event types, active bilingual templates, scoped alert rules, roles, organizations, administrative units, and scoped active users.
+- `GET /api/v1/notifications/inbox`, `POST /api/v1/notifications/inbox/{dispatch}/read`, `POST /api/v1/notifications/inbox/read-all` — Self-service In-App notification inbox with unread counts, category/severity filters, and read receipts.
+- `GET /api/v1/notifications/preferences` & `PUT /api/v1/notifications/preferences` — Per-user, per-category channel preferences (`in_app_enabled`, `email_enabled`, `sms_enabled`, `push_enabled`, quiet hours) enforcing MoDMR mandatory policy locks on critical emergency categories (`EMERGENCY_ALERT`, `DISASTER_WARNING`).
+- `GET /api/v1/notifications/devices`, `POST /api/v1/notifications/devices`, `DELETE /api/v1/notifications/devices/{device}` — Secure Flutter/mobile push device registration (`ANDROID`, `IOS`, `WEB` / `FCM`, `APNS`, `WEB_PUSH`) encrypting push tokens at rest and hiding raw tokens from all API responses.
+
+### 16.2 Bilingual Templates, Multi-Channel Dispatch & Delivery Logs
+- `GET/POST /api/v1/notifications/templates`, `GET/PUT/DELETE /api/v1/notifications/templates/{template}` — Manage reusable Bangla and English notification templates with `{{variable}}` interpolation (`notification.template.manage`, audited; system templates protected from deletion).
+- `GET/POST /api/v1/notifications`, `GET /api/v1/notifications/{notification}` — Scoped notification campaigns & broadcasts targeting `USER`, `ROLE`, `ORGANIZATION`, `GEOGRAPHY`, or `ALL` across `IN_APP`, `EMAIL`, `SMS`, and `PUSH`, supporting `scheduled_at`, `idempotency_key` deduplication, priority Redis queues (`notifications-urgent`, `notifications-default`), `ROLE_SUPER_ADMIN` operational blackout, and 7-tier jurisdiction validation.
+- `GET /api/v1/notifications/dispatches`, `POST /api/v1/notifications/dispatches/{dispatch}/retry`, `POST /api/v1/notifications/process-scheduled` — Scoped delivery logs with strictly masked contact destinations (`masked_destination`), automated exponential backoff retries (`DeliverNotificationDispatchJob`), manual retry for `FAILED` dispatches, and scheduled dispatch execution.
+
+### 16.3 Alert Rules, Threshold Triggering, Acknowledgement & SLA Escalations
+- `GET/POST /api/v1/notifications/alert-rules`, `PUT/DELETE /api/v1/notifications/alert-rules/{rule}` — Configure threshold alert rules (`condition_config`), target roles, cooldown windows, and escalation policies (`escalation_delay_minutes`, `escalation_role_code`).
+- `GET /api/v1/notifications/alerts`, `GET /api/v1/notifications/alerts/{alert}`, `POST /api/v1/notifications/alerts/trigger` — Scoped alert workbench and event/threshold evaluation trigger with cooldown & `idempotency_key` deduplication.
+- `POST /api/v1/notifications/alerts/{alert}/acknowledge`, `POST /api/v1/notifications/alerts/{alert}/resolve`, `POST /api/v1/notifications/alerts/escalate` — Audited alert acknowledgement & resolution (enforcing `ROLE_SUPER_ADMIN` operational blackout & jurisdiction scoping) and SLA escalation sweep (`ProcessAlertEscalationsJob` / `php artisan notifications:escalate-alerts`).
+
 
 
 

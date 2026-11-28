@@ -325,9 +325,12 @@ Module 12: User & Access Management (user.*, role.*)
   └── role.permission.view
 
 Module 13: Notification & Alert Management (notification.*)
-  ├── notification.template.manage         # Configure SMS/Email alert templates in Bangla & English
-  ├── notification.broadcast.send          # Trigger emergency bulk SMS / WebPush blast
-  └── notification.log.view
+  ├── notification.template.manage         # Configure SMS/Email/Push/In-app templates in Bangla & English
+  ├── notification.broadcast.send          # Trigger emergency & scheduled notifications/broadcasts
+  ├── notification.log.view                # View scoped notification dispatches & delivery logs
+  ├── notification.alert.manage            # Configure alert rules, thresholds & escalation policies
+  ├── notification.alert.acknowledge       # Acknowledge, escalate & resolve triggered alerts
+  └── notification.preference.manage       # Manage policy-locked & administrative notification preferences
 
 Module 14: Document Management (document.*)
   ├── document.file.view                   # View document metadata & request signed streaming URL
@@ -481,6 +484,9 @@ The following matrix maps every system role across all 17 functional modules.
 | `notification.template.manage` | ✔ | -- | ✔ | -- | ✔ | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
 | `notification.broadcast.send` | -- | ✔ | ✔ | -- | ✔ | -- | -- | [S] | [S] | -- | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
 | `notification.log.view` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | -- | -- | -- | -- | -- | -- |
+| `notification.alert.manage` | ✔ | ✔ | ✔ | -- | ✔ | -- | -- | [S] | [S] | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `notification.alert.acknowledge` | -- | ✔ | ✔ | -- | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | -- | [S] | [S] | [S] | -- | -- |
+| `notification.preference.manage` | ✔ | -- | ✔ | -- | ✔ | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
 | **M14: DOCUMENTS** | | | | | | | | | | | | | | | | | | | | | |
 | `document.file.view` | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- | [A] |
 | `document.file.upload` | ✔ | ✔ | ✔ | -- | ✔ | ✔ | ✔ | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | [S] | -- |

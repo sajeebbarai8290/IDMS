@@ -33,20 +33,20 @@ class AdministrativeScopeService
             return true;
         }
 
-        $scope = $user->getAdministrativeScope();
-        $officerPath = $scope['ancestry_path'] ?? '/';
-
-        // Root path covers all
-        if ($officerPath === '/' || $officerPath === '') {
-            return true;
-        }
-
-        // Normalize paths with trailing slashes
-        $officerPathNormalized = rtrim($officerPath, '/') . '/';
         $targetPathNormalized = rtrim($targetAncestryPath, '/') . '/';
 
-        // Invariant 2: Subtree inclusion (Target path must start with officer path)
-        return str_starts_with($targetPathNormalized, $officerPathNormalized);
+        // Invariant 2: Subtree inclusion across primary and active temporary scopes
+        foreach ($user->getAccessibleAncestryPaths() as $officerPath) {
+            if ($officerPath === '/' || $officerPath === '') {
+                return true;
+            }
+            $officerPathNormalized = rtrim($officerPath, '/') . '/';
+            if (str_starts_with($targetPathNormalized, $officerPathNormalized)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

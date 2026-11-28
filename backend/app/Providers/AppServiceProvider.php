@@ -2,7 +2,16 @@
 
 namespace App\Providers;
 
+use App\Core\Models\User;
 use App\Modules\Beneficiary\Models\Household;
+use App\Modules\UserManagement\Adapters\KeycloakAdminHttpAdapter;
+use App\Modules\UserManagement\Adapters\MockKeycloakAdminAdapter;
+use App\Modules\UserManagement\Contracts\KeycloakAdminServiceInterface;
+use App\Modules\UserManagement\Models\Organization;
+use App\Modules\UserManagement\Models\Permission;
+use App\Modules\UserManagement\Models\Role;
+use App\Modules\UserManagement\Models\UserAdministrativeScope;
+use App\Modules\UserManagement\Policies\UserManagementPolicy;
 use App\Modules\Beneficiary\Policies\HouseholdPolicy;
 use App\Modules\DamageAssessment\Models\DamageAssessment;
 use App\Modules\DamageAssessment\Models\DamageCategory;
@@ -19,6 +28,18 @@ use App\Modules\Disaster\Adapters\MockDisasterNotificationAdapter;
 use App\Modules\Disaster\Contracts\DisasterNotificationInterface;
 use App\Modules\Disaster\Models\DisasterEvent;
 use App\Modules\Disaster\Policies\DisasterPolicy;
+use App\Modules\Notification\Adapters\FcmPushNotificationAdapter;
+use App\Modules\Notification\Adapters\MockPushNotificationAdapter;
+use App\Modules\Notification\Adapters\MockSmsGatewayAdapter;
+use App\Modules\Notification\Adapters\TeletalkSmsGatewayAdapter;
+use App\Modules\Notification\Contracts\PushNotificationInterface;
+use App\Modules\Notification\Contracts\SmsGatewayInterface;
+use App\Modules\Notification\Models\Alert;
+use App\Modules\Notification\Models\AlertRule;
+use App\Modules\Notification\Models\Notification;
+use App\Modules\Notification\Models\NotificationDispatch;
+use App\Modules\Notification\Models\NotificationTemplate;
+use App\Modules\Notification\Policies\NotificationPolicy;
 use App\Modules\NidVerification\Adapters\AuthorizedGovernmentNidAdapter;
 use App\Modules\NidVerification\Adapters\MockNidAdapter;
 use App\Modules\NidVerification\Contracts\NidVerificationServiceInterface;
@@ -88,6 +109,39 @@ class AppServiceProvider extends ServiceProvider
             WorkflowNotificationInterface::class,
             DatabaseWorkflowNotificationAdapter::class
         );
+
+        $this->app->bind(KeycloakAdminServiceInterface::class, function ($app) {
+            $driver = config('services.keycloak.admin_driver', 'mock');
+
+            // Hard safety invariant: never allow mock Keycloak Admin adapter in production
+            if ($app->environment('production') || $driver === 'keycloak') {
+                return $app->make(KeycloakAdminHttpAdapter::class);
+            }
+
+            return $app->make(MockKeycloakAdminAdapter::class);
+        });
+
+        $this->app->bind(SmsGatewayInterface::class, function ($app) {
+            $driver = config('services.sms.driver', 'mock');
+
+            // Hard safety invariant: never allow mock SMS adapter in production
+            if ($app->environment('production') || $driver === 'teletalk') {
+                return $app->make(TeletalkSmsGatewayAdapter::class);
+            }
+
+            return $app->make(MockSmsGatewayAdapter::class);
+        });
+
+        $this->app->bind(PushNotificationInterface::class, function ($app) {
+            $driver = config('services.push.driver', 'mock');
+
+            // Hard safety invariant: never allow mock Push adapter in production
+            if ($app->environment('production') || $driver === 'fcm') {
+                return $app->make(FcmPushNotificationAdapter::class);
+            }
+
+            return $app->make(MockPushNotificationAdapter::class);
+        });
     }
 
     /**
@@ -133,5 +187,15 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(WorkflowInstance::class, WorkflowPolicy::class);
         Gate::policy(WorkflowDelegation::class, WorkflowPolicy::class);
         Gate::policy(WorkflowNotification::class, WorkflowPolicy::class);
+        Gate::policy(User::class, UserManagementPolicy::class);
+        Gate::policy(Role::class, UserManagementPolicy::class);
+        Gate::policy(Permission::class, UserManagementPolicy::class);
+        Gate::policy(Organization::class, UserManagementPolicy::class);
+        Gate::policy(UserAdministrativeScope::class, UserManagementPolicy::class);
+        Gate::policy(Notification::class, NotificationPolicy::class);
+        Gate::policy(NotificationTemplate::class, NotificationPolicy::class);
+        Gate::policy(NotificationDispatch::class, NotificationPolicy::class);
+        Gate::policy(AlertRule::class, NotificationPolicy::class);
+        Gate::policy(Alert::class, NotificationPolicy::class);
     }
 }

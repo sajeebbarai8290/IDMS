@@ -998,20 +998,47 @@ Append-only immutable log of all state changes and decisions (`workflow_instance
 
 ---
 
-## 10. Schema: `notification` & `document`
+## 10. Schema: `notification` (Module 13: Notification & Alert Management) & `document`
 
-### 10.1 `notification.notification_dispatches`
-Outbound alerting queue and logs (SMS, Web Push, Email).
+### 10.1 `notification.notification_templates`
+Reusable bilingual notification templates (`IN_APP`, `EMAIL`, `SMS`, `PUSH`, or `MULTI`) across disaster warnings, emergency alerts, workflow updates, inventory alerts, and system announcements.
+- Key columns: `id` (UUID PK), `template_code` (unique), `category`, `channel`, `default_severity`, `title_bn`, `title_en`, `subject_bn`, `subject_en`, `body_bn`, `body_en`, `variables` (`jsonb`), `is_system`, `is_active`, `created_by`, `updated_by`, timestamps, `deleted_at`.
+
+### 10.1A `notification.notifications`
+Master notification campaigns, scheduled dispatches, and event-driven notices targeted by user, role, organization, geography (`administrative_unit_id`), or system-wide broadcast.
+- Key columns: `id` (UUID PK), `notification_no` (unique), `template_id` (FK &rarr; `notification.notification_templates`), `category`, `severity`, `priority`, `channels` (`jsonb`), `title_bn`, `title_en`, `message_bn`, `message_en`, `target_type`, `target_criteria` (`jsonb`), `administrative_unit_id` (FK &rarr; `core.administrative_units`), `related_entity_type`, `related_entity_id`, `scheduled_at`, `dispatched_at`, `status`, `idempotency_key` (unique), `total_recipients`, `delivered_count`, `failed_count`, `created_by`, `updated_by`, timestamps, `deleted_at`.
+
+### 10.1B `notification.notification_dispatches`
+Per-recipient, per-channel outbound delivery queue, retry state, provider receipt logs, and in-app read status.
 
 | Column Name | Data Type | Null | Default / Constraints | Indexes | Description |
 | :--- | :--- | :---: | :--- | :--- | :--- |
 | `id` | `uuid` | NO | PK | B-Tree (PK) | Dispatch ID |
+| `notification_id` | `uuid` | NO | FK &rarr; `notification.notifications(id)` | B-Tree | Parent notification record |
+| `template_id` | `uuid` | YES | FK &rarr; `notification.notification_templates(id)` | B-Tree | Template used |
 | `recipient_user_id`| `uuid` | YES | FK &rarr; `core.users(id)` | B-Tree | Recipient user |
-| `channel` | `varchar(20)` | NO | CHECK in ('SMS', 'WEB_PUSH', 'EMAIL') | B-Tree | Dispatch channel |
-| `destination_address`| `varchar(150)`| NO | | | Phone number, token, or email |
-| `message_body` | `text` | NO | | | Notification content |
-| `delivery_status`| `varchar(30)`| NO | CHECK in ('QUEUED', 'SENT', 'DELIVERED', 'FAILED') | B-Tree | Telecom delivery status |
-| `dispatched_at` | `timestamptz` | NO | CURRENT_TIMESTAMP | B-Tree | Dispatch timestamp |
+| `administrative_unit_id`| `uuid` | YES | FK &rarr; `core.administrative_units(id)` | B-Tree | Jurisdiction unit |
+| `channel` | `varchar(20)` | NO | CHECK in ('IN_APP', 'EMAIL', 'SMS', 'PUSH') | B-Tree | Dispatch channel |
+| `destination_address`| `varchar(255)`| YES | | | Masked phone/email/token ref (never exposed raw in logs/API) |
+| `title_bn` / `title_en` | `varchar(250)` | YES | | | Rendered bilingual title |
+| `message_body` | `text` | NO | | | Rendered notification content |
+| `message_body_bn` / `message_body_en` | `text` | YES | | | Bilingual rendered payloads |
+| `delivery_status`| `varchar(30)`| NO | CHECK in ('QUEUED', 'RETRYING', 'SENT', 'DELIVERED', 'FAILED', 'SKIPPED') | B-Tree | Delivery lifecycle status |
+| `provider_name` | `varchar(60)` | YES | | | Adapter identifier (e.g., `mock_sms`, `teletalk_sms`, `smtp`, `fcm_push`, `in_app`) |
+| `provider_reference` | `varchar(120)` | YES | | | External gateway message ID |
+| `attempt_count` | `integer` | NO | DEFAULT 0 | | Number of delivery attempts |
+| `last_error` | `text` | YES | | | Sanitized transient/permanent failure reason |
+| `read_at` | `timestamptz` | YES | | B-Tree | In-app read receipt timestamp |
+| `dispatched_at` | `timestamptz` | YES | | B-Tree | Dispatch timestamp |
+| `delivered_at` | `timestamptz` | YES | | | Delivery confirmation timestamp |
+
+### 10.1C `notification.alert_rules` & `notification.alerts`
+- `notification.alert_rules`: Configurable alert rules, threshold conditions (`condition_config` JSONB), severity, target channels, escalation delay (`escalation_delay_minutes`), `escalation_role_code`, and `administrative_unit_id`.
+- `notification.alerts`: Active, acknowledged, escalated, and resolved alert instances (`alert_no`, `alert_rule_id`, `category`, `severity`, `status`, `source_module`, `source_entity_type`, `source_entity_id`, `administrative_unit_id`, `triggered_at`, `acknowledged_by`, `acknowledged_at`, `acknowledgement_notes`, `escalated_at`, `resolved_by`, `resolved_at`, `resolution_notes`).
+
+### 10.1D `notification.notification_preferences` & `notification.notification_devices`
+- `notification.notification_preferences`: Per-user, per-category channel toggles (`in_app_enabled`, `email_enabled`, `sms_enabled`, `push_enabled`, `quiet_hours_start`, `quiet_hours_end`, `policy_locked` for mandatory critical emergency alerts).
+- `notification.notification_devices`: Encrypted Flutter/mobile push device registrations (`user_id`, `device_uuid`, `platform`, `push_provider`, `push_token_encrypted`, `push_token_hash`, `device_name`, `app_version`, `is_active`, `last_seen_at`).
 
 ---
 
@@ -1102,3 +1129,19 @@ Maintenance schedules, preventive/corrective maintenance records, inspection rep
 
 ### 13.6 `resource.human_resource_deployments`
 Human resource deployment tracking linking personnel (`resource_asset_id`, `user_id`, or named personnel) and/or `response.response_teams` to `response.response_operations` and/or `disaster.disaster_events`, recording `deployment_no`, `assigned_duty`, `deployment_location`, `deployment_start_date`, `deployment_end_date`, `actual_return_date`, and `availability_status` (`ASSIGNED`, `IN_USE`, `COMPLETED`, `CANCELLED`).
+
+---
+
+## 14. Schema: `core` Extensions (Module 12: User Management, RBAC & Organizational Scoping)
+
+### 14.1 `core.organizations`
+Statutory ministries, directorates, divisional/district/upazila/union disaster offices, defense/rescue agencies, and humanitarian partner organizations (`org_code` unique, bilingual `name_en`/`name_bn`, `org_type`, `tier_level`, `administrative_unit_id` FK &rarr; `core.administrative_units(id)`, self-referencing `parent_organization_id`, contact fields, `is_active`, and soft deletes).
+
+### 14.2 `core.users` (Module 12 Extensions)
+Extends the passwordless Keycloak-federated registry with `employee_id` (unique nullable), `designation_bn`, `organization_id` FK &rarr; `core.organizations(id)`, `department_en`, `department_bn`, lifecycle status `account_status` (`PENDING`, `ACTIVE`, `SUSPENDED`, `DEACTIVATED`, `LOCKED`), `status_reason`, `status_changed_at`, `status_changed_by`, private profile photograph metadata (`photo_path`, `photo_mime`, `photo_hash`), Keycloak IdP sync tracking (`keycloak_username`, `idp_sync_status`, `idp_synced_at`, `idp_sync_error`), MFA policy & verification flags (`mfa_enforced`, `mfa_verified`, `mfa_enrolled_at`), and nullable `keycloak_sub` for pre-provisioned pending accounts. Zero passwords are stored.
+
+### 14.3 `core.roles`, `core.permissions`, `core.role_permissions`, `core.user_roles`
+Dynamic RBAC tables storing statutory (`is_system = true`) and configurable custom roles (`code`, bilingual names, `tier_level`, `hierarchy_rank` 1–7 for privilege-escalation prevention, `mfa_required`), granular module/action permissions (`code`, `module_code`, `action_type`, `is_sensitive`), role-permission mappings, and multi-role user assignments (`is_primary`, `assigned_by`, `assigned_at`).
+
+### 14.4 `core.user_administrative_scopes`
+Organizational and temporary geographical assignments linking `user_id` to `core.administrative_units(id)` with `assignment_type` (`PRIMARY_POSTING`, `ADDITIONAL_CHARGE`, `EMERGENCY_DEPUTATION`, `INSPECTION_TAG`), `is_active`, `valid_from`, `valid_until` (auto-expiring temporary deputations), `delegated_by`, `official_order_ref`, and `notes`.

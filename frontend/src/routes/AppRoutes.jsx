@@ -104,6 +104,23 @@ import WorkflowConfigListPage from '../modules/workflow/pages/WorkflowConfigList
 import WorkflowConfigFormPage from '../modules/workflow/pages/WorkflowConfigFormPage';
 import WorkflowDelegationPage from '../modules/workflow/pages/WorkflowDelegationPage';
 
+// Module 12: User Management Pages
+import UserDashboardPage from '../modules/user-management/pages/UserDashboardPage';
+import UserListPage from '../modules/user-management/pages/UserListPage';
+import UserFormPage from '../modules/user-management/pages/UserFormPage';
+import UserDetailPage from '../modules/user-management/pages/UserDetailPage';
+import RolePermissionPage from '../modules/user-management/pages/RolePermissionPage';
+import OrganizationListPage from '../modules/user-management/pages/OrganizationListPage';
+
+// Module 13: Notification & Alert Management Pages
+import NotificationDashboardPage from '../modules/notification/pages/NotificationDashboardPage';
+import NotificationCenterPage from '../modules/notification/pages/NotificationCenterPage';
+import NotificationSendPage from '../modules/notification/pages/NotificationSendPage';
+import NotificationLogPage from '../modules/notification/pages/NotificationLogPage';
+import NotificationTemplatePage from '../modules/notification/pages/NotificationTemplatePage';
+import AlertManagementPage from '../modules/notification/pages/AlertManagementPage';
+import NotificationPreferencesPage from '../modules/notification/pages/NotificationPreferencesPage';
+
 export const AppRoutes = () => {
   return (
     <Routes>
@@ -818,6 +835,24 @@ export const AppRoutes = () => {
       <Route path="/workflow/configurations/new" element={<ProtectedRoute><MainLayout><WorkflowConfigFormPage /></MainLayout></ProtectedRoute>} />
       <Route path="/workflow/configurations/:id/edit" element={<ProtectedRoute><MainLayout><WorkflowConfigFormPage /></MainLayout></ProtectedRoute>} />
       <Route path="/workflow/delegations" element={<ProtectedRoute><MainLayout><WorkflowDelegationPage /></MainLayout></ProtectedRoute>} />
+
+      {/* Module 12: User Management Routes */}
+      <Route path="/user-management/dashboard" element={<ProtectedRoute><MainLayout><UserDashboardPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/user-management/users" element={<ProtectedRoute><MainLayout><UserListPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/user-management/users/new" element={<ProtectedRoute><MainLayout><UserFormPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/user-management/users/:id" element={<ProtectedRoute><MainLayout><UserDetailPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/user-management/users/:id/edit" element={<ProtectedRoute><MainLayout><UserFormPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/user-management/roles" element={<ProtectedRoute><MainLayout><RolePermissionPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/user-management/organizations" element={<ProtectedRoute><MainLayout><OrganizationListPage /></MainLayout></ProtectedRoute>} />
+
+      {/* Module 13: Notification & Alert Management Routes */}
+      <Route path="/notifications/dashboard" element={<ProtectedRoute><MainLayout><NotificationDashboardPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/notifications/inbox" element={<ProtectedRoute><MainLayout><NotificationCenterPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/notifications/send" element={<ProtectedRoute><MainLayout><NotificationSendPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/notifications/logs" element={<ProtectedRoute><MainLayout><NotificationLogPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/notifications/templates" element={<ProtectedRoute><MainLayout><NotificationTemplatePage /></MainLayout></ProtectedRoute>} />
+      <Route path="/notifications/alerts" element={<ProtectedRoute><MainLayout><AlertManagementPage /></MainLayout></ProtectedRoute>} />
+      <Route path="/notifications/preferences" element={<ProtectedRoute><MainLayout><NotificationPreferencesPage /></MainLayout></ProtectedRoute>} />
 
       {/* Root Redirection */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />

@@ -17,6 +17,10 @@ use App\Modules\DamageAssessment\Controllers\Api\V1\DamageVerificationController
 use App\Modules\Disaster\Controllers\Api\V1\DisasterCategoryController;
 use App\Modules\Disaster\Controllers\Api\V1\DisasterController;
 use App\Modules\NidVerification\Controllers\Api\V1\NidVerificationController as ModuleNidVerificationController;
+use App\Modules\Notification\Controllers\Api\V1\AlertController;
+use App\Modules\Notification\Controllers\Api\V1\NotificationDashboardController;
+use App\Modules\Notification\Controllers\Api\V1\NotificationDispatchController;
+use App\Modules\Notification\Controllers\Api\V1\NotificationTemplateController;
 use App\Modules\Project\Controllers\Api\V1\ProjectController;
 use App\Modules\Project\Controllers\Api\V1\ProjectDashboardController;
 use App\Modules\Project\Controllers\Api\V1\ProjectFinancialController;
@@ -37,6 +41,10 @@ use App\Modules\Response\Controllers\Api\V1\ResponseDashboardController;
 use App\Modules\Response\Controllers\Api\V1\ResponseOperationController;
 use App\Modules\Response\Controllers\Api\V1\ResponseSituationReportController;
 use App\Modules\Response\Controllers\Api\V1\ResponseTaskController;
+use App\Modules\UserManagement\Controllers\Api\V1\OrganizationController;
+use App\Modules\UserManagement\Controllers\Api\V1\RoleController;
+use App\Modules\UserManagement\Controllers\Api\V1\UserController;
+use App\Modules\UserManagement\Controllers\Api\V1\UserDashboardController;
 use App\Modules\Volunteer\Controllers\Api\V1\VolunteerAttendanceController;
 use App\Modules\Volunteer\Controllers\Api\V1\VolunteerCategoryController;
 use App\Modules\Volunteer\Controllers\Api\V1\VolunteerController;
@@ -470,6 +478,89 @@ Route::prefix('v1')->group(function () {
             Route::post('/instances/{instance}/remind', [WorkflowInstanceController::class, 'remind'])->name('api.v1.workflow.instances.remind');
             Route::post('/instances/{instance}/attachments', [WorkflowInstanceController::class, 'uploadAttachment'])->name('api.v1.workflow.instances.attachments.store');
             Route::get('/instances/{instance}/attachments/{attachment}', [WorkflowInstanceController::class, 'downloadAttachment'])->name('api.v1.workflow.instances.attachments.download');
+        });
+
+        // 14. Module 12: User Management (user.*, role.*, organization.*)
+        Route::prefix('user-management')->group(function () {
+            Route::get('/dashboard', [UserDashboardController::class, 'summary'])->name('api.v1.user_management.dashboard');
+            Route::get('/lookups', [UserDashboardController::class, 'lookups'])->name('api.v1.user_management.lookups');
+            Route::get('/activity-logs', [UserDashboardController::class, 'activityLogs'])->name('api.v1.user_management.activity_logs');
+            Route::get('/keycloak-health', [UserDashboardController::class, 'keycloakHealth'])->name('api.v1.user_management.keycloak_health');
+
+            Route::get('/users', [UserController::class, 'index'])->name('api.v1.user_management.users.index');
+            Route::post('/users', [UserController::class, 'store'])->name('api.v1.user_management.users.store');
+            Route::get('/users/{user}', [UserController::class, 'show'])->name('api.v1.user_management.users.show');
+            Route::put('/users/{user}', [UserController::class, 'update'])->name('api.v1.user_management.users.update');
+            Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('api.v1.user_management.users.destroy');
+            Route::post('/users/{user}/status', [UserController::class, 'changeStatus'])->name('api.v1.user_management.users.status');
+            Route::post('/users/{user}/roles', [UserController::class, 'assignRoles'])->name('api.v1.user_management.users.roles');
+            Route::post('/users/{user}/scopes', [UserController::class, 'assignScope'])->name('api.v1.user_management.users.scopes.store');
+            Route::post('/users/{user}/scopes/{scope}/revoke', [UserController::class, 'revokeScope'])->name('api.v1.user_management.users.scopes.revoke');
+            Route::post('/users/{user}/sync-keycloak', [UserController::class, 'syncKeycloak'])->name('api.v1.user_management.users.sync_keycloak');
+            Route::post('/users/{user}/photo', [UserController::class, 'uploadPhoto'])->name('api.v1.user_management.users.photo.upload');
+            Route::get('/users/{user}/photo', [UserController::class, 'downloadPhoto'])->name('api.v1.user_management.users.photo.download');
+            Route::get('/users/{user}/activity', [UserController::class, 'activity'])->name('api.v1.user_management.users.activity');
+
+            Route::get('/roles', [RoleController::class, 'index'])->name('api.v1.user_management.roles.index');
+            Route::post('/roles', [RoleController::class, 'store'])->name('api.v1.user_management.roles.store');
+            Route::get('/roles/{role}', [RoleController::class, 'show'])->name('api.v1.user_management.roles.show');
+            Route::put('/roles/{role}', [RoleController::class, 'update'])->name('api.v1.user_management.roles.update');
+            Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('api.v1.user_management.roles.destroy');
+            Route::post('/roles/{role}/permissions', [RoleController::class, 'syncPermissions'])->name('api.v1.user_management.roles.permissions');
+            Route::get('/permissions', [RoleController::class, 'permissions'])->name('api.v1.user_management.permissions.index');
+
+            Route::get('/organizations', [OrganizationController::class, 'index'])->name('api.v1.user_management.organizations.index');
+            Route::post('/organizations', [OrganizationController::class, 'store'])->name('api.v1.user_management.organizations.store');
+            Route::get('/organizations/{organization}', [OrganizationController::class, 'show'])->name('api.v1.user_management.organizations.show');
+            Route::put('/organizations/{organization}', [OrganizationController::class, 'update'])->name('api.v1.user_management.organizations.update');
+            Route::delete('/organizations/{organization}', [OrganizationController::class, 'destroy'])->name('api.v1.user_management.organizations.destroy');
+        });
+
+        // 15. Module 13: Notification & Alert Management (notification.*)
+        Route::prefix('notifications')->group(function () {
+            Route::get('/dashboard', [NotificationDashboardController::class, 'summary'])->name('api.v1.notifications.dashboard');
+            Route::get('/lookups', [NotificationDashboardController::class, 'lookups'])->name('api.v1.notifications.lookups');
+
+            // Self-service In-App Inbox, Preferences & Flutter Push Devices
+            Route::get('/inbox', [NotificationDashboardController::class, 'inbox'])->name('api.v1.notifications.inbox');
+            Route::post('/inbox/{dispatch}/read', [NotificationDashboardController::class, 'markRead'])->whereUuid('dispatch')->name('api.v1.notifications.inbox.read');
+            Route::post('/inbox/read-all', [NotificationDashboardController::class, 'markAllRead'])->name('api.v1.notifications.inbox.read_all');
+
+            Route::get('/preferences', [NotificationDashboardController::class, 'preferences'])->name('api.v1.notifications.preferences.index');
+            Route::put('/preferences', [NotificationDashboardController::class, 'updatePreferences'])->name('api.v1.notifications.preferences.update');
+
+            Route::get('/devices', [NotificationDashboardController::class, 'devices'])->name('api.v1.notifications.devices.index');
+            Route::post('/devices', [NotificationDashboardController::class, 'registerDevice'])->name('api.v1.notifications.devices.store');
+            Route::delete('/devices/{device}', [NotificationDashboardController::class, 'deactivateDevice'])->whereUuid('device')->name('api.v1.notifications.devices.destroy');
+
+            // Bilingual Templates
+            Route::get('/templates', [NotificationTemplateController::class, 'index'])->name('api.v1.notifications.templates.index');
+            Route::post('/templates', [NotificationTemplateController::class, 'store'])->name('api.v1.notifications.templates.store');
+            Route::get('/templates/{template}', [NotificationTemplateController::class, 'show'])->whereUuid('template')->name('api.v1.notifications.templates.show');
+            Route::put('/templates/{template}', [NotificationTemplateController::class, 'update'])->whereUuid('template')->name('api.v1.notifications.templates.update');
+            Route::delete('/templates/{template}', [NotificationTemplateController::class, 'destroy'])->whereUuid('template')->name('api.v1.notifications.templates.destroy');
+
+            // Alert Rules & Active Alerts
+            Route::get('/alert-rules', [AlertController::class, 'rules'])->name('api.v1.notifications.alert_rules.index');
+            Route::post('/alert-rules', [AlertController::class, 'storeRule'])->name('api.v1.notifications.alert_rules.store');
+            Route::put('/alert-rules/{rule}', [AlertController::class, 'updateRule'])->whereUuid('rule')->name('api.v1.notifications.alert_rules.update');
+            Route::delete('/alert-rules/{rule}', [AlertController::class, 'destroyRule'])->whereUuid('rule')->name('api.v1.notifications.alert_rules.destroy');
+
+            Route::get('/alerts', [AlertController::class, 'alerts'])->name('api.v1.notifications.alerts.index');
+            Route::post('/alerts/trigger', [AlertController::class, 'trigger'])->name('api.v1.notifications.alerts.trigger');
+            Route::post('/alerts/escalate', [AlertController::class, 'runEscalations'])->name('api.v1.notifications.alerts.escalate');
+            Route::get('/alerts/{alert}', [AlertController::class, 'showAlert'])->whereUuid('alert')->name('api.v1.notifications.alerts.show');
+            Route::post('/alerts/{alert}/acknowledge', [AlertController::class, 'acknowledge'])->whereUuid('alert')->name('api.v1.notifications.alerts.acknowledge');
+            Route::post('/alerts/{alert}/resolve', [AlertController::class, 'resolve'])->whereUuid('alert')->name('api.v1.notifications.alerts.resolve');
+
+            // Notification Campaigns & Delivery Logs
+            Route::get('/dispatches', [NotificationDispatchController::class, 'dispatches'])->name('api.v1.notifications.dispatches.index');
+            Route::post('/dispatches/{dispatch}/retry', [NotificationDispatchController::class, 'retryDispatch'])->whereUuid('dispatch')->name('api.v1.notifications.dispatches.retry');
+            Route::post('/process-scheduled', [NotificationDispatchController::class, 'processScheduled'])->name('api.v1.notifications.process_scheduled');
+
+            Route::get('/', [NotificationDispatchController::class, 'index'])->name('api.v1.notifications.index');
+            Route::post('/', [NotificationDispatchController::class, 'store'])->name('api.v1.notifications.store');
+            Route::get('/{notification}', [NotificationDispatchController::class, 'show'])->whereUuid('notification')->name('api.v1.notifications.show');
         });
 
         // Administrative Overview Scenarios

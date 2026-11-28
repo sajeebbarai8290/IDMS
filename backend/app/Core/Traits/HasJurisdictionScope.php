@@ -20,22 +20,24 @@ trait HasJurisdictionScope
             return $query;
         }
 
-        $scope = $user->getAdministrativeScope();
-        $officerPath = $scope['ancestry_path'] ?? '/';
-
-        if ($officerPath === '/' || $officerPath === '') {
+        $paths = $user->getAccessibleAncestryPaths();
+        if (in_array('/', $paths, true)) {
             return $query;
         }
 
-        $normPath = rtrim($officerPath, '/') . '/';
         $adminTable = (new AdministrativeUnit())->getTable();
         $modelTable = $this->getTable();
 
-        return $query->whereExists(function ($subQuery) use ($adminTable, $modelTable, $adminUnitColumn, $normPath) {
+        return $query->whereExists(function ($subQuery) use ($adminTable, $modelTable, $adminUnitColumn, $paths) {
             $subQuery->selectRaw('1')
                 ->from($adminTable)
                 ->whereColumn("{$adminTable}.id", "{$modelTable}.{$adminUnitColumn}")
-                ->where("{$adminTable}.ancestry_path", 'like', $normPath . '%');
+                ->where(function ($pathQuery) use ($paths, $adminTable) {
+                    foreach ($paths as $p) {
+                        $normPath = rtrim($p, '/') . '/';
+                        $pathQuery->orWhere("{$adminTable}.ancestry_path", 'like', $normPath . '%');
+                    }
+                });
         });
     }
 }

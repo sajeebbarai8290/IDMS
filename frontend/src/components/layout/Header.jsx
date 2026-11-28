@@ -1,12 +1,24 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { notificationApi } from '../../api/notificationApi';
 import Badge from '../common/Badge';
 
 export const Header = ({ toggleSidebar }) => {
   const { user, isAuthenticated, logout } = useAuth();
   const { lang, setLang } = useLanguage();
+
+  const { data: inboxRes } = useQuery({
+    queryKey: ['notifications', 'inbox', 'header-badge'],
+    queryFn: () => notificationApi.getInbox({ unread_only: 'true', per_page: 1 }),
+    enabled: isAuthenticated,
+    staleTime: 30000,
+    retry: false,
+  });
+
+  const unreadCount = inboxRes?.meta?.unread_count ?? 0;
 
   const scope = user?.administrativeScope;
 
@@ -45,6 +57,22 @@ export const Header = ({ toggleSidebar }) => {
               {scope.tier_level || 'NATIONAL'}
             </Badge>
           </div>
+        )}
+
+        {/* In-App Notification Bell */}
+        {isAuthenticated && (
+          <Link
+            to="/notifications/inbox"
+            className="btn btn-outline-secondary btn-sm position-relative"
+            title={lang === 'en' ? 'Notification Inbox' : 'বিজ্ঞপ্তি ইনবক্স'}
+          >
+            <i className="bi bi-bell-fill"></i>
+            {unreadCount > 0 && (
+              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </Link>
         )}
 
         {/* Language Selector */}

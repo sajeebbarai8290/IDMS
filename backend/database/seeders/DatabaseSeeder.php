@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             AdministrativeUnitSeeder::class,
+            UserManagementSeeder::class,
             DisasterEventSeeder::class,
             BeneficiarySeeder::class,
             ReliefCatalogAndWarehouseSeeder::class,
@@ -25,6 +26,7 @@ class DatabaseSeeder extends Seeder
             DamageAssessmentSeeder::class,
             VolunteerSeeder::class,
             WorkflowSeeder::class,
+            NotificationSeeder::class,
         ]);
     }
 }

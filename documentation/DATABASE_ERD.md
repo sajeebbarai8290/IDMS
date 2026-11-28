@@ -155,9 +155,19 @@ erDiagram
     DAMAGE_ASSESSMENTS ||--o{ WORKFLOW_INSTANCES : "governed_by"
     PROJECT_DISBURSEMENTS ||--o{ WORKFLOW_INSTANCES : "governed_by"
 
-    %% NOTIFICATIONS, DOCUMENTS & AUDIT
+    %% NOTIFICATIONS & ALERTS (MODULE 13), DOCUMENTS & AUDIT
+    USERS ||--o{ NOTIFICATIONS : "creates_notice"
+    ADMINISTRATIVE_UNITS ||--o{ NOTIFICATIONS : "targets_area"
+    NOTIFICATION_TEMPLATES ||--o{ NOTIFICATIONS : "instantiates"
+    NOTIFICATIONS ||--|{ NOTIFICATION_DISPATCHES : "delivers_via"
     USERS ||--o{ NOTIFICATION_DISPATCHES : "receives_notice"
     NOTIFICATION_TEMPLATES ||--o{ NOTIFICATION_DISPATCHES : "instantiated_from"
+    ADMINISTRATIVE_UNITS ||--o{ ALERT_RULES : "scopes_rule"
+    ALERT_RULES ||--o{ ALERTS : "triggers"
+    ADMINISTRATIVE_UNITS ||--o{ ALERTS : "impacts_unit"
+    USERS ||--o{ ALERTS : "acknowledges_resolves"
+    USERS ||--o{ NOTIFICATION_PREFERENCES : "configures_channels"
+    USERS ||--o{ NOTIFICATION_DEVICES : "registers_push_device"
     USERS ||--o{ DOCUMENTS : "uploaded_by"
     USERS ||--o{ AUDIT_LOGS : "performed_by"
 
@@ -1077,18 +1087,106 @@ erDiagram
     NOTIFICATION_TEMPLATES {
         uuid id PK
         string template_code UK
+        string category
         string channel
-        text body_template_bn
-        text body_template_en
+        string default_severity
+        string title_bn
+        string title_en
+        text body_bn
+        text body_en
+        jsonb variables
+        boolean is_system
+        boolean is_active
+    }
+
+    NOTIFICATIONS {
+        uuid id PK
+        string notification_no UK
+        uuid template_id FK
+        string category
+        string severity
+        string priority
+        jsonb channels
+        string target_type
+        jsonb target_criteria
+        uuid administrative_unit_id FK
+        string status
+        string idempotency_key UK
+        timestamptz scheduled_at
+        timestamptz dispatched_at
+        uuid created_by FK
     }
 
     NOTIFICATION_DISPATCHES {
         uuid id PK
+        uuid notification_id FK
         uuid template_id FK
         uuid recipient_user_id FK
+        string channel
         string destination_address
         string delivery_status
+        string provider_name
+        string provider_reference
+        integer attempt_count
+        timestamptz read_at
         timestamptz dispatched_at
+        timestamptz delivered_at
+    }
+
+    ALERT_RULES {
+        uuid id PK
+        string rule_code UK
+        string category
+        string event_type
+        string severity
+        jsonb condition_config
+        jsonb channels
+        integer escalation_delay_minutes
+        string escalation_role_code
+        uuid administrative_unit_id FK
+        boolean is_active
+    }
+
+    ALERTS {
+        uuid id PK
+        string alert_no UK
+        uuid alert_rule_id FK
+        string category
+        string severity
+        string status
+        string source_module
+        string source_entity_type
+        uuid source_entity_id
+        uuid administrative_unit_id FK
+        timestamptz triggered_at
+        uuid acknowledged_by FK
+        timestamptz acknowledged_at
+        timestamptz escalated_at
+        uuid resolved_by FK
+        timestamptz resolved_at
+    }
+
+    NOTIFICATION_PREFERENCES {
+        uuid id PK
+        uuid user_id FK
+        string category
+        boolean in_app_enabled
+        boolean email_enabled
+        boolean sms_enabled
+        boolean push_enabled
+        boolean policy_locked
+    }
+
+    NOTIFICATION_DEVICES {
+        uuid id PK
+        uuid user_id FK
+        string device_uuid
+        string platform
+        string push_provider
+        text push_token_encrypted
+        string push_token_hash
+        boolean is_active
+        timestamptz last_seen_at
     }
 
     DOCUMENTS {
@@ -1271,5 +1369,77 @@ erDiagram
         uuid relief_allocation_item_id FK
         uuid household_id FK
         decimal quantity_disbursed
+    }
+```
+
+### 3.3 User Management, RBAC & Organizational Scoping Sub-Domain (`core.*`)
+```mermaid
+erDiagram
+    ADMINISTRATIVE_UNITS ||--o{ ORGANIZATIONS : "hosts"
+    ORGANIZATIONS ||--o{ USERS : "employs"
+    ADMINISTRATIVE_UNITS ||--o{ USERS : "primary_scope"
+    USERS ||--o{ USER_ROLES : "assigned"
+    ROLES ||--o{ USER_ROLES : "granted_to"
+    ROLES ||--o{ ROLE_PERMISSIONS : "includes"
+    PERMISSIONS ||--o{ ROLE_PERMISSIONS : "mapped_to"
+    USERS ||--o{ USER_ADMINISTRATIVE_SCOPES : "scoped_via"
+    ADMINISTRATIVE_UNITS ||--o{ USER_ADMINISTRATIVE_SCOPES : "authorizes"
+
+    ORGANIZATIONS {
+        uuid id PK
+        string org_code UK
+        string name_en
+        string name_bn
+        string org_type
+        string tier_level
+        uuid administrative_unit_id FK
+        uuid parent_organization_id FK
+        boolean is_active
+    }
+
+    USERS {
+        uuid id PK
+        string keycloak_sub UK
+        string email UK
+        string employee_id UK
+        string full_name_en
+        string full_name_bn
+        string role_code
+        uuid organization_id FK
+        uuid administrative_unit_id FK
+        string account_status
+        string idp_sync_status
+        boolean mfa_enforced
+        boolean mfa_verified
+    }
+
+    ROLES {
+        uuid id PK
+        string code UK
+        string name_en
+        string name_bn
+        string tier_level
+        int hierarchy_rank
+        boolean is_system
+        boolean mfa_required
+    }
+
+    PERMISSIONS {
+        uuid id PK
+        string code UK
+        string module_code
+        string action_type
+        boolean is_sensitive
+    }
+
+    USER_ADMINISTRATIVE_SCOPES {
+        uuid id PK
+        uuid user_id FK
+        uuid administrative_unit_id FK
+        string assignment_type
+        boolean is_active
+        timestamptz valid_from
+        timestamptz valid_until
+        string official_order_ref
     }
 ```

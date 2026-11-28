@@ -71,6 +71,19 @@ class KeycloakAuthenticate
             $user->setJwtClaims($claims);
         }
 
+        // Enforce local account lifecycle status (reject SUSPENDED, DEACTIVATED, LOCKED, PENDING)
+        if (!$user->isOperationalActive()) {
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'code' => 'ACCOUNT_RESTRICTED',
+                    'message' => 'Your account is currently ' . strtolower((string) ($user->account_status ?? 'inactive')) . '. Contact an administrator.',
+                    'account_status' => $user->account_status ?? 'DEACTIVATED',
+                ],
+                'timestamp' => now()->toIso8601String(),
+            ], 403);
+        }
+
         // Bind user to request and Auth facade
         Auth::setUser($user);
         $request->setUserResolver(fn () => $user);
